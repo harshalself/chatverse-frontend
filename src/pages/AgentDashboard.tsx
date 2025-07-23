@@ -78,7 +78,7 @@ export default function AgentDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header breadcrumbs={["AI", "Workspace", agentName]} />
+      <Header breadcrumbs={["Workspace", agentName]} />
       <Navigation tabs={tabs} onTabChange={setActiveTab} />
       {renderContent()}
     </div>

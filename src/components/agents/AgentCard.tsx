@@ -1,6 +1,6 @@
 import { MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 interface AgentCardProps {
@@ -9,11 +9,12 @@ interface AgentCardProps {
   description: string;
   status: "active" | "inactive";
   conversations: number;
-  lastActive: string;
+  lastTrained: string;
   onClick?: (id: string) => void;
+  onStatusChange?: (id: string, status: "active" | "inactive") => void;
 }
 
-export function AgentCard({ id, name, description, status, conversations, lastActive, onClick }: AgentCardProps) {
+export function AgentCard({ id, name, description, status, conversations, lastTrained, onClick, onStatusChange }: AgentCardProps) {
   return (
     <Card 
       className="cursor-pointer transition-all hover:shadow-md hover:scale-[1.02]"
@@ -30,17 +31,13 @@ export function AgentCard({ id, name, description, status, conversations, lastAc
               <p className="text-sm text-muted-foreground">{description}</p>
             </div>
           </div>
-          <Badge 
-            variant="secondary" 
-            className={cn(
-              "text-xs",
-              status === "active" 
-                ? "bg-success/10 text-success border-success/20" 
-                : "bg-muted text-muted-foreground"
-            )}
-          >
-            {status}
-          </Badge>
+          <Switch 
+            checked={status === "active"}
+            onCheckedChange={(checked) => 
+              onStatusChange?.(id, checked ? "active" : "inactive")
+            }
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
         
         <div className="space-y-2">
@@ -49,8 +46,8 @@ export function AgentCard({ id, name, description, status, conversations, lastAc
             <span className="font-medium text-foreground">{conversations}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Last active:</span>
-            <span className="font-medium text-foreground">{lastActive}</span>
+            <span className="text-muted-foreground">Last trained:</span>
+            <span className="font-medium text-foreground">{lastTrained}</span>
           </div>
         </div>
       </CardContent>

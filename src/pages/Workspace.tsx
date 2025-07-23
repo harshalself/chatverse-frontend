@@ -14,7 +14,7 @@ const mockAgents = [
     description: "Resume assistant chatbot",
     status: "active" as const,
     conversations: 24,
-    lastActive: "2 hours ago"
+    lastTrained: "2 hours ago"
   },
   {
     id: "2", 
@@ -22,7 +22,7 @@ const mockAgents = [
     description: "General customer support assistant",
     status: "active" as const,
     conversations: 156,
-    lastActive: "5 minutes ago"
+    lastTrained: "5 minutes ago"
   },
   {
     id: "3",
@@ -30,7 +30,7 @@ const mockAgents = [
     description: "Product information and FAQ assistant",
     status: "inactive" as const,
     conversations: 89,
-    lastActive: "1 day ago"
+    lastTrained: "1 day ago"
   }
 ];
 
@@ -60,10 +60,18 @@ export default function Workspace() {
       description: "New AI assistant",
       status: "active" as const,
       conversations: 0,
-      lastActive: "Just created"
+      lastTrained: "Just created"
     };
     setAgents([...agents, newAgent]);
     navigate(`/agent/${newAgent.id}`, { state: { agentName: newAgent.name } });
+  };
+
+  const handleStatusChange = (agentId: string, newStatus: "active" | "inactive") => {
+    setAgents(agents.map(agent => 
+      agent.id === agentId 
+        ? { ...agent, status: newStatus }
+        : agent
+    ));
   };
 
   const renderContent = () => {
@@ -91,6 +99,7 @@ export default function Workspace() {
                   key={agent.id}
                   {...agent}
                   onClick={handleAgentClick}
+                  onStatusChange={handleStatusChange}
                 />
               ))}
             </div>
@@ -117,7 +126,7 @@ export default function Workspace() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header breadcrumbs={["AI", "Workspace"]} />
+      <Header breadcrumbs={["Workspace"]} />
       <Navigation tabs={tabs} onTabChange={setActiveTab} />
       {renderContent()}
       
