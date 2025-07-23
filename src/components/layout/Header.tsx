@@ -26,10 +26,13 @@ export function Header({ breadcrumbs, children }: HeaderProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-            <Bot 
-              className="h-5 w-5 text-primary cursor-pointer" 
-              onClick={handleLogoClick}
-            />
+            <div className="flex items-center">
+              <Bot 
+                className="h-5 w-5 text-primary cursor-pointer" 
+                onClick={handleLogoClick}
+              />
+              <span className="mx-2">/</span>
+            </div>
             {breadcrumbs.map((crumb, index) => (
               <div key={index} className="flex items-center">
                 <span 
