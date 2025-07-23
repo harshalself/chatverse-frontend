@@ -78,7 +78,7 @@ export default function Workspace() {
     switch (activeTab) {
       case "agents":
         return (
-          <div className="p-6">
+          <div className="p-6 max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">AI Agents</h1>
@@ -107,14 +107,14 @@ export default function Workspace() {
         );
       case "usage":
         return (
-          <div className="p-6">
+          <div className="p-6 max-w-7xl mx-auto">
             <h1 className="text-3xl font-bold text-foreground mb-4">Usage</h1>
             <p className="text-muted-foreground">Usage analytics and statistics will be displayed here.</p>
           </div>
         );
       case "settings":
         return (
-          <div className="p-6">
+          <div className="p-6 max-w-7xl mx-auto">
             <h1 className="text-3xl font-bold text-foreground mb-4">Settings</h1>
             <p className="text-muted-foreground">Workspace settings and configuration options.</p>
           </div>
