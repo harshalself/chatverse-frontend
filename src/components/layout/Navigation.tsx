@@ -7,7 +7,7 @@ interface NavigationProps {
 
 export function Navigation({ tabs, onTabChange }: NavigationProps) {
   return (
-    <nav className="border-b bg-background">
+    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="px-6">
         <div className="flex justify-center">
           <div className="flex space-x-8">

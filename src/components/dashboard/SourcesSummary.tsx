@@ -37,7 +37,7 @@ export function SourcesSummary() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Brain className="h-5 w-5" />
-            <span>Sources Summary</span>
+            <span>Sources</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -68,19 +68,6 @@ export function SourcesSummary() {
                 </div>
               );
             })}
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-              Recent Sources
-            </h4>
-            {mockSources.slice(0, 3).map((source) => (
-              <div key={source.id} className="text-sm text-foreground truncate">
-                {source.name}
-              </div>
-            ))}
           </div>
 
           <Separator />

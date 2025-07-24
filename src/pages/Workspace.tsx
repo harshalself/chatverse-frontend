@@ -13,7 +13,6 @@ const mockAgents = [
     name: "Harshal Patil Resume V2.pdf",
     description: "Resume assistant chatbot",
     status: "active" as const,
-    conversations: 24,
     lastTrained: "2 hours ago"
   },
   {
@@ -21,7 +20,6 @@ const mockAgents = [
     name: "Customer Support Bot",
     description: "General customer support assistant",
     status: "active" as const,
-    conversations: 156,
     lastTrained: "5 minutes ago"
   },
   {
@@ -29,7 +27,6 @@ const mockAgents = [
     name: "Product FAQ Bot", 
     description: "Product information and FAQ assistant",
     status: "inactive" as const,
-    conversations: 89,
     lastTrained: "1 day ago"
   }
 ];
@@ -59,7 +56,6 @@ export default function Workspace() {
       name,
       description: "New AI assistant",
       status: "active" as const,
-      conversations: 0,
       lastTrained: "Just created"
     };
     setAgents([...agents, newAgent]);

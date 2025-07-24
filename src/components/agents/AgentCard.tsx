@@ -8,13 +8,12 @@ interface AgentCardProps {
   name: string;
   description: string;
   status: "active" | "inactive";
-  conversations: number;
   lastTrained: string;
   onClick?: (id: string) => void;
   onStatusChange?: (id: string, status: "active" | "inactive") => void;
 }
 
-export function AgentCard({ id, name, description, status, conversations, lastTrained, onClick, onStatusChange }: AgentCardProps) {
+export function AgentCard({ id, name, description, status, lastTrained, onClick, onStatusChange }: AgentCardProps) {
   return (
     <Card 
       className="cursor-pointer transition-all hover:shadow-md hover:scale-[1.02]"
@@ -41,10 +40,6 @@ export function AgentCard({ id, name, description, status, conversations, lastTr
         </div>
         
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Conversations:</span>
-            <span className="font-medium text-foreground">{conversations}</span>
-          </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Last trained:</span>
             <span className="font-medium text-foreground">{lastTrained}</span>
