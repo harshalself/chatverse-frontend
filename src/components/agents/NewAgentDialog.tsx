@@ -43,15 +43,14 @@ export function NewAgentDialog({ open, onOpenChange, onCreateAgent }: NewAgentDi
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="name">
               Name
             </Label>
             <Input
               id="name"
               value={agentName}
               onChange={(e) => setAgentName(e.target.value)}
-              className="col-span-3"
               placeholder="e.g. Customer Support Bot"
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
             />
