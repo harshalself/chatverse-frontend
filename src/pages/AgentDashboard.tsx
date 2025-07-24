@@ -4,6 +4,11 @@ import { Header } from "@/components/layout/Header";
 import { Navigation } from "@/components/layout/Navigation";
 import { SourcesSidebar } from "@/components/dashboard/SourcesSidebar";
 import { DocumentFiles } from "@/components/dashboard/DocumentFiles";
+import { TextSource } from "@/components/dashboard/TextSource";
+import { WebsiteSource } from "@/components/dashboard/WebsiteSource";
+import { DatabaseSource } from "@/components/dashboard/DatabaseSource";
+import { QASource } from "@/components/dashboard/QASource";
+import { SourcesSummary } from "@/components/dashboard/SourcesSummary";
 
 export default function AgentDashboard() {
   const { agentId } = useParams();
@@ -31,16 +36,11 @@ export default function AgentDashboard() {
               onSourceChange={setActiveSource} 
             />
             {activeSource === "files" && <DocumentFiles />}
-            {activeSource !== "files" && (
-              <div className="flex-1 p-6 max-w-7xl mx-auto">
-                <h2 className="text-2xl font-semibold text-foreground mb-4">
-                  {activeSource.charAt(0).toUpperCase() + activeSource.slice(1)}
-                </h2>
-                <p className="text-muted-foreground">
-                  {activeSource} configuration and management will be available here.
-                </p>
-              </div>
-            )}
+            {activeSource === "text" && <TextSource />}
+            {activeSource === "website" && <WebsiteSource />}
+            {activeSource === "database" && <DatabaseSource />}
+            {activeSource === "qa" && <QASource />}
+            <SourcesSummary />
           </div>
         );
       case "playground":

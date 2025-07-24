@@ -8,7 +8,7 @@ interface SourcesSidebarProps {
 
 const sources = [
   { id: "files", label: "Files", icon: Files },
-  { id: "test", label: "Test", icon: Beaker },
+  { id: "text", label: "Text", icon: Beaker },
   { id: "website", label: "Website", icon: Globe },
   { id: "database", label: "Database", icon: Database },
   { id: "qa", label: "Q&A", icon: HelpCircle },
