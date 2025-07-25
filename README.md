@@ -1,73 +1,105 @@
-# Welcome to your Lovable project
+# AgentFlow UI
 
-## Project info
+A modern React application for building and managing AI agents with an intuitive interface.
 
-**URL**: https://lovable.dev/projects/90e53e0a-ad5f-493f-a96a-742610acfc95
+## Features
 
-## How can I edit this code?
+- **Homepage**: Landing page with authentication-aware navigation
+- **Authentication**: Complete sign in/sign up flow with protected routes
+- **Workspace**: Main dashboard for managing agents
+- **Agent Management**: Create, configure, and deploy AI agents
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use Lovable**
+### Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/90e53e0a-ad5f-493f-a96a-742610acfc95) and start prompting.
+- Node.js (v18 or higher)
+- npm or yarn package manager
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
+1. Clone the repository:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+git clone <repository-url>
+cd agentflow-ui
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. Install dependencies:
 
-Follow these steps:
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Start the development server:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open your browser and navigate to `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Available Scripts
 
-**Use GitHub Codespaces**
+- `npm run dev` - Start the development server
+- `npm run build` - Build the application for production
+- `npm run preview` - Preview the production build locally
+- `npm run lint` - Run ESLint to check for code issues
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Tech Stack
 
-## What technologies are used for this project?
+- **React 18** - Modern React with hooks and functional components
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool and development server
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Router** - Client-side routing
+- **Radix UI** - Accessible component primitives
+- **Lucide React** - Beautiful icons
+- **React Query** - Data fetching and state management
 
-This project is built with:
+## Project Structure
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # Base UI components (buttons, inputs, etc.)
+│   ├── layout/         # Layout components (header, navigation)
+│   └── agents/         # Agent-specific components
+├── contexts/           # React contexts (auth, etc.)
+├── hooks/              # Custom React hooks
+├── pages/              # Page components
+├── lib/                # Utility functions
+└── types/              # TypeScript type definitions
+```
 
-## How can I deploy this project?
+## Authentication
 
-Simply open [Lovable](https://lovable.dev/projects/90e53e0a-ad5f-493f-a96a-742610acfc95) and click on Share -> Publish.
+The application includes a complete authentication system:
 
-## Can I connect a custom domain to my Lovable project?
+- Protected routes for workspace and agent management
+- Persistent login state using localStorage
+- Automatic redirect to intended destination after login
+- User profile management with sign out functionality
 
-Yes, you can!
+## Deployment
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Build for Production
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```bash
+npm run build
+```
+
+The built files will be in the `dist` directory and can be deployed to any static hosting service.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes and commit them: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin feature-name`
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
