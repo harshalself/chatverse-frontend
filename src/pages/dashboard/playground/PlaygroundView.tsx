@@ -1,6 +1,5 @@
 import { Chat } from "@/components/dashboard/playground/Chat";
 import { ChatSidebar } from "@/components/dashboard/playground/ChatSidebar";
-import { ChatSources } from "@/components/dashboard/playground/ChatSources";
 
 export function PlaygroundView() {
   return (
@@ -10,7 +9,6 @@ export function PlaygroundView() {
         <div className="flex-1 flex justify-center items-center">
           <Chat />
         </div>
-        <ChatSources />
       </div>
     </div>
   );
