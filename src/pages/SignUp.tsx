@@ -12,16 +12,16 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { Navigate, Link } from "react-router-dom";
+import { useAuth, useRegister } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
 
 export default function SignUp() {
-  const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const registerMutation = useRegister();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -32,46 +32,87 @@ export default function SignUp() {
     subscribeToNewsletter: false,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+  // Redirect if already authenticated
+  if (user && !isAuthLoading) {
+    return <Navigate to="/workspace" replace />;
+  }
 
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords don't match!");
-      setIsLoading(false);
-      return;
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) {
+      errors.firstName = "First name is required";
+    }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = "Last name is required";
+    }
+
+    if (!formData.email) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      errors.password = "Password must be at least 8 characters";
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      errors.password =
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number";
+    }
+
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = "Please confirm your password";
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = "Passwords don't match";
     }
 
     if (!formData.agreeToTerms) {
-      setError("Please agree to the terms and conditions!");
-      setIsLoading(false);
+      errors.agreeToTerms = "Please agree to the terms and conditions";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
       return;
     }
 
     try {
-      await signUp({
+      await registerMutation.mutateAsync({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
       });
-      // Navigate to workspace after successful sign up
-      navigate("/workspace");
+
+      // Success is handled in the hook
     } catch (error) {
-      setError("Failed to create account. Please try again.");
-      console.error("Sign up error:", error);
-    } finally {
-      setIsLoading(false);
+      // Error handling is done in the hook
+      console.error("Registration error:", error);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors({
+        ...fieldErrors,
+        [name]: "",
+      });
+    }
   };
 
   const handleCheckboxChange = (name: string, checked: boolean) => {
@@ -79,6 +120,14 @@ export default function SignUp() {
       ...formData,
       [name]: checked,
     });
+
+    // Clear field error when user checks checkbox
+    if (fieldErrors[name]) {
+      setFieldErrors({
+        ...fieldErrors,
+        [name]: "",
+      });
+    }
   };
 
   return (
@@ -107,11 +156,17 @@ export default function SignUp() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {error && (
+            {/* Display field errors */}
+            {Object.keys(fieldErrors).length > 0 && (
               <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
-                {error}
+                <ul className="space-y-1">
+                  {Object.entries(fieldErrors).map(([field, error]) => (
+                    <li key={field}>• {error}</li>
+                  ))}
+                </ul>
               </div>
             )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -123,8 +178,16 @@ export default function SignUp() {
                     placeholder="John"
                     value={formData.firstName}
                     onChange={handleInputChange}
+                    className={
+                      fieldErrors.firstName ? "border-destructive" : ""
+                    }
                     required
                   />
+                  {fieldErrors.firstName && (
+                    <p className="text-sm text-destructive">
+                      {fieldErrors.firstName}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last name</Label>
@@ -135,8 +198,14 @@ export default function SignUp() {
                     placeholder="Doe"
                     value={formData.lastName}
                     onChange={handleInputChange}
+                    className={fieldErrors.lastName ? "border-destructive" : ""}
                     required
                   />
+                  {fieldErrors.lastName && (
+                    <p className="text-sm text-destructive">
+                      {fieldErrors.lastName}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -149,8 +218,14 @@ export default function SignUp() {
                   placeholder="john@example.com"
                   value={formData.email}
                   onChange={handleInputChange}
+                  className={fieldErrors.email ? "border-destructive" : ""}
                   required
                 />
+                {fieldErrors.email && (
+                  <p className="text-sm text-destructive">
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -163,6 +238,7 @@ export default function SignUp() {
                     placeholder="Create a strong password"
                     value={formData.password}
                     onChange={handleInputChange}
+                    className={fieldErrors.password ? "border-destructive" : ""}
                     required
                   />
                   <Button
@@ -178,6 +254,11 @@ export default function SignUp() {
                     )}
                   </Button>
                 </div>
+                {fieldErrors.password && (
+                  <p className="text-sm text-destructive">
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -190,6 +271,9 @@ export default function SignUp() {
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
+                    className={
+                      fieldErrors.confirmPassword ? "border-destructive" : ""
+                    }
                     required
                   />
                   <Button
@@ -207,29 +291,46 @@ export default function SignUp() {
                     )}
                   </Button>
                 </div>
+                {fieldErrors.confirmPassword && (
+                  <p className="text-sm text-destructive">
+                    {fieldErrors.confirmPassword}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-start space-x-2">
                   <Checkbox
                     id="terms"
                     checked={formData.agreeToTerms}
                     onCheckedChange={(checked) =>
                       handleCheckboxChange("agreeToTerms", checked as boolean)
                     }
+                    className={
+                      fieldErrors.agreeToTerms ? "border-destructive" : ""
+                    }
                   />
-                  <Label htmlFor="terms" className="text-sm">
-                    I agree to the{" "}
-                    <Link to="/terms" className="text-primary hover:underline">
-                      Terms of Service
-                    </Link>{" "}
-                    and{" "}
-                    <Link
-                      to="/privacy"
-                      className="text-primary hover:underline">
-                      Privacy Policy
-                    </Link>
-                  </Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="terms" className="text-sm">
+                      I agree to the{" "}
+                      <Link
+                        to="/terms"
+                        className="text-primary hover:underline">
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        to="/privacy"
+                        className="text-primary hover:underline">
+                        Privacy Policy
+                      </Link>
+                    </Label>
+                    {fieldErrors.agreeToTerms && (
+                      <p className="text-sm text-destructive">
+                        {fieldErrors.agreeToTerms}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -249,8 +350,13 @@ export default function SignUp() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Create Account"}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={registerMutation.isPending}>
+                {registerMutation.isPending
+                  ? "Creating Account..."
+                  : "Create Account"}
               </Button>
             </form>
 

@@ -1,120 +1,109 @@
+import { createContext, useContext, useEffect, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
-
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-}
+  useAuth as useAuthHook,
+  useLogin,
+  useRegister,
+  useLogout,
+} from "@/hooks/use-auth";
+import { User, LoginRequest, RegisterRequest } from "@/types/auth.types";
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (userData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-  }) => Promise<void>;
-  signOut: () => void;
+  signIn: (
+    email: string,
+    password: string,
+    rememberMe?: boolean
+  ) => Promise<void>;
+  signUp: (userData: RegisterRequest) => Promise<void>;
+  signOut: () => Promise<void>;
+  refetchUser: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+export { AuthContext };
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // Check if user is already signed in (from localStorage)
-    const savedUser = localStorage.getItem("agentflow_user");
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error("Error parsing saved user:", error);
-        localStorage.removeItem("agentflow_user");
-      }
-    }
-    setIsLoading(false);
-  }, []);
+  // Use the auth hook from our hooks file
+  const {
+    user,
+    isLoading,
+    error,
+    refetch: refetchUser,
+    isAuthenticated: hookIsAuthenticated,
+  } = useAuthHook();
 
-  const signIn = async (email: string, password: string) => {
+  // Auth mutations
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
+  const logoutMutation = useLogout();
+
+  const signIn = async (
+    email: string,
+    password: string,
+    rememberMe?: boolean
+  ) => {
     try {
-      // TODO: Replace with actual API call
-      // For now, simulate authentication
-      if (email && password) {
-        const mockUser: User = {
-          id: "1",
-          email,
-          firstName: "John",
-          lastName: "Doe",
-        };
-
-        setUser(mockUser);
-        localStorage.setItem("agentflow_user", JSON.stringify(mockUser));
-      } else {
-        throw new Error("Invalid credentials");
-      }
+      await loginMutation.mutateAsync({
+        email,
+        password,
+        rememberMe,
+      });
+      // The user data will be updated automatically via React Query
     } catch (error) {
       console.error("Sign in error:", error);
       throw error;
     }
   };
 
-  const signUp = async (userData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-  }) => {
+  const signUp = async (userData: RegisterRequest) => {
     try {
-      // TODO: Replace with actual API call
-      // For now, simulate user creation
-      const newUser: User = {
-        id: Date.now().toString(),
-        email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-      };
-
-      setUser(newUser);
-      localStorage.setItem("agentflow_user", JSON.stringify(newUser));
+      await registerMutation.mutateAsync(userData);
+      // The user data will be updated automatically via React Query
     } catch (error) {
       console.error("Sign up error:", error);
       throw error;
     }
   };
 
-  const signOut = () => {
-    setUser(null);
-    localStorage.removeItem("agentflow_user");
+  const signOut = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+      // Clear all React Query cache on logout
+      queryClient.clear();
+    } catch (error) {
+      console.error("Sign out error:", error);
+      // Even if logout fails, clear local state
+      queryClient.clear();
+    }
   };
 
   const value = {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
+    user: user || null,
+    isAuthenticated: hookIsAuthenticated,
+    isLoading:
+      isLoading || loginMutation.isPending || registerMutation.isPending,
     signIn,
     signUp,
     signOut,
+    refetchUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuthContext() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuthContext must be used within an AuthProvider");
   }
   return context;
 }
+
+// Backward compatibility export
+export const useAuth = useAuthContext;

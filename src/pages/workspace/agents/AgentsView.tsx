@@ -1,22 +1,78 @@
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AgentCard } from "@/components/agents/AgentCard";
+import { NewAgentDialog } from "@/components/agents/NewAgentDialog";
+import { useAgents, useUpdateAgent, useDeleteAgent } from "@/hooks/use-agents";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "@/hooks/use-toast";
 
-import { Agent } from "./agentTypes";
+export function AgentsView() {
+  const [showNewAgentDialog, setShowNewAgentDialog] = useState(false);
 
-interface AgentsViewProps {
-  agents: Agent[];
-  onNewAgent: () => void;
-  onAgentClick: (agentId: string) => void;
-  onStatusChange: (agentId: string, newStatus: "active" | "inactive") => void;
-}
+  // Fetch agents with pagination
+  const {
+    data: agentsResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useAgents({ page: 1, limit: 20 });
 
-export function AgentsView({
-  agents,
-  onNewAgent,
-  onAgentClick,
-  onStatusChange,
-}: AgentsViewProps) {
+  const updateAgentMutation = useUpdateAgent();
+  const deleteAgentMutation = useDeleteAgent();
+
+  const agents = agentsResponse?.data || [];
+
+  const handleNewAgent = () => {
+    setShowNewAgentDialog(true);
+  };
+
+  const handleAgentClick = (agentId: string) => {
+    // Navigate to agent details/edit page
+    // This would typically use useNavigate from react-router-dom
+    console.log("Navigate to agent:", agentId);
+  };
+
+  const handleStatusChange = async (
+    agentId: string,
+    newStatus: "active" | "inactive"
+  ) => {
+    try {
+      await updateAgentMutation.mutateAsync({
+        id: agentId,
+        data: { status: newStatus },
+      });
+
+      toast({
+        title: "Agent updated",
+        description: `Agent status changed to ${newStatus}`,
+      });
+    } catch (error) {
+      console.error("Failed to update agent status:", error);
+    }
+  };
+
+  const handleCreateAgent = async (agentId: string) => {
+    // Navigate to the newly created agent or refresh the list
+    // For now, we'll just refresh the agents list
+    refetch();
+  };
+
+  if (error) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <Alert variant="destructive">
+          <AlertDescription>
+            Failed to load agents. Please try again.
+          </AlertDescription>
+        </Alert>
+        <Button onClick={() => refetch()} className="mt-4">
+          Retry
+        </Button>
+      </div>
+    );
+  }
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
@@ -26,22 +82,47 @@ export function AgentsView({
             Manage and monitor your AI chatbot agents
           </p>
         </div>
-        <Button onClick={onNewAgent} className="flex items-center space-x-2">
+        <Button
+          onClick={handleNewAgent}
+          className="flex items-center space-x-2">
           <Plus className="h-4 w-4" />
           <span>New agent</span>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {agents.map((agent) => (
-          <AgentCard
-            key={agent.id}
-            {...agent}
-            onClick={onAgentClick}
-            onStatusChange={onStatusChange}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-lg" />
+          ))}
+        </div>
+      ) : agents.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-muted-foreground mb-4">No agents found</div>
+          <Button onClick={handleNewAgent}>Create your first agent</Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {agents.map((agent) => (
+            <AgentCard
+              key={agent.id}
+              id={agent.id}
+              name={agent.name}
+              description={agent.description}
+              status={agent.status}
+              lastTrained={agent.lastActiveAt || agent.updatedAt}
+              onClick={handleAgentClick}
+              onStatusChange={handleStatusChange}
+            />
+          ))}
+        </div>
+      )}
+
+      <NewAgentDialog
+        open={showNewAgentDialog}
+        onOpenChange={setShowNewAgentDialog}
+        onCreateAgent={handleCreateAgent}
+      />
     </div>
   );
 }

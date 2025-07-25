@@ -11,45 +11,86 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useNavigate, Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { Navigate, Link, useLocation } from "react-router-dom";
+import { useAuth, useLogin } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
 
 export default function SignIn() {
-  const navigate = useNavigate();
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const loginMutation = useLogin();
   const location = useLocation();
-  const { signIn } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const from = location.state?.from?.pathname || "/workspace";
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    remember: false,
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const from = location.state?.from?.pathname || "/workspace";
+  // Redirect if already authenticated
+  if (user && !isAuthLoading) {
+    return <Navigate to={from} replace />;
+  }
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.email) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError("");
+
+    if (!validateForm()) {
+      return;
+    }
 
     try {
-      await signIn(formData.email, formData.password);
-      // Redirect to the page they were trying to visit or workspace
-      navigate(from, { replace: true });
+      await loginMutation.mutateAsync({
+        email: formData.email,
+        password: formData.password,
+        rememberMe: formData.remember,
+      });
+
+      toast({
+        title: "Welcome back!",
+        description: "You have been successfully signed in.",
+      });
     } catch (error) {
-      setError("Invalid email or password. Please try again.");
-      console.error("Sign in error:", error);
-    } finally {
-      setIsLoading(false);
+      // Error handling is done in the hook
+      console.error("Login error:", error);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === "checkbox" ? checked : value,
     });
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors({
+        ...fieldErrors,
+        [name]: "",
+      });
+    }
   };
 
   return (
@@ -78,11 +119,17 @@ export default function SignIn() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {error && (
+            {/* Display field errors */}
+            {Object.keys(fieldErrors).length > 0 && (
               <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
-                {error}
+                <ul className="space-y-1">
+                  {Object.entries(fieldErrors).map(([field, error]) => (
+                    <li key={field}>• {error}</li>
+                  ))}
+                </ul>
               </div>
             )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -93,8 +140,14 @@ export default function SignIn() {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleInputChange}
+                  className={fieldErrors.email ? "border-destructive" : ""}
                   required
                 />
+                {fieldErrors.email && (
+                  <p className="text-sm text-destructive">
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -107,6 +160,7 @@ export default function SignIn() {
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleInputChange}
+                    className={fieldErrors.password ? "border-destructive" : ""}
                     required
                   />
                   <Button
@@ -122,13 +176,21 @@ export default function SignIn() {
                     )}
                   </Button>
                 </div>
+                {fieldErrors.password && (
+                  <p className="text-sm text-destructive">
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <input
                     id="remember"
+                    name="remember"
                     type="checkbox"
+                    checked={formData.remember}
+                    onChange={handleInputChange}
                     className="h-4 w-4 rounded border-gray-300"
                   />
                   <Label htmlFor="remember" className="text-sm">
@@ -142,8 +204,11 @@ export default function SignIn() {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing In..." : "Sign In"}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? "Signing In..." : "Sign In"}
               </Button>
             </form>
 
