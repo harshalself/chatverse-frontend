@@ -8,10 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 
 export function SettingsView() {
-  const [apiKey, setApiKey] = useState("sk-************************************");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
-  const [defaultModel, setDefaultModel] = useState("gpt-4");
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -21,72 +19,6 @@ export function SettingsView() {
           Configure your workspace preferences and API settings.
         </p>
       </div>
-
-      {/* API Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle>API Configuration</CardTitle>
-          <CardDescription>Manage your API keys and model settings</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="api-key">OpenAI API Key</Label>
-            <Input
-              id="api-key"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your API key"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="default-model">Default Model</Label>
-            <Select value={defaultModel} onValueChange={setDefaultModel}>
-              <SelectTrigger id="default-model">
-                <SelectValue placeholder="Select a model" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gpt-4">GPT-4</SelectItem>
-                <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                <SelectItem value="claude-3">Claude 3</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button>Save API Settings</Button>
-        </CardContent>
-      </Card>
-
-      {/* Notifications */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>Configure how you receive updates and alerts</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Email Notifications</Label>
-              <p className="text-sm text-muted-foreground">
-                Receive email updates about agent activity
-              </p>
-            </div>
-            <Switch
-              checked={emailNotifications}
-              onCheckedChange={setEmailNotifications}
-            />
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Browser Notifications</Label>
-              <p className="text-sm text-muted-foreground">
-                Show notifications in your browser
-              </p>
-            </div>
-            <Switch defaultChecked={false} />
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Workspace Preferences */}
       <Card>
@@ -132,6 +64,39 @@ export function SettingsView() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Notifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Notifications</CardTitle>
+          <CardDescription>Configure how you receive updates and alerts</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Email Notifications</Label>
+              <p className="text-sm text-muted-foreground">
+                Receive email updates about agent activity
+              </p>
+            </div>
+            <Switch
+              checked={emailNotifications}
+              onCheckedChange={setEmailNotifications}
+            />
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Browser Notifications</Label>
+              <p className="text-sm text-muted-foreground">
+                Show notifications in your browser
+              </p>
+            </div>
+            <Switch defaultChecked={false} />
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* Account */}
       <Card>
