@@ -5,6 +5,8 @@ export interface User {
   id: ID;
   email: string;
   name: string;
+  firstName: string;
+  lastName: string;
   avatar?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;

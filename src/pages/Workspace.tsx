@@ -58,12 +58,7 @@ export default function Workspace() {
     switch (activeTab) {
       case "agents":
         return (
-          <AgentsView
-            agents={agents}
-            onNewAgent={() => setShowNewAgentDialog(true)}
-            onAgentClick={handleAgentClick}
-            onStatusChange={handleStatusChange}
-          />
+          <AgentsView />
         );
       case "usage":
         return <UsageView />;
