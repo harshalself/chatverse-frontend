@@ -95,7 +95,7 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-4xl">
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2 mb-4">
           <Bot className="h-8 w-8 text-primary" />
