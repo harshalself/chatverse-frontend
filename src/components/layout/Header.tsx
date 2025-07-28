@@ -1,6 +1,6 @@
 import { Bot, ChevronDown, User, LogOut, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useSimpleAuth } from "@/hooks/use-simple-auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,7 +22,7 @@ interface HeaderProps {
 
 export function Header({ breadcrumbs, children }: HeaderProps) {
   const navigate = useNavigate();
-  const { user, signOut } = useSimpleAuth();
+  const { user, signOut } = useAuth();
 
   const handleBreadcrumbClick = (index: number) => {
     if (index === 0) {
@@ -37,8 +37,8 @@ export function Header({ breadcrumbs, children }: HeaderProps) {
   };
 
   const handleSignOut = () => {
-    console.log('🔄 Header: Signing out...');
     signOut();
+    navigate("/");
   };
 
   return (
