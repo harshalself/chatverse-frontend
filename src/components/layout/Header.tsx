@@ -128,7 +128,7 @@ export function Header({ breadcrumbs, children }: HeaderProps) {
                   size="sm"
                   className="flex items-center space-x-2 h-8">
                   <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">{user.firstName}</span>
+                  <span className="hidden sm:inline">{user.name}</span>
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
@@ -136,7 +136,7 @@ export function Header({ breadcrumbs, children }: HeaderProps) {
                 <DropdownMenuItem disabled>
                   <div className="flex flex-col">
                     <span className="font-medium">
-                      {user.firstName} {user.lastName}
+                      {user.name}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {user.email}

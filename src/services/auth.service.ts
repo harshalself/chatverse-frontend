@@ -112,10 +112,35 @@ export class AuthService {
   // }
 
   /**
-   * Check if user is authenticated
+   * Check if user is authenticated with robust validation
    */
   static isAuthenticated(): boolean {
-    return !!TokenManager.getToken();
+    const token = TokenManager.getToken();
+    const user = this.getStoredUser();
+    
+    // Must have both token and user data
+    if (!token || !user) {
+      return false;
+    }
+    
+    // Basic token validation (check if it's not expired if it's a JWT)
+    try {
+      // If token is JWT, check expiry
+      if (token.includes('.')) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const now = Math.floor(Date.now() / 1000);
+        if (payload.exp && payload.exp < now) {
+          // Token is expired, clear auth data
+          this.clearTokens();
+          return false;
+        }
+      }
+    } catch (error) {
+      // If token parsing fails, assume it's still valid (might not be JWT)
+      console.warn('Token validation warning:', error);
+    }
+    
+    return true;
   }
 
   /**
@@ -138,10 +163,11 @@ export class AuthService {
   }
 
   /**
-   * Clear stored user
+   * Clear stored user and related data
    */
   static clearStoredUser(): void {
     localStorage.removeItem("user");
+    localStorage.removeItem("intendedRoute"); // Clear any saved intended route
   }
 
   /**

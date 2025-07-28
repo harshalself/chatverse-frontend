@@ -13,14 +13,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Navigate, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth, useLogin } from "@/hooks/use-auth";
+import { useAuthRedirect } from "@/hooks/use-redirect";
 import { toast } from "@/hooks/use-toast";
 
 export default function SignIn() {
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const loginMutation = useLogin();
   const location = useLocation();
   const navigate = useNavigate();
-  const from = location.state?.from?.pathname || "/workspace";
+  const { getIntendedDestination, redirectAfterAuth } = useAuthRedirect();
+  const from = getIntendedDestination();
 
   // Get registration state (email and success message)
   const registrationState = location.state;
@@ -47,13 +49,14 @@ export default function SignIn() {
 
   // Auto-redirect after successful login
   useEffect(() => {
-    if (user && !isAuthLoading && loginMutation.isSuccess) {
-      navigate(from);
+    if (isAuthenticated && !isAuthLoading && loginMutation.isSuccess) {
+      // Use the robust redirect logic
+      redirectAfterAuth();
     }
-  }, [user, isAuthLoading, loginMutation.isSuccess, navigate, from]);
+  }, [isAuthenticated, isAuthLoading, loginMutation.isSuccess, redirectAfterAuth]);
 
   // Redirect if already authenticated
-  if (user && !isAuthLoading) {
+  if (isAuthenticated && !isAuthLoading) {
     return <Navigate to={from} replace />;
   }
 

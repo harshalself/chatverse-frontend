@@ -19,7 +19,7 @@ import {
 export const useAuth = () => {
   const queryClient = useQueryClient();
 
-  // Get current user from localStorage or API
+  // Get current user from localStorage with robust validation
   const {
     data: user,
     isLoading,
@@ -28,20 +28,19 @@ export const useAuth = () => {
   } = useQuery({
     queryKey: QUERY_KEYS.USER,
     queryFn: () => {
-      // Get user from localStorage since backend doesn't have /auth/me endpoint
-      const storedUser = AuthService.getStoredUser();
-      const hasToken = AuthService.isAuthenticated();
-
-      if (storedUser && hasToken) {
-        return storedUser;
+      // Use robust authentication check
+      if (AuthService.isAuthenticated()) {
+        return AuthService.getStoredUser();
       }
       return null;
     },
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Always refetch on mount
   });
 
-  // Check if user is authenticated
+  // Check if user is authenticated with robust validation
   const isAuthenticated = !!user && AuthService.isAuthenticated();
 
   // Clear auth data
