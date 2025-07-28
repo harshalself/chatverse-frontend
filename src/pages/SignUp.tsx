@@ -12,20 +12,21 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import { useAuth, useRegister } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 
 export default function SignUp() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const registerMutation = useRegister();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
+    phone_number: "",
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
@@ -40,12 +41,10 @@ export default function SignUp() {
   const validateForm = () => {
     const errors: Record<string, string> = {};
 
-    if (!formData.firstName.trim()) {
-      errors.firstName = "First name is required";
-    }
-
-    if (!formData.lastName.trim()) {
-      errors.lastName = "Last name is required";
+    if (!formData.name.trim()) {
+      errors.name = "Name is required";
+    } else if (formData.name.length < 2) {
+      errors.name = "Name must be at least 2 characters long";
     }
 
     if (!formData.email) {
@@ -54,13 +53,16 @@ export default function SignUp() {
       errors.email = "Please enter a valid email address";
     }
 
+    if (!formData.phone_number) {
+      errors.phone_number = "Phone number is required";
+    } else if (!/^\+?[\d\s\-\(\)]+$/.test(formData.phone_number)) {
+      errors.phone_number = "Please enter a valid phone number";
+    }
+
     if (!formData.password) {
       errors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      errors.password = "Password must be at least 8 characters";
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      errors.password =
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
     }
 
     if (!formData.confirmPassword) {
@@ -86,13 +88,28 @@ export default function SignUp() {
 
     try {
       await registerMutation.mutateAsync({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        name: formData.name,
         email: formData.email,
+        phone_number: formData.phone_number,
         password: formData.password,
       });
 
       // Success is handled in the hook
+      // Show success message and redirect to sign in
+      toast({
+        title: "Registration Successful",
+        description: "Please sign in with your new account.",
+      });
+
+      // Redirect to sign in page after successful registration
+      // Pass the email to pre-fill the sign-in form
+      navigate("/signin", {
+        state: {
+          email: formData.email,
+          message:
+            "Registration successful! Please sign in with your new account.",
+        },
+      });
     } catch (error) {
       // Error handling is done in the hook
       console.error("Registration error:", error);
@@ -168,45 +185,21 @@ export default function SignUp() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First name</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className={
-                      fieldErrors.firstName ? "border-destructive" : ""
-                    }
-                    required
-                  />
-                  {fieldErrors.firstName && (
-                    <p className="text-sm text-destructive">
-                      {fieldErrors.firstName}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last name</Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className={fieldErrors.lastName ? "border-destructive" : ""}
-                    required
-                  />
-                  {fieldErrors.lastName && (
-                    <p className="text-sm text-destructive">
-                      {fieldErrors.lastName}
-                    </p>
-                  )}
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className={fieldErrors.name ? "border-destructive" : ""}
+                  required
+                />
+                {fieldErrors.name && (
+                  <p className="text-sm text-destructive">{fieldErrors.name}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -228,6 +221,27 @@ export default function SignUp() {
                 )}
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="phone_number">Phone Number</Label>
+                <Input
+                  id="phone_number"
+                  name="phone_number"
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={formData.phone_number}
+                  onChange={handleInputChange}
+                  className={
+                    fieldErrors.phone_number ? "border-destructive" : ""
+                  }
+                  required
+                />
+                {fieldErrors.phone_number && (
+                  <p className="text-sm text-destructive">
+                    {fieldErrors.phone_number}
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
@@ -239,7 +253,9 @@ export default function SignUp() {
                       placeholder="Create a strong password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className={fieldErrors.password ? "border-destructive" : ""}
+                      className={
+                        fieldErrors.password ? "border-destructive" : ""
+                      }
                       required
                     />
                     <Button
@@ -334,7 +350,6 @@ export default function SignUp() {
                     )}
                   </div>
                 </div>
-
               </div>
 
               <Button

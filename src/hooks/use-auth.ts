@@ -6,17 +6,20 @@ import {
   LoginRequest,
   RegisterRequest,
   AuthResponse,
+  RegisterResponse,
   User,
-  ChangePasswordRequest,
-  ForgotPasswordRequest,
-  ResetPasswordRequest,
+  UpdateUserRequest,
+  UsersResponse,
+  UserResponse,
+  UpdateUserResponse,
+  DeleteUserResponse,
 } from "@/types/auth.types";
 
 // Authentication state hook
 export const useAuth = () => {
   const queryClient = useQueryClient();
 
-  // Get current user query
+  // Get current user from localStorage or API
   const {
     data: user,
     isLoading,
@@ -24,14 +27,22 @@ export const useAuth = () => {
     refetch,
   } = useQuery({
     queryKey: QUERY_KEYS.USER,
-    queryFn: AuthService.getCurrentUser,
-    enabled: AuthService.isAuthenticated(),
+    queryFn: () => {
+      // Get user from localStorage since backend doesn't have /auth/me endpoint
+      const storedUser = AuthService.getStoredUser();
+      const hasToken = AuthService.isAuthenticated();
+
+      if (storedUser && hasToken) {
+        return storedUser;
+      }
+      return null;
+    },
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Check if user is authenticated
-  const isAuthenticated = AuthService.isAuthenticated() && !!user;
+  const isAuthenticated = !!user && AuthService.isAuthenticated();
 
   // Clear auth data
   const clearAuth = () => {
@@ -56,9 +67,10 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (credentials: LoginRequest) => AuthService.login(credentials),
     onSuccess: (data: AuthResponse) => {
-      // Cache user data
+      // Cache user data and invalidate queries to trigger re-render
       queryClient.setQueryData(QUERY_KEYS.USER, data.user);
-      showSuccessToast("Welcome back!", "Login Successful");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER });
+      showSuccessToast(data.message || "Welcome back!", "Login Successful");
     },
     onError: (error) => {
       console.error("Login error:", error);
@@ -72,11 +84,11 @@ export const useRegister = () => {
 
   return useMutation({
     mutationFn: (userData: RegisterRequest) => AuthService.register(userData),
-    onSuccess: (data: AuthResponse) => {
-      // Cache user data
-      queryClient.setQueryData(QUERY_KEYS.USER, data.user);
+    onSuccess: (data: RegisterResponse) => {
+      // Note: Your API doesn't return a token on registration,
+      // so users need to login after registration
       showSuccessToast(
-        "Account created successfully!",
+        data.message || "Account created successfully!",
         "Registration Successful"
       );
     },
@@ -106,139 +118,92 @@ export const useLogout = () => {
   });
 };
 
-// Update profile mutation hook
-export const useUpdateProfile = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: Partial<User>) => AuthService.updateProfile(data),
-    onSuccess: (updatedUser: User) => {
-      // Update cached user data
-      queryClient.setQueryData(QUERY_KEYS.USER, updatedUser);
-      showSuccessToast("Profile updated successfully");
-    },
-    onError: (error) => {
-      console.error("Update profile error:", error);
-    },
+// Get all users hook (admin functionality)
+export const useUsers = () => {
+  return useQuery({
+    queryKey: ["users"],
+    queryFn: AuthService.getAllUsers,
+    enabled: AuthService.isAuthenticated(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
-// Change password mutation hook
-export const useChangePassword = () => {
-  return useMutation({
-    mutationFn: (data: ChangePasswordRequest) =>
-      AuthService.changePassword(data),
-    onSuccess: () => {
-      showSuccessToast("Password changed successfully");
-    },
-    onError: (error) => {
-      console.error("Change password error:", error);
-    },
+// Get user by ID hook
+export const useUser = (id: string) => {
+  return useQuery({
+    queryKey: ["users", id],
+    queryFn: () => AuthService.getUserById(id),
+    enabled: !!id && AuthService.isAuthenticated(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
-// Forgot password mutation hook
-export const useForgotPassword = () => {
-  return useMutation({
-    mutationFn: (data: ForgotPasswordRequest) =>
-      AuthService.forgotPassword(data),
-    onSuccess: () => {
-      showSuccessToast("Password reset email sent. Please check your inbox.");
-    },
-    onError: (error) => {
-      console.error("Forgot password error:", error);
-    },
-  });
-};
-
-// Reset password mutation hook
-export const useResetPassword = () => {
-  return useMutation({
-    mutationFn: (data: ResetPasswordRequest) => AuthService.resetPassword(data),
-    onSuccess: () => {
-      showSuccessToast(
-        "Password reset successfully. You can now log in with your new password."
-      );
-    },
-    onError: (error) => {
-      console.error("Reset password error:", error);
-    },
-  });
-};
-
-// Upload avatar mutation hook
-export const useUploadAvatar = () => {
+// Update user mutation hook
+export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
-      file,
-      onProgress,
+      id,
+      userData,
     }: {
-      file: File;
-      onProgress?: (progress: number) => void;
-    }) => AuthService.uploadAvatar(file, onProgress),
-    onSuccess: (data) => {
-      // Update user data with new avatar
-      queryClient.setQueryData(QUERY_KEYS.USER, (oldData: User | undefined) => {
-        if (oldData) {
-          return { ...oldData, avatar: data.avatarUrl };
-        }
-        return oldData;
-      });
-      showSuccessToast("Avatar uploaded successfully");
+      id: string;
+      userData: UpdateUserRequest;
+    }) => AuthService.updateUser(id, userData),
+    onSuccess: (data: UpdateUserResponse, variables) => {
+      // Update cached user data
+      queryClient.setQueryData(["users", variables.id], { user: data.user });
+      // Also update users list cache
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      // If updating current user, update user cache
+      const currentUser = AuthService.getStoredUser();
+      if (currentUser && currentUser.id.toString() === variables.id) {
+        queryClient.setQueryData(QUERY_KEYS.USER, data.user);
+        AuthService.storeUser(data.user);
+      }
+      showSuccessToast(data.message || "User updated successfully");
     },
     onError: (error) => {
-      console.error("Upload avatar error:", error);
+      console.error("Update user error:", error);
     },
   });
 };
 
-// Verify email mutation hook
-export const useVerifyEmail = () => {
+// Delete user mutation hook
+export const useDeleteUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (token: string) => AuthService.verifyEmail(token),
-    onSuccess: () => {
-      // Refetch user data to update verification status
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER });
-      showSuccessToast("Email verified successfully");
+    mutationFn: (id: string) => AuthService.deleteUser(id),
+    onSuccess: (data: DeleteUserResponse) => {
+      // Invalidate users cache
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      showSuccessToast(data.message || "User deleted successfully");
     },
     onError: (error) => {
-      console.error("Verify email error:", error);
+      console.error("Delete user error:", error);
     },
   });
 };
 
-// Resend verification mutation hook
-export const useResendVerification = () => {
-  return useMutation({
-    mutationFn: AuthService.resendVerification,
-    onSuccess: () => {
-      showSuccessToast("Verification email sent. Please check your inbox.");
-    },
-    onError: (error) => {
-      console.error("Resend verification error:", error);
-    },
-  });
-};
-
-// Refresh token hook (mainly for internal use)
-export const useRefreshToken = () => {
+// Update current user profile hook
+export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
+  const currentUser = AuthService.getStoredUser();
 
   return useMutation({
-    mutationFn: AuthService.refreshToken,
-    onSuccess: () => {
-      // Invalidate user query to refetch with new token
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER });
+    mutationFn: (userData: UpdateUserRequest) => {
+      if (!currentUser) throw new Error("No current user");
+      return AuthService.updateUser(currentUser.id.toString(), userData);
+    },
+    onSuccess: (data: UpdateUserResponse) => {
+      // Update cached user data
+      queryClient.setQueryData(QUERY_KEYS.USER, data.user);
+      AuthService.storeUser(data.user);
+      showSuccessToast(data.message || "Profile updated successfully");
     },
     onError: (error) => {
-      console.error("Refresh token error:", error);
-      // Clear auth on refresh failure
-      AuthService.clearTokens();
-      queryClient.clear();
+      console.error("Update profile error:", error);
     },
   });
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bot, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Navigate, Link, useLocation } from "react-router-dom";
+import { Navigate, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth, useLogin } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 
@@ -19,15 +19,38 @@ export default function SignIn() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const loginMutation = useLogin();
   const location = useLocation();
+  const navigate = useNavigate();
   const from = location.state?.from?.pathname || "/workspace";
 
+  // Get registration state (email and success message)
+  const registrationState = location.state;
+  const prefilledEmail = registrationState?.email || "";
+  const successMessage = registrationState?.message || "";
+
   const [formData, setFormData] = useState({
-    email: "",
+    email: prefilledEmail,
     password: "",
-    remember: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Show success message if coming from registration
+  useEffect(() => {
+    if (successMessage) {
+      toast({
+        title: "Registration Successful",
+        description: successMessage,
+        variant: "default",
+      });
+    }
+  }, [successMessage]);
+
+  // Auto-redirect after successful login
+  useEffect(() => {
+    if (user && !isAuthLoading && loginMutation.isSuccess) {
+      navigate(from);
+    }
+  }, [user, isAuthLoading, loginMutation.isSuccess, navigate, from]);
 
   // Redirect if already authenticated
   if (user && !isAuthLoading) {
@@ -64,13 +87,10 @@ export default function SignIn() {
       await loginMutation.mutateAsync({
         email: formData.email,
         password: formData.password,
-        rememberMe: formData.remember,
       });
 
-      toast({
-        title: "Welcome back!",
-        description: "You have been successfully signed in.",
-      });
+      // Success toast is handled in the hook
+      // Redirect is handled by useEffect when user state updates
     } catch (error) {
       // Error handling is done in the hook
       console.error("Login error:", error);
@@ -78,10 +98,10 @@ export default function SignIn() {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     });
 
     // Clear field error when user starts typing
@@ -183,20 +203,7 @@ export default function SignIn() {
                 )}
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="remember"
-                    name="remember"
-                    type="checkbox"
-                    checked={formData.remember}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  <Label htmlFor="remember" className="text-sm">
-                    Remember me
-                  </Label>
-                </div>
+              <div className="flex justify-end">
                 <Link
                   to="/forgot-password"
                   className="text-sm text-primary hover:underline">

@@ -4,11 +4,9 @@
 
 ### 1.1 Environment Files
 
-- [x] Create `.env.development` file with development environment variables
-- [x] Create `.env.production` file with production environment variables
-- [x] Create `.env.staging` file with staging environment variables
+- [x] Create `.env` file with development environment variables
+- [x] Create `.env.example` file with example environment variables for all environments
 - [x] Add environment files to `.gitignore` if not already present
-- [x] Create `.env.example` file with example environment variables
 
 ### 1.2 Package Dependencies
 

@@ -24,8 +24,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export { AuthContext };
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
@@ -52,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await loginMutation.mutateAsync({
         email,
         password,
-        rememberMe,
       });
       // The user data will be updated automatically via React Query
     } catch (error) {

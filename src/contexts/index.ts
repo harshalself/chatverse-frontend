@@ -29,7 +29,6 @@ export {
 export type { Theme, UserPreferences } from "./ThemeContext";
 
 // Context instances (for advanced usage)
-export { AuthContext } from "./AuthContext";
 export { LoadingContext } from "./LoadingContext";
 export { ErrorContext } from "./ErrorContext";
 export { ThemeContext } from "./ThemeContext";

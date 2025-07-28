@@ -44,15 +44,24 @@ export const QUERY_KEYS = {
   CHAT: ["chat"],
 } as const;
 
-// API Endpoints
+// API Endpoints - Updated to match real User API
 export const API_ENDPOINTS = {
-  // Authentication
+  // Authentication & Users - Real API endpoints
   AUTH: {
-    LOGIN: "/auth/login",
-    REGISTER: "/auth/register",
-    LOGOUT: "/auth/logout",
-    ME: "/auth/me",
-    REFRESH: "/auth/refresh",
+    LOGIN: "/users/login",
+    REGISTER: "/users/register",
+    // Note: These endpoints don't exist in current backend
+    // LOGOUT: "/auth/logout",
+    // ME: "/auth/me",
+    // REFRESH: "/auth/refresh",
+  },
+
+  // Users Management
+  USERS: {
+    LIST: "/users",
+    GET: (id: string) => `/users/${id}`,
+    UPDATE: (id: string) => `/users/${id}`,
+    DELETE: (id: string) => `/users/${id}`,
   },
 
   // Agents

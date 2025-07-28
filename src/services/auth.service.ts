@@ -4,11 +4,13 @@ import {
   LoginRequest,
   RegisterRequest,
   AuthResponse,
+  RegisterResponse,
   User,
-  ForgotPasswordRequest,
-  ResetPasswordRequest,
-  ChangePasswordRequest,
-  RefreshTokenResponse,
+  UpdateUserRequest,
+  UsersResponse,
+  UserResponse,
+  UpdateUserResponse,
+  DeleteUserResponse,
 } from "@/types/auth.types";
 
 export class AuthService {
@@ -21,11 +23,9 @@ export class AuthService {
       credentials
     );
 
-    // Store tokens
+    // Store token and user
     TokenManager.setToken(response.token);
-    if (response.refreshToken) {
-      TokenManager.setRefreshToken(response.refreshToken);
-    }
+    this.storeUser(response.user);
 
     return response;
   }
@@ -33,18 +33,56 @@ export class AuthService {
   /**
    * Register new user
    */
-  static async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>(
+  static async register(userData: RegisterRequest): Promise<RegisterResponse> {
+    const response = await apiClient.post<RegisterResponse>(
       API_ENDPOINTS.AUTH.REGISTER,
       userData
     );
 
-    // Store tokens
-    TokenManager.setToken(response.token);
-    if (response.refreshToken) {
-      TokenManager.setRefreshToken(response.refreshToken);
-    }
+    return response;
+  }
 
+  /**
+   * Get all users (admin functionality)
+   */
+  static async getAllUsers(): Promise<UsersResponse> {
+    const response = await apiClient.get<UsersResponse>(
+      API_ENDPOINTS.USERS.LIST
+    );
+    return response;
+  }
+
+  /**
+   * Get user by ID
+   */
+  static async getUserById(id: string): Promise<UserResponse> {
+    const response = await apiClient.get<UserResponse>(
+      API_ENDPOINTS.USERS.GET(id)
+    );
+    return response;
+  }
+
+  /**
+   * Update user information
+   */
+  static async updateUser(
+    id: string,
+    userData: UpdateUserRequest
+  ): Promise<UpdateUserResponse> {
+    const response = await apiClient.put<UpdateUserResponse>(
+      API_ENDPOINTS.USERS.UPDATE(id),
+      userData
+    );
+    return response;
+  }
+
+  /**
+   * Delete user account
+   */
+  static async deleteUser(id: string): Promise<DeleteUserResponse> {
+    const response = await apiClient.delete<DeleteUserResponse>(
+      API_ENDPOINTS.USERS.DELETE(id)
+    );
     return response;
   }
 
@@ -53,110 +91,57 @@ export class AuthService {
    */
   static async logout(): Promise<void> {
     try {
-      await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
+      // If you have a logout endpoint, uncomment this:
+      // await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
     } catch (error) {
       // Continue with logout even if API call fails
       console.warn("Logout API call failed:", error);
     } finally {
-      // Always clear tokens on logout
+      // Always clear tokens and user data
       TokenManager.clearTokens();
+      this.clearStoredUser();
     }
   }
 
   /**
-   * Get current user profile
+   * Get current user profile (not available in current backend)
+   * Using localStorage instead since backend doesn't have /auth/me endpoint
    */
-  static async getCurrentUser(): Promise<User> {
-    return apiClient.get<User>(API_ENDPOINTS.AUTH.ME);
-  }
-
-  /**
-   * Refresh access token
-   */
-  static async refreshToken(): Promise<RefreshTokenResponse> {
-    const refreshToken = TokenManager.getRefreshToken();
-    if (!refreshToken) {
-      throw new Error("No refresh token available");
-    }
-
-    const response = await apiClient.post<RefreshTokenResponse>(
-      API_ENDPOINTS.AUTH.REFRESH,
-      { refreshToken }
-    );
-
-    // Update stored token
-    TokenManager.setToken(response.token);
-
-    return response;
-  }
-
-  /**
-   * Send forgot password email
-   */
-  static async forgotPassword(
-    data: ForgotPasswordRequest
-  ): Promise<{ message: string }> {
-    return apiClient.post("/auth/forgot-password", data);
-  }
-
-  /**
-   * Reset password with token
-   */
-  static async resetPassword(
-    data: ResetPasswordRequest
-  ): Promise<{ message: string }> {
-    return apiClient.post("/auth/reset-password", data);
-  }
-
-  /**
-   * Change user password
-   */
-  static async changePassword(
-    data: ChangePasswordRequest
-  ): Promise<{ message: string }> {
-    return apiClient.post("/auth/change-password", data);
-  }
-
-  /**
-   * Update user profile
-   */
-  static async updateProfile(data: Partial<User>): Promise<User> {
-    return apiClient.put<User>("/auth/profile", data);
-  }
-
-  /**
-   * Upload user avatar
-   */
-  static async uploadAvatar(
-    file: File,
-    onProgress?: (progress: number) => void
-  ): Promise<{ avatarUrl: string }> {
-    return apiClient.uploadFile<{ avatarUrl: string }>(
-      "/auth/avatar",
-      file,
-      onProgress
-    );
-  }
-
-  /**
-   * Verify email address
-   */
-  static async verifyEmail(token: string): Promise<{ message: string }> {
-    return apiClient.post("/auth/verify-email", { token });
-  }
-
-  /**
-   * Resend email verification
-   */
-  static async resendVerification(): Promise<{ message: string }> {
-    return apiClient.post("/auth/resend-verification");
-  }
+  // static async getCurrentUser(): Promise<User> {
+  //   return apiClient.get<User>(API_ENDPOINTS.AUTH.ME);
+  // }
 
   /**
    * Check if user is authenticated
    */
   static isAuthenticated(): boolean {
     return !!TokenManager.getToken();
+  }
+
+  /**
+   * Get stored user from localStorage
+   */
+  static getStoredUser(): User | null {
+    try {
+      const userStr = localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Store user in localStorage
+   */
+  static storeUser(user: User): void {
+    localStorage.setItem("user", JSON.stringify(user));
+  }
+
+  /**
+   * Clear stored user
+   */
+  static clearStoredUser(): void {
+    localStorage.removeItem("user");
   }
 
   /**
@@ -171,5 +156,6 @@ export class AuthService {
    */
   static clearTokens(): void {
     TokenManager.clearTokens();
+    this.clearStoredUser();
   }
 }

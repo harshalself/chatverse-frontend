@@ -1,35 +1,43 @@
 import { ID, Timestamp } from "./api.types";
 
-// User Types
+// User Types - Updated to match real API
 export interface User {
   id: ID;
-  email: string;
   name: string;
-  firstName: string;
-  lastName: string;
-  avatar?: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  role: UserRole;
-  isEmailVerified: boolean;
+  email: string;
+  phone_number: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
 }
 
 export type UserRole = "admin" | "user" | "guest";
 
-// Authentication Request Types
+// Authentication Request Types - Updated to match real API
 export interface LoginRequest {
   email: string;
   password: string;
-  rememberMe?: boolean;
 }
 
 export interface RegisterRequest {
+  name: string;
   email: string;
+  phone_number: string;
   password: string;
-  firstName: string;
-  lastName: string;
 }
 
+// Authentication Response Types - Updated to match real API
+export interface AuthResponse {
+  message: string;
+  token: string;
+  user: User;
+}
+
+export interface RegisterResponse {
+  message: string;
+  user: User;
+}
+
+// Additional request types for existing features
 export interface ForgotPasswordRequest {
   email: string;
 }
@@ -46,12 +54,11 @@ export interface ChangePasswordRequest {
   confirmPassword: string;
 }
 
-// Authentication Response Types
-export interface AuthResponse {
-  user: User;
-  token: string;
-  refreshToken?: string;
-  expiresIn: number;
+export interface UpdateUserRequest {
+  name?: string;
+  email?: string;
+  phone_number?: string;
+  password?: string;
 }
 
 export interface RefreshTokenResponse {
@@ -75,4 +82,30 @@ export interface TokenPayload {
   role: UserRole;
   iat: number;
   exp: number;
+}
+
+// API Error Response - Updated to match real API
+export interface ApiErrorResponse {
+  status: number;
+  message: string;
+  details?: string[];
+}
+
+// Users list response (for admin features)
+export interface UsersResponse {
+  users: User[];
+  total: number;
+}
+
+export interface UserResponse {
+  user: User;
+}
+
+export interface UpdateUserResponse {
+  message: string;
+  user: User;
+}
+
+export interface DeleteUserResponse {
+  message: string;
 }
