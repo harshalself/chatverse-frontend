@@ -4,7 +4,77 @@
  */
 
 import { useEffect, useCallback, useRef } from "react";
-import { formDraftStorage } from "../lib/storage";
+
+// Simple localStorage wrapper for form drafts
+const formDraftStorage = {
+  getDraft: (formId: string) => {
+    try {
+      const draft = localStorage.getItem(`form_draft_${formId}`);
+      return draft ? JSON.parse(draft) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  saveDraft: (formId: string, data: any) => {
+    try {
+      localStorage.setItem(
+        `form_draft_${formId}`,
+        JSON.stringify({
+          data,
+          timestamp: Date.now(),
+        })
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  removeDraft: (formId: string) => {
+    try {
+      localStorage.removeItem(`form_draft_${formId}`);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  getAllDrafts: () => {
+    try {
+      const drafts: Record<string, any> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("form_draft_")) {
+          const formId = key.replace("form_draft_", "");
+          const draft = localStorage.getItem(key);
+          if (draft) {
+            drafts[formId] = JSON.parse(draft);
+          }
+        }
+      }
+      return drafts;
+    } catch {
+      return {};
+    }
+  },
+
+  clearAllDrafts: () => {
+    try {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("form_draft_")) {
+          keys.push(key);
+        }
+      }
+      keys.forEach((key) => localStorage.removeItem(key));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+};
 
 interface UseFormPersistenceOptions {
   formId: string;

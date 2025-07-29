@@ -6,22 +6,17 @@ import {
   AuthResponse,
   RegisterResponse,
   User,
-  UpdateUserRequest,
-  UsersResponse,
-  UserResponse,
-  UpdateUserResponse,
-  DeleteUserResponse,
 } from "@/types/auth.types";
 
-export class AuthService {
+class AuthService {
   /**
    * Login user with email and password
    */
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>(
+    const response = (await apiClient.post(
       API_ENDPOINTS.AUTH.LOGIN,
       credentials
-    );
+    )) as AuthResponse;
 
     // Store token and user
     TokenManager.setToken(response.token);
@@ -34,55 +29,11 @@ export class AuthService {
    * Register new user
    */
   static async register(userData: RegisterRequest): Promise<RegisterResponse> {
-    const response = await apiClient.post<RegisterResponse>(
+    const response = (await apiClient.post(
       API_ENDPOINTS.AUTH.REGISTER,
       userData
-    );
+    )) as RegisterResponse;
 
-    return response;
-  }
-
-  /**
-   * Get all users (admin functionality)
-   */
-  static async getAllUsers(): Promise<UsersResponse> {
-    const response = await apiClient.get<UsersResponse>(
-      API_ENDPOINTS.USERS.LIST
-    );
-    return response;
-  }
-
-  /**
-   * Get user by ID
-   */
-  static async getUserById(id: string): Promise<UserResponse> {
-    const response = await apiClient.get<UserResponse>(
-      API_ENDPOINTS.USERS.GET(id)
-    );
-    return response;
-  }
-
-  /**
-   * Update user information
-   */
-  static async updateUser(
-    id: string,
-    userData: UpdateUserRequest
-  ): Promise<UpdateUserResponse> {
-    const response = await apiClient.put<UpdateUserResponse>(
-      API_ENDPOINTS.USERS.UPDATE(id),
-      userData
-    );
-    return response;
-  }
-
-  /**
-   * Delete user account
-   */
-  static async deleteUser(id: string): Promise<DeleteUserResponse> {
-    const response = await apiClient.delete<DeleteUserResponse>(
-      API_ENDPOINTS.USERS.DELETE(id)
-    );
     return response;
   }
 
@@ -91,13 +42,12 @@ export class AuthService {
    */
   static async logout(): Promise<void> {
     try {
-      // If you have a logout endpoint, uncomment this:
-      // await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
+      // Clear tokens and user data
+      TokenManager.clearTokens();
+      this.clearStoredUser();
     } catch (error) {
-      // Continue with logout even if API call fails
-      console.warn("Logout API call failed:", error);
-    } finally {
-      // Always clear tokens and user data
+      console.warn("Logout error:", error);
+      // Always clear local data even if API call fails
       TokenManager.clearTokens();
       this.clearStoredUser();
     }
@@ -117,29 +67,30 @@ export class AuthService {
   static isAuthenticated(): boolean {
     const token = TokenManager.getToken();
     const user = this.getStoredUser();
-    
+
     // Must have both token and user data
     if (!token || !user) {
       return false;
     }
-    
+
     // Basic token validation (check if it's not expired if it's a JWT)
     try {
       // If token is JWT, check expiry
-      if (token.includes('.')) {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+      if (token.includes(".")) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
         const now = Math.floor(Date.now() / 1000);
         if (payload.exp && payload.exp < now) {
           // Token is expired, clear auth data
-          this.clearTokens();
+          TokenManager.clearTokens();
+          this.clearStoredUser();
           return false;
         }
       }
     } catch (error) {
       // If token parsing fails, assume it's still valid (might not be JWT)
-      console.warn('Token validation warning:', error);
+      console.warn("Token validation warning:", error);
     }
-    
+
     return true;
   }
 
@@ -185,3 +136,5 @@ export class AuthService {
     this.clearStoredUser();
   }
 }
+
+export default AuthService;

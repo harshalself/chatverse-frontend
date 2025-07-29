@@ -8,11 +8,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, useLogout } from "@/hooks/use-auth";
 
 export default function Homepage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const { mutate: logout } = useLogout();
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,7 +55,7 @@ export default function Homepage() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      signOut();
+                      logout();
                       // Stay on homepage after sign out
                     }}>
                     Sign Out

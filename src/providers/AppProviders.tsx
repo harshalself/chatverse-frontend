@@ -5,13 +5,7 @@
 
 import { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  ErrorProvider,
-  ThemeProvider,
-  LoadingProvider,
-  AuthProvider,
-  PersistenceProvider,
-} from "../contexts";
+import { ThemeProvider } from "../contexts";
 import { Toaster } from "@/components/ui/sonner";
 
 // Configure React Query
@@ -56,23 +50,10 @@ interface AppProvidersProps {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <ErrorProvider>
-        <ThemeProvider>
-          <PersistenceProvider>
-            <LoadingProvider>
-              <AuthProvider>
-                {children}
-                <Toaster
-                  position="top-right"
-                  expand={false}
-                  richColors
-                  closeButton
-                />
-              </AuthProvider>
-            </LoadingProvider>
-          </PersistenceProvider>
-        </ThemeProvider>
-      </ErrorProvider>
+      <ThemeProvider>
+        {children}
+        <Toaster position="top-right" expand={false} richColors closeButton />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

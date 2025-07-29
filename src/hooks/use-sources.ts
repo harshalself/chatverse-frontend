@@ -13,7 +13,7 @@ import {
   QASourceRequest,
 } from "@/services/sources.service";
 import { QUERY_KEYS, SUCCESS_MESSAGES } from "@/lib/constants";
-import { showSuccessToast } from "@/lib/error-handler";
+import { toast } from "@/hooks/use-toast";
 import { DataSource } from "@/types/common.types";
 import { PaginatedResponse, PaginationOptions } from "@/types/api.types";
 
@@ -83,7 +83,7 @@ export const useCreateTextSource = () => {
       // Add to cache
       queryClient.setQueryData(QUERY_KEYS.SOURCE(newSource.id), newSource);
 
-      showSuccessToast(SUCCESS_MESSAGES.SOURCE_CREATED);
+      toast({ title: "Success", description: SUCCESS_MESSAGES.SOURCE_CREATED });
     },
     onError: (error) => {
       console.error("Create text source error:", error);
@@ -101,7 +101,7 @@ export const useCreateWebsiteSource = () => {
     onSuccess: (newSource: DataSource) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOURCES });
       queryClient.setQueryData(QUERY_KEYS.SOURCE(newSource.id), newSource);
-      showSuccessToast(SUCCESS_MESSAGES.SOURCE_CREATED);
+      toast({ title: "Success", description: SUCCESS_MESSAGES.SOURCE_CREATED });
     },
     onError: (error) => {
       console.error("Create website source error:", error);
@@ -119,7 +119,7 @@ export const useCreateDatabaseSource = () => {
     onSuccess: (newSource: DataSource) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOURCES });
       queryClient.setQueryData(QUERY_KEYS.SOURCE(newSource.id), newSource);
-      showSuccessToast(SUCCESS_MESSAGES.SOURCE_CREATED);
+      toast({ title: "Success", description: SUCCESS_MESSAGES.SOURCE_CREATED });
     },
     onError: (error) => {
       console.error("Create database source error:", error);
@@ -136,7 +136,7 @@ export const useCreateQASource = () => {
     onSuccess: (newSource: DataSource) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOURCES });
       queryClient.setQueryData(QUERY_KEYS.SOURCE(newSource.id), newSource);
-      showSuccessToast(SUCCESS_MESSAGES.SOURCE_CREATED);
+      toast({ title: "Success", description: SUCCESS_MESSAGES.SOURCE_CREATED });
     },
     onError: (error) => {
       console.error("Create Q&A source error:", error);
@@ -161,7 +161,10 @@ export const useUploadFile = () => {
     onSuccess: (newSource: DataSource) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOURCES });
       queryClient.setQueryData(QUERY_KEYS.SOURCE(newSource.id), newSource);
-      showSuccessToast(SUCCESS_MESSAGES.FILE_UPLOADED);
+      toast({
+        title: "Success",
+        description: SUCCESS_MESSAGES.FILE_UPLOADED,
+      });
     },
     onError: (error) => {
       console.error("Upload file error:", error);
@@ -189,7 +192,10 @@ export const useUploadMultipleFiles = () => {
         queryClient.setQueryData(QUERY_KEYS.SOURCE(source.id), source);
       });
 
-      showSuccessToast(`${newSources.length} files uploaded successfully`);
+      toast({
+        title: "Success",
+        description: `${newSources.length} files uploaded successfully`,
+      });
     },
     onError: (error) => {
       console.error("Upload multiple files error:", error);
@@ -214,7 +220,7 @@ export const useUpdateSource = () => {
       // Invalidate sources list to ensure consistency
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOURCES });
 
-      showSuccessToast(SUCCESS_MESSAGES.SOURCE_UPDATED);
+      toast({ title: "Success", description: SUCCESS_MESSAGES.SOURCE_UPDATED });
     },
     onError: (error) => {
       console.error("Update source error:", error);
@@ -235,7 +241,7 @@ export const useDeleteSource = () => {
       // Invalidate sources list
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOURCES });
 
-      showSuccessToast(SUCCESS_MESSAGES.SOURCE_DELETED);
+      toast({ title: "Success", description: SUCCESS_MESSAGES.SOURCE_DELETED });
     },
     onError: (error) => {
       console.error("Delete source error:", error);
@@ -262,7 +268,10 @@ export const useBulkDeleteSources = () => {
       const failedCount = result.failed.length;
 
       if (successCount > 0) {
-        showSuccessToast(`${successCount} sources deleted successfully`);
+        toast({
+          title: "Success",
+          description: `${successCount} sources deleted successfully`,
+        });
       }
 
       if (failedCount > 0) {
@@ -280,7 +289,7 @@ export const useProcessSource = () => {
   return useMutation({
     mutationFn: (id: string) => SourcesService.processSource(id),
     onSuccess: () => {
-      showSuccessToast("Source processing started");
+      toast({ title: "Success", description: "Source processing started" });
     },
     onError: (error) => {
       console.error("Process source error:", error);
@@ -314,7 +323,7 @@ export const useTestWebsiteConnection = () => {
     mutationFn: (url: string) => SourcesService.testWebsiteConnection(url),
     onSuccess: (result) => {
       if (result.accessible) {
-        showSuccessToast("Website is accessible");
+        toast({ title: "Success", description: "Website is accessible" });
       }
     },
     onError: (error) => {
@@ -330,7 +339,10 @@ export const useTestDatabaseConnection = () => {
       SourcesService.testDatabaseConnection(connectionString),
     onSuccess: (result) => {
       if (result.connected) {
-        showSuccessToast("Database connection successful");
+        toast({
+          title: "Success",
+          description: "Database connection successful",
+        });
       }
     },
     onError: (error) => {
@@ -389,7 +401,10 @@ export const useExportSource = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      showSuccessToast("Source data exported successfully");
+      toast({
+        title: "Success",
+        description: "Source data exported successfully",
+      });
     },
     onError: (error) => {
       console.error("Export source error:", error);

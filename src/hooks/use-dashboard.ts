@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { DashboardService } from "@/services/dashboard.service";
 import { QUERY_KEYS } from "@/lib/constants";
-import { showSuccessToast } from "@/lib/error-handler";
+import { toast } from "@/hooks/use-toast";
 
 // Get dashboard overview
 export const useDashboardOverview = (
@@ -167,7 +167,10 @@ export const useExportDashboardData = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      showSuccessToast(`${type} data exported successfully`);
+      toast({
+        title: "Success",
+        description: `${type} data exported successfully`,
+      });
     },
     onError: (error) => {
       console.error("Export dashboard data error:", error);

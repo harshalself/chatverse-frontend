@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { AgentsService } from "@/services/agents.service";
 import { QUERY_KEYS, SUCCESS_MESSAGES } from "@/lib/constants";
-import { showSuccessToast } from "@/lib/error-handler";
+import { toast } from "@/hooks/use-toast";
 import {
   Agent,
   CreateAgentRequest,
@@ -68,7 +68,7 @@ export const useCreateAgent = () => {
       // Add to cache
       queryClient.setQueryData(QUERY_KEYS.AGENT(newAgent.id), newAgent);
 
-      showSuccessToast(SUCCESS_MESSAGES.AGENT_CREATED);
+      toast({ title: "Success", description: SUCCESS_MESSAGES.AGENT_CREATED });
     },
     onError: (error) => {
       console.error("Create agent error:", error);
@@ -90,7 +90,7 @@ export const useUpdateAgent = () => {
       // Invalidate agents list to ensure consistency
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENTS });
 
-      showSuccessToast(SUCCESS_MESSAGES.AGENT_UPDATED);
+      toast({ title: "Success", description: SUCCESS_MESSAGES.AGENT_UPDATED });
     },
     onError: (error) => {
       console.error("Update agent error:", error);
@@ -111,7 +111,7 @@ export const useDeleteAgent = () => {
       // Invalidate agents list
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENTS });
 
-      showSuccessToast(SUCCESS_MESSAGES.AGENT_DELETED);
+      toast({ title: "Success", description: SUCCESS_MESSAGES.AGENT_DELETED });
     },
     onError: (error) => {
       console.error("Delete agent error:", error);
@@ -136,7 +136,7 @@ export const useDuplicateAgent = () => {
         duplicatedAgent
       );
 
-      showSuccessToast("Agent duplicated successfully");
+      toast({ title: "Success", description: "Agent duplicated successfully" });
     },
     onError: (error) => {
       console.error("Duplicate agent error:", error);
@@ -150,7 +150,10 @@ export const useTrainAgent = () => {
     mutationFn: ({ id, trainingData }: { id: string; trainingData: any }) =>
       AgentsService.trainAgent(id, trainingData),
     onSuccess: () => {
-      showSuccessToast("Agent training started successfully");
+      toast({
+        title: "Success",
+        description: "Agent training started successfully",
+      });
     },
     onError: (error) => {
       console.error("Train agent error:", error);
@@ -188,7 +191,7 @@ export const useDeployAgent = () => {
       // Invalidate agent data to refresh status
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENT(agentId) });
 
-      showSuccessToast("Agent deployed successfully");
+      toast({ title: "Success", description: "Agent deployed successfully" });
     },
     onError: (error) => {
       console.error("Deploy agent error:", error);
@@ -222,7 +225,10 @@ export const useCreateConversation = () => {
         queryKey: ["agent-conversations", agentId],
       });
 
-      showSuccessToast("Conversation created successfully");
+      toast({
+        title: "Success",
+        description: "Conversation created successfully",
+      });
     },
     onError: (error) => {
       console.error("Create conversation error:", error);
@@ -289,7 +295,10 @@ export const useArchiveConversation = () => {
         queryKey: ["agent-conversations", agentId],
       });
 
-      showSuccessToast("Conversation archived successfully");
+      toast({
+        title: "Success",
+        description: "Conversation archived successfully",
+      });
     },
     onError: (error) => {
       console.error("Archive conversation error:", error);
@@ -320,7 +329,10 @@ export const useDeleteConversation = () => {
         queryKey: ["agent-conversations", agentId],
       });
 
-      showSuccessToast("Conversation deleted successfully");
+      toast({
+        title: "Success",
+        description: "Conversation deleted successfully",
+      });
     },
     onError: (error) => {
       console.error("Delete conversation error:", error);
@@ -363,7 +375,7 @@ export const useImportAgent = () => {
         importedAgent
       );
 
-      showSuccessToast("Agent imported successfully");
+      toast({ title: "Success", description: "Agent imported successfully" });
     },
     onError: (error) => {
       console.error("Import agent error:", error);
@@ -386,7 +398,10 @@ export const useExportAgent = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      showSuccessToast("Agent configuration exported successfully");
+      toast({
+        title: "Success",
+        description: "Agent configuration exported successfully",
+      });
     },
     onError: (error) => {
       console.error("Export agent error:", error);

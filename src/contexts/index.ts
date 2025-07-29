@@ -1,5 +1,4 @@
 // Context providers
-export { AuthProvider, useAuthContext, useAuth } from "./AuthContext";
 export {
   LoadingProvider,
   useLoading,
@@ -16,15 +15,6 @@ export {
   useAccessibility,
   useWorkspacePreferences,
 } from "./ThemeContext";
-export {
-  PersistenceProvider,
-  usePersistence,
-  useTokenPersistence,
-  useDraftPersistence,
-  useWorkspacePersistence,
-  useOfflinePersistence,
-} from "./PersistenceContext";
-
 // Types
 export type { Theme, UserPreferences } from "./ThemeContext";
 
@@ -32,4 +22,3 @@ export type { Theme, UserPreferences } from "./ThemeContext";
 export { LoadingContext } from "./LoadingContext";
 export { ErrorContext } from "./ErrorContext";
 export { ThemeContext } from "./ThemeContext";
-export { PersistenceContext } from "./PersistenceContext";

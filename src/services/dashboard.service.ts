@@ -1,6 +1,7 @@
-import { apiClient } from "@/lib/api/client";
-import { API_ENDPOINTS } from "@/lib/constants";
+import { apiClient, TokenManager } from "@/lib/api/client";
+import { API_ENDPOINTS, APP_CONFIG } from "@/lib/constants";
 import { AnalyticsData, TrendData } from "@/types/common.types";
+import axios from "axios";
 
 export interface DashboardOverview {
   totalAgents: number;
@@ -57,9 +58,9 @@ export class DashboardService {
   static async getOverview(
     timeRange: "24h" | "7d" | "30d" | "90d" = "7d"
   ): Promise<DashboardOverview> {
-    return apiClient.get<DashboardOverview>(
+    return (await apiClient.get(
       `${API_ENDPOINTS.DASHBOARD.ANALYTICS}/overview?timeRange=${timeRange}`
-    );
+    )) as DashboardOverview;
   }
 
   /**
@@ -68,9 +69,9 @@ export class DashboardService {
   static async getAnalytics(
     timeRange: "24h" | "7d" | "30d" | "90d" = "7d"
   ): Promise<AnalyticsData> {
-    return apiClient.get<AnalyticsData>(
+    return (await apiClient.get(
       `${API_ENDPOINTS.DASHBOARD.ANALYTICS}?timeRange=${timeRange}`
-    );
+    )) as AnalyticsData;
   }
 
   /**
@@ -114,9 +115,9 @@ export class DashboardService {
   static async getUsageStatistics(
     timeRange: "24h" | "7d" | "30d" | "90d" = "30d"
   ): Promise<UsageStatistics> {
-    return apiClient.get<UsageStatistics>(
+    return (await apiClient.get(
       `${API_ENDPOINTS.DASHBOARD.USAGE}?timeRange=${timeRange}`
-    );
+    )) as UsageStatistics;
   }
 
   /**
@@ -258,12 +259,15 @@ export class DashboardService {
     format: "csv" | "json" | "pdf" = "csv",
     timeRange: "24h" | "7d" | "30d" | "90d" = "30d"
   ): Promise<Blob> {
-    const response = await apiClient
-      .getAxiosInstance()
-      .get(
-        `/dashboard/export?type=${type}&format=${format}&timeRange=${timeRange}`,
-        { responseType: "blob" }
-      );
+    const response = await axios.get(
+      `${APP_CONFIG.apiBaseUrl}/dashboard/export?type=${type}&format=${format}&timeRange=${timeRange}`,
+      {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${TokenManager.getToken()}`,
+        },
+      }
+    );
     return response.data;
   }
 

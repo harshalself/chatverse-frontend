@@ -1,7 +1,8 @@
-import { apiClient } from "@/lib/api/client";
-import { API_ENDPOINTS } from "@/lib/constants";
+import { apiClient, TokenManager } from "@/lib/api/client";
+import { API_ENDPOINTS, APP_CONFIG } from "@/lib/constants";
 import { DataSource } from "@/types/common.types";
 import { PaginatedResponse, PaginationOptions } from "@/types/api.types";
+import axios from "axios";
 
 export interface CreateSourceRequest {
   name: string;
@@ -67,14 +68,14 @@ export class SourcesService {
       ? `${API_ENDPOINTS.SOURCES.LIST}?${queryString}`
       : API_ENDPOINTS.SOURCES.LIST;
 
-    return apiClient.get<PaginatedResponse<DataSource>>(url);
+    return (await apiClient.get(url)) as PaginatedResponse<DataSource>;
   }
 
   /**
    * Get single source by ID
    */
   static async getSource(id: string): Promise<DataSource> {
-    return apiClient.get<DataSource>(API_ENDPOINTS.SOURCES.GET(id));
+    return (await apiClient.get(API_ENDPOINTS.SOURCES.GET(id))) as DataSource;
   }
 
   /**
@@ -83,10 +84,10 @@ export class SourcesService {
   static async createTextSource(
     data: CreateSourceRequest
   ): Promise<DataSource> {
-    return apiClient.post<DataSource>(API_ENDPOINTS.SOURCES.CREATE, {
+    return (await apiClient.post(API_ENDPOINTS.SOURCES.CREATE, {
       ...data,
       type: "text",
-    });
+    })) as DataSource;
   }
 
   /**
@@ -95,10 +96,10 @@ export class SourcesService {
   static async createWebsiteSource(
     data: WebsiteSourceRequest
   ): Promise<DataSource> {
-    return apiClient.post<DataSource>(API_ENDPOINTS.SOURCES.CREATE, {
+    return (await apiClient.post(API_ENDPOINTS.SOURCES.CREATE, {
       ...data,
       type: "website",
-    });
+    })) as DataSource;
   }
 
   /**
@@ -107,20 +108,20 @@ export class SourcesService {
   static async createDatabaseSource(
     data: DatabaseSourceRequest
   ): Promise<DataSource> {
-    return apiClient.post<DataSource>(API_ENDPOINTS.SOURCES.CREATE, {
+    return (await apiClient.post(API_ENDPOINTS.SOURCES.CREATE, {
       ...data,
       type: "database",
-    });
+    })) as DataSource;
   }
 
   /**
    * Create Q&A source
    */
   static async createQASource(data: QASourceRequest): Promise<DataSource> {
-    return apiClient.post<DataSource>(API_ENDPOINTS.SOURCES.CREATE, {
+    return (await apiClient.post(API_ENDPOINTS.SOURCES.CREATE, {
       ...data,
       type: "qa",
-    });
+    })) as DataSource;
   }
 
   /**
@@ -131,11 +132,29 @@ export class SourcesService {
     name?: string,
     onProgress?: (progress: number) => void
   ): Promise<DataSource> {
-    return apiClient.uploadFile<DataSource>(
-      API_ENDPOINTS.SOURCES.UPLOAD,
-      file,
-      onProgress
+    const formData = new FormData();
+    formData.append("file", file);
+    if (name) formData.append("name", name);
+
+    const response = await axios.post(
+      `${APP_CONFIG.apiBaseUrl}${API_ENDPOINTS.SOURCES.UPLOAD}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${TokenManager.getToken()}`,
+        },
+        onUploadProgress: onProgress
+          ? (progressEvent) => {
+              const progress = progressEvent.total
+                ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                : 0;
+              onProgress(progress);
+            }
+          : undefined,
+      }
     );
+    return response.data;
   }
 
   /**
@@ -165,21 +184,26 @@ export class SourcesService {
     id: string,
     data: UpdateSourceRequest
   ): Promise<DataSource> {
-    return apiClient.put<DataSource>(API_ENDPOINTS.SOURCES.UPDATE(id), data);
+    return (await apiClient.put(
+      API_ENDPOINTS.SOURCES.UPDATE(id),
+      data
+    )) as DataSource;
   }
 
   /**
    * Delete source
    */
   static async deleteSource(id: string): Promise<void> {
-    return apiClient.delete<void>(API_ENDPOINTS.SOURCES.DELETE(id));
+    await apiClient.delete(API_ENDPOINTS.SOURCES.DELETE(id));
   }
 
   /**
    * Process source (extract content, index, etc.)
    */
   static async processSource(id: string): Promise<{ taskId: string }> {
-    return apiClient.post<{ taskId: string }>(`/sources/${id}/process`);
+    return (await apiClient.post(`/sources/${id}/process`)) as {
+      taskId: string;
+    };
   }
 
   /**
@@ -295,11 +319,15 @@ export class SourcesService {
     id: string,
     format: "json" | "csv" | "txt" = "json"
   ): Promise<Blob> {
-    const response = await apiClient
-      .getAxiosInstance()
-      .get(`/sources/${id}/export?format=${format}`, {
+    const response = await axios.get(
+      `${APP_CONFIG.apiBaseUrl}/sources/${id}/export?format=${format}`,
+      {
         responseType: "blob",
-      });
+        headers: {
+          Authorization: `Bearer ${TokenManager.getToken()}`,
+        },
+      }
+    );
     return response.data;
   }
 

@@ -1,5 +1,5 @@
-import { apiClient } from "@/lib/api/client";
-import { API_ENDPOINTS } from "@/lib/constants";
+import { apiClient, TokenManager } from "@/lib/api/client";
+import { API_ENDPOINTS, APP_CONFIG } from "@/lib/constants";
 import {
   Agent,
   CreateAgentRequest,
@@ -9,6 +9,7 @@ import {
   MessageRole,
 } from "@/types/agent.types";
 import { PaginatedResponse, PaginationOptions } from "@/types/api.types";
+import axios from "axios";
 
 export class AgentsService {
   /**
@@ -37,21 +38,21 @@ export class AgentsService {
       ? `${API_ENDPOINTS.AGENTS.LIST}?${queryString}`
       : API_ENDPOINTS.AGENTS.LIST;
 
-    return apiClient.get<PaginatedResponse<Agent>>(url);
+    return (await apiClient.get(url)) as PaginatedResponse<Agent>;
   }
 
   /**
    * Get single agent by ID
    */
   static async getAgent(id: string): Promise<Agent> {
-    return apiClient.get<Agent>(API_ENDPOINTS.AGENTS.GET(id));
+    return (await apiClient.get(API_ENDPOINTS.AGENTS.GET(id))) as Agent;
   }
 
   /**
    * Create new agent
    */
   static async createAgent(data: CreateAgentRequest): Promise<Agent> {
-    return apiClient.post<Agent>(API_ENDPOINTS.AGENTS.CREATE, data);
+    return (await apiClient.post(API_ENDPOINTS.AGENTS.CREATE, data)) as Agent;
   }
 
   /**
@@ -61,21 +62,24 @@ export class AgentsService {
     id: string,
     data: UpdateAgentRequest
   ): Promise<Agent> {
-    return apiClient.put<Agent>(API_ENDPOINTS.AGENTS.UPDATE(id), data);
+    return (await apiClient.put(
+      API_ENDPOINTS.AGENTS.UPDATE(id),
+      data
+    )) as Agent;
   }
 
   /**
    * Delete agent
    */
   static async deleteAgent(id: string): Promise<void> {
-    return apiClient.delete<void>(API_ENDPOINTS.AGENTS.DELETE(id));
+    await apiClient.delete(API_ENDPOINTS.AGENTS.DELETE(id));
   }
 
   /**
    * Duplicate agent
    */
   static async duplicateAgent(id: string, name?: string): Promise<Agent> {
-    return apiClient.post<Agent>(`/agents/${id}/duplicate`, { name });
+    return (await apiClient.post(`/agents/${id}/duplicate`, { name })) as Agent;
   }
 
   /**
@@ -85,10 +89,9 @@ export class AgentsService {
     id: string,
     trainingData: any
   ): Promise<{ taskId: string }> {
-    return apiClient.post<{ taskId: string }>(
-      `/agents/${id}/train`,
-      trainingData
-    );
+    return (await apiClient.post(`/agents/${id}/train`, trainingData)) as {
+      taskId: string;
+    };
   }
 
   /**
@@ -109,7 +112,9 @@ export class AgentsService {
    * Deploy agent to production
    */
   static async deployAgent(id: string): Promise<{ deploymentId: string }> {
-    return apiClient.post<{ deploymentId: string }>(`/agents/${id}/deploy`);
+    return (await apiClient.post(`/agents/${id}/deploy`)) as {
+      deploymentId: string;
+    };
   }
 
   /**
@@ -129,7 +134,7 @@ export class AgentsService {
       ? `/agents/${agentId}/conversations?${queryString}`
       : `/agents/${agentId}/conversations`;
 
-    return apiClient.get<PaginatedResponse<Conversation>>(url);
+    return (await apiClient.get(url)) as PaginatedResponse<Conversation>;
   }
 
   /**
@@ -139,9 +144,9 @@ export class AgentsService {
     agentId: string,
     title?: string
   ): Promise<Conversation> {
-    return apiClient.post<Conversation>(`/agents/${agentId}/conversations`, {
+    return (await apiClient.post(`/agents/${agentId}/conversations`, {
       title,
-    });
+    })) as Conversation;
   }
 
   /**
@@ -152,13 +157,13 @@ export class AgentsService {
     conversationId: string,
     content: string
   ): Promise<Message> {
-    return apiClient.post<Message>(
+    return (await apiClient.post(
       `/agents/${agentId}/conversations/${conversationId}/messages`,
       {
         content,
         role: "user" as MessageRole,
       }
-    );
+    )) as Message;
   }
 
   /**
@@ -179,7 +184,7 @@ export class AgentsService {
       ? `/agents/${agentId}/conversations/${conversationId}/messages?${queryString}`
       : `/agents/${agentId}/conversations/${conversationId}/messages`;
 
-    return apiClient.get<PaginatedResponse<Message>>(url);
+    return (await apiClient.get(url)) as PaginatedResponse<Message>;
   }
 
   /**
@@ -189,7 +194,7 @@ export class AgentsService {
     agentId: string,
     conversationId: string
   ): Promise<void> {
-    return apiClient.patch<void>(
+    await apiClient.patch(
       `/agents/${agentId}/conversations/${conversationId}`,
       {
         status: "archived",
@@ -204,7 +209,7 @@ export class AgentsService {
     agentId: string,
     conversationId: string
   ): Promise<void> {
-    return apiClient.delete<void>(
+    await apiClient.delete(
       `/agents/${agentId}/conversations/${conversationId}`
     );
   }
@@ -231,11 +236,15 @@ export class AgentsService {
    * Export agent configuration
    */
   static async exportAgent(id: string): Promise<Blob> {
-    const response = await apiClient
-      .getAxiosInstance()
-      .get(`/agents/${id}/export`, {
+    const response = await axios.get(
+      `${APP_CONFIG.apiBaseUrl}/agents/${id}/export`,
+      {
         responseType: "blob",
-      });
+        headers: {
+          Authorization: `Bearer ${TokenManager.getToken()}`,
+        },
+      }
+    );
     return response.data;
   }
 
@@ -246,6 +255,27 @@ export class AgentsService {
     file: File,
     onProgress?: (progress: number) => void
   ): Promise<Agent> {
-    return apiClient.uploadFile<Agent>("/agents/import", file, onProgress);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await axios.post(
+      `${APP_CONFIG.apiBaseUrl}/agents/import`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${TokenManager.getToken()}`,
+        },
+        onUploadProgress: onProgress
+          ? (progressEvent) => {
+              const progress = progressEvent.total
+                ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                : 0;
+              onProgress(progress);
+            }
+          : undefined,
+      }
+    );
+    return response.data;
   }
 }

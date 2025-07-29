@@ -1,6 +1,6 @@
 import { Bot, ChevronDown, User, LogOut, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, useLogout } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,7 +22,8 @@ interface HeaderProps {
 
 export function Header({ breadcrumbs, children }: HeaderProps) {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const { mutate: logout } = useLogout();
 
   const handleBreadcrumbClick = (index: number) => {
     if (index === 0) {
@@ -37,7 +38,7 @@ export function Header({ breadcrumbs, children }: HeaderProps) {
   };
 
   const handleSignOut = () => {
-    signOut();
+    logout();
     navigate("/");
   };
 
@@ -79,37 +80,60 @@ export function Header({ breadcrumbs, children }: HeaderProps) {
           {user && (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative h-8 w-8 p-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="relative h-8 w-8 p-0">
                   <Bell className="h-4 w-4" />
                   <span className="absolute -top-1 -right-1 h-2 w-2 bg-destructive rounded-full"></span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80" align="end">
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-foreground">Notifications</h3>
+                  <h3 className="font-semibold text-foreground">
+                    Notifications
+                  </h3>
                   <div className="space-y-2">
                     <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted">
                       <div className="h-2 w-2 bg-primary rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">Agent training completed</p>
-                        <p className="text-xs text-muted-foreground">Your sales agent has finished training on new data</p>
-                        <p className="text-xs text-muted-foreground mt-1">2 minutes ago</p>
+                        <p className="text-sm font-medium">
+                          Agent training completed
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Your sales agent has finished training on new data
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          2 minutes ago
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted">
                       <div className="h-2 w-2 bg-muted-foreground rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">New conversation started</p>
-                        <p className="text-xs text-muted-foreground">Customer support agent received a new inquiry</p>
-                        <p className="text-xs text-muted-foreground mt-1">1 hour ago</p>
+                        <p className="text-sm font-medium">
+                          New conversation started
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Customer support agent received a new inquiry
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          1 hour ago
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted">
                       <div className="h-2 w-2 bg-muted-foreground rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">Usage limit reminder</p>
-                        <p className="text-xs text-muted-foreground">You've used 80% of your monthly quota</p>
-                        <p className="text-xs text-muted-foreground mt-1">3 hours ago</p>
+                        <p className="text-sm font-medium">
+                          Usage limit reminder
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          You've used 80% of your monthly quota
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          3 hours ago
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -135,9 +159,7 @@ export function Header({ breadcrumbs, children }: HeaderProps) {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem disabled>
                   <div className="flex flex-col">
-                    <span className="font-medium">
-                      {user.name}
-                    </span>
+                    <span className="font-medium">{user.name}</span>
                     <span className="text-xs text-muted-foreground">
                       {user.email}
                     </span>
