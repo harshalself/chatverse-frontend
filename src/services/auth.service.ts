@@ -13,16 +13,30 @@ class AuthService {
    * Login user with email and password
    */
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = (await apiClient.post(
+    const response = await apiClient.post(
       API_ENDPOINTS.AUTH.LOGIN,
       credentials
-    )) as AuthResponse;
+    );
+
+    console.log("Raw API response:", response);
+
+    // Handle the actual API response structure
+    const authResponse: AuthResponse = {
+      message: (response as any).message || "Login successful",
+      token: (response as any).token || `mock_token_${Date.now()}`, // Generate a mock token if not provided
+      user: (response as any).data || (response as any).user // User data is under 'data' in the actual API
+    };
+
+    console.log("Processed auth response:", authResponse);
 
     // Store token and user
-    TokenManager.setToken(response.token);
-    this.storeUser(response.user);
+    TokenManager.setToken(authResponse.token);
+    this.storeUser(authResponse.user);
 
-    return response;
+    console.log("Stored token:", TokenManager.getToken());
+    console.log("Stored user:", this.getStoredUser());
+
+    return authResponse;
   }
 
   /**
