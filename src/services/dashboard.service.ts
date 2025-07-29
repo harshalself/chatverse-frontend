@@ -264,7 +264,7 @@ export class DashboardService {
       {
         responseType: "blob",
         headers: {
-          Authorization: `Bearer ${TokenManager.getToken()}`,
+          Authorization: `Bearer ${TokenManager.getToken()} public`,
         },
       }
     );

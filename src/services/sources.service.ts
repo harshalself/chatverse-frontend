@@ -142,7 +142,7 @@ export class SourcesService {
       {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${TokenManager.getToken()}`,
+          Authorization: `Bearer ${TokenManager.getToken()} public`,
         },
         onUploadProgress: onProgress
           ? (progressEvent) => {
@@ -324,7 +324,7 @@ export class SourcesService {
       {
         responseType: "blob",
         headers: {
-          Authorization: `Bearer ${TokenManager.getToken()}`,
+          Authorization: `Bearer ${TokenManager.getToken()} public`,
         },
       }
     );

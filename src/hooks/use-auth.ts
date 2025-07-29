@@ -9,10 +9,36 @@ import {
   User,
 } from "@/types/auth.types";
 import { toast } from "@/hooks/use-toast";
+import { useState, useEffect, useCallback } from "react";
+
+// Global state for auth changes
+let authListeners: (() => void)[] = [];
+
+const notifyAuthChange = () => {
+  authListeners.forEach((listener) => listener());
+};
+
+const subscribeToAuthChanges = (listener: () => void) => {
+  authListeners.push(listener);
+  return () => {
+    authListeners = authListeners.filter((l) => l !== listener);
+  };
+};
 
 // Simple authentication state hook
 export const useAuth = () => {
   const queryClient = useQueryClient();
+
+  // Add a force refresh state to trigger re-renders
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Subscribe to auth changes
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthChanges(() => {
+      setRefreshTrigger((prev) => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
 
   // Get current user from localStorage
   const {
@@ -20,12 +46,17 @@ export const useAuth = () => {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: QUERY_KEYS.USER,
+    queryKey: [...QUERY_KEYS.USER, refreshTrigger], // Include refresh trigger in query key
     queryFn: () => {
       const storedUser = AuthService.getStoredUser();
       const hasToken = AuthService.isAuthenticated();
 
-      console.log("Auth query check:", { storedUser, hasToken, token: AuthService.getToken() });
+      console.log("Auth query check:", {
+        storedUser,
+        hasToken,
+        token: AuthService.getToken(),
+        refreshTrigger,
+      });
 
       if (storedUser && hasToken) {
         return storedUser;
@@ -33,19 +64,25 @@ export const useAuth = () => {
       return null;
     },
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Don't cache, always check fresh
+    refetchOnWindowFocus: true,
     refetchOnMount: true,
   });
 
   // Check if user is authenticated
   const isAuthenticated = !!user && AuthService.isAuthenticated();
 
+  // Add a function to force refresh
+  const forceRefresh = useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
+
   return {
     user,
     isAuthenticated,
     isLoading,
     refetch,
+    forceRefresh,
   };
 };
 
@@ -57,7 +94,7 @@ export const useLogin = () => {
     mutationFn: (credentials: LoginRequest) => AuthService.login(credentials),
     onSuccess: (data: AuthResponse) => {
       console.log("Login success:", data);
-      
+
       // Cache user data and invalidate queries
       queryClient.setQueryData(QUERY_KEYS.USER, data.user);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER });
@@ -108,8 +145,11 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: () => AuthService.logout(),
     onSuccess: () => {
-      // Clear all cached data
+      // Clear all cached data first
       queryClient.clear();
+
+      // Notify all auth listeners to refresh
+      notifyAuthChange();
 
       toast({
         title: "Logged out",

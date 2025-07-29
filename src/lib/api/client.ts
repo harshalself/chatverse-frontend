@@ -30,7 +30,16 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use((config) => {
   const token = TokenManager.getToken();
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    // Debug token before sending
+    console.log("Token being sent:", token);
+    console.log("Token type:", typeof token);
+    console.log("Token length:", token.length);
+
+    // Include schema in Authorization header as expected by backend
+    const authHeader = `Bearer ${token} public`;
+    config.headers.Authorization = authHeader;
+
+    console.log("Authorization header:", authHeader);
   }
   return config;
 });

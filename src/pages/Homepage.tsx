@@ -51,13 +51,7 @@ export default function Homepage() {
                     onClick={() => navigate("/workspace")}>
                     Dashboard
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      logout();
-                      // Stay on homepage after sign out
-                    }}>
+                  <Button variant="outline" size="sm" onClick={() => logout()}>
                     Sign Out
                   </Button>
                 </>

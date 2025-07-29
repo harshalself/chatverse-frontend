@@ -20,19 +20,44 @@ class AuthService {
 
     console.log("Raw API response:", response);
 
+    // Extract token from response - ensure we get the raw token value
+    let token: string;
+
+    // Handle different possible response structures
+    if (typeof response === "object" && response !== null) {
+      // Try different possible token locations
+      token =
+        (response as any).token ||
+        (response as any).data?.token ||
+        (response as any).access_token ||
+        `mock_token_${Date.now()}`;
+    } else {
+      token = `mock_token_${Date.now()}`;
+    }
+
+    // Ensure token is a clean string (no quotes, no extra spaces)
+    if (typeof token === "string") {
+      token = token.trim().replace(/^["']|["']$/g, ""); // Remove surrounding quotes if any
+    }
+
+    console.log("Extracted token:", token);
+    console.log("Token type:", typeof token);
+    console.log("Token length:", token?.length);
+
     // Handle the actual API response structure
     const authResponse: AuthResponse = {
       message: (response as any).message || "Login successful",
-      token: (response as any).token || `mock_token_${Date.now()}`, // Generate a mock token if not provided
-      user: (response as any).data || (response as any).user // User data is under 'data' in the actual API
+      token: token,
+      user: (response as any).data || (response as any).user, // User data is under 'data' in the actual API
     };
 
     console.log("Processed auth response:", authResponse);
 
-    // Store token and user
+    // Store token and user - ensure we store the clean token
     TokenManager.setToken(authResponse.token);
     this.storeUser(authResponse.user);
 
+    // Debug what's actually stored
     console.log("Stored token:", TokenManager.getToken());
     console.log("Stored user:", this.getStoredUser());
 

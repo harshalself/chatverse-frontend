@@ -241,7 +241,7 @@ export class AgentsService {
       {
         responseType: "blob",
         headers: {
-          Authorization: `Bearer ${TokenManager.getToken()}`,
+          Authorization: `Bearer ${TokenManager.getToken()} public`,
         },
       }
     );
@@ -264,7 +264,7 @@ export class AgentsService {
       {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${TokenManager.getToken()}`,
+          Authorization: `Bearer ${TokenManager.getToken()} public`,
         },
         onUploadProgress: onProgress
           ? (progressEvent) => {
