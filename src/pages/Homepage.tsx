@@ -74,26 +74,26 @@ export default function Homepage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-6 py-20">
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 sm:mb-6">
             Build Intelligent Agents
             <span className="text-primary"> Effortlessly</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             Create, manage, and deploy AI agents with our intuitive platform.
             Connect data sources, customize behaviors, and scale your
             automation.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <Button
               size="lg"
-              className="text-lg px-8"
+              className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-auto"
               onClick={() => navigate("/workspace")}>
               Get Started
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8">
+            <Button variant="outline" size="lg" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-auto">
               View Documentation
             </Button>
           </div>
@@ -101,17 +101,17 @@ export default function Homepage() {
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-6 py-20 bg-muted/30">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20 bg-muted/30">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 px-4">
             Why Choose AgentFlow?
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
             Everything you need to create powerful AI agents in one platform
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
           <Card>
             <CardHeader>
               <Zap className="h-10 w-10 text-primary mb-4" />
@@ -148,8 +148,8 @@ export default function Homepage() {
       </section>
 
       {/* Stats Section */}
-      <section className="container mx-auto px-6 py-20">
-        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto text-center">
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto text-center">
           <div>
             <div className="text-4xl font-bold text-primary mb-2">10k+</div>
             <div className="text-muted-foreground">Active Agents</div>
@@ -166,29 +166,29 @@ export default function Homepage() {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-6 py-20 bg-primary/5">
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20 bg-primary/5">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 px-4">
             Ready to Build Your First Agent?
           </h2>
-          <p className="text-xl text-muted-foreground mb-8">
+          <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 px-4">
             Join thousands of developers and businesses already using AgentFlow
             to automate their workflows.
           </p>
           <Button
             size="lg"
-            className="text-lg px-8"
+            className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-auto"
             onClick={() => navigate("/workspace")}>
             Start Building Now
-            <ArrowRight className="ml-2 h-5 w-5" />
+            <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t bg-background">
-        <div className="container mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-4 gap-8">
+        <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Bot className="h-6 w-6 text-primary" />
@@ -281,7 +281,7 @@ export default function Homepage() {
             </div>
           </div>
 
-          <div className="border-t mt-12 pt-8 text-center text-muted-foreground">
+          <div className="border-t mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-muted-foreground">
             <p>&copy; 2025 AgentFlow. All rights reserved.</p>
           </div>
         </div>

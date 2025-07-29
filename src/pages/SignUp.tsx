@@ -148,16 +148,16 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="w-full max-w-4xl">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-md sm:max-w-lg lg:max-w-2xl">
         {/* Logo */}
-        <div className="flex items-center justify-center space-x-2 mb-4">
-          <Bot className="h-8 w-8 text-primary" />
-          <span className="text-2xl font-bold">AgentFlow</span>
+        <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
+          <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+          <span className="text-xl sm:text-2xl font-bold">AgentFlow</span>
         </div>
 
         {/* Back to home link */}
-        <div className="mb-8 text-center">
+        <div className="mb-6 sm:mb-8 text-center">
           <Link
             to="/"
             className="text-sm text-muted-foreground hover:text-foreground">
@@ -166,13 +166,13 @@ export default function SignUp() {
         </div>
 
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Create your account</CardTitle>
-            <CardDescription>
+          <CardHeader className="text-center px-4 sm:px-6">
+            <CardTitle className="text-xl sm:text-2xl">Create your account</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Get started with AgentFlow and build your first AI agent
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
             {/* Display field errors */}
             {Object.keys(fieldErrors).length > 0 && (
               <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
@@ -242,7 +242,7 @@ export default function SignUp() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
@@ -373,7 +373,7 @@ export default function SignUp() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <Button variant="outline" className="w-full">
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
