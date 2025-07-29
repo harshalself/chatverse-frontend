@@ -3,19 +3,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { AgentStatus } from "@/types/agent.types";
+
+type AgentCardStatus = "active" | "inactive" | "training" | "error";
 
 interface AgentCardProps {
   id: string;
   name: string;
   description: string;
-  status: AgentStatus;
+  status: AgentCardStatus;
   lastTrained: string;
   onClick?: (id: string) => void;
   onStatusChange?: (id: string, status: "active" | "inactive") => void;
 }
 
-const getStatusColor = (status: AgentStatus) => {
+const getStatusColor = (status: AgentCardStatus) => {
   switch (status) {
     case "active":
       return "bg-green-100 text-green-800 hover:bg-green-200";
@@ -30,7 +31,7 @@ const getStatusColor = (status: AgentStatus) => {
   }
 };
 
-const getStatusIcon = (status: AgentStatus) => {
+const getStatusIcon = (status: AgentCardStatus) => {
   switch (status) {
     case "training":
       return <Clock className="h-3 w-3" />;

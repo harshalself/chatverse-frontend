@@ -41,7 +41,7 @@ export function AgentsView() {
     try {
       await updateAgentMutation.mutateAsync({
         id: agentId,
-        data: { status: newStatus },
+        data: { is_active: newStatus === "active" ? 1 : 0 },
       });
 
       toast({
@@ -108,9 +108,11 @@ export function AgentsView() {
               key={agent.id}
               id={agent.id}
               name={agent.name}
-              description={agent.description}
-              status={agent.status}
-              lastTrained={agent.lastActiveAt || agent.updatedAt}
+              description={`${agent.provider} - ${
+                agent.model || "Default model"
+              }`}
+              status={agent.is_active ? "active" : "inactive"}
+              lastTrained={agent.updated_at}
               onClick={handleAgentClick}
               onStatusChange={handleStatusChange}
             />

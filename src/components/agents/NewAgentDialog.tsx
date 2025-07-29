@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -20,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useCreateAgent } from "@/hooks/use-agents";
 import { toast } from "@/hooks/use-toast";
-import { AgentType } from "@/types/agent.types";
+import { AgentProvider } from "@/types/agent.types";
 
 interface NewAgentDialogProps {
   open: boolean;
@@ -35,8 +34,10 @@ export function NewAgentDialog({
 }: NewAgentDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
-    type: "chatbot" as AgentType,
+    provider: "openai" as AgentProvider,
+    api_key: "",
+    model: "",
+    temperature: 0.7,
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -49,8 +50,12 @@ export function NewAgentDialog({
       errors.name = "Agent name is required";
     }
 
-    if (!formData.description.trim()) {
-      errors.description = "Agent description is required";
+    if (!formData.provider) {
+      errors.provider = "Provider is required";
+    }
+
+    if (!formData.api_key.trim()) {
+      errors.api_key = "API key is required";
     }
 
     setFieldErrors(errors);
@@ -63,27 +68,30 @@ export function NewAgentDialog({
     }
 
     try {
-      const newAgent = await createAgentMutation.mutateAsync({
+      const requestData = {
         name: formData.name.trim(),
-        description: formData.description.trim(),
-        type: formData.type,
-        configuration: {
-          model: "gpt-3.5-turbo",
-          temperature: 0.7,
-          maxTokens: 1000,
-          systemPrompt: "You are a helpful AI assistant.",
-          tools: [],
-          knowledgeBase: [],
-        },
-      });
+        provider: formData.provider,
+        api_key: formData.api_key.trim(),
+        ...(formData.model && { model: formData.model }),
+        temperature: formData.temperature,
+        is_active: 1,
+      };
+
+      const newAgent = await createAgentMutation.mutateAsync(requestData);
 
       toast({
         title: "Agent created successfully!",
-        description: `${formData.name} has been created and is ready to configure.`,
+        description: `${formData.name} has been created and is ready to use.`,
       });
 
       // Reset form
-      setFormData({ name: "", description: "", type: "chatbot" });
+      setFormData({
+        name: "",
+        provider: "openai",
+        api_key: "",
+        model: "",
+        temperature: 0.7,
+      });
       setFieldErrors({});
 
       // Close dialog
@@ -97,12 +105,18 @@ export function NewAgentDialog({
   };
 
   const handleClose = () => {
-    setFormData({ name: "", description: "", type: "chatbot" });
+    setFormData({
+      name: "",
+      provider: "openai",
+      api_key: "",
+      model: "",
+      temperature: 0.7,
+    });
     setFieldErrors({});
     onOpenChange(false);
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Clear field error when user starts typing
@@ -117,8 +131,8 @@ export function NewAgentDialog({
         <DialogHeader>
           <DialogTitle>Create New Agent</DialogTitle>
           <DialogDescription>
-            Create a new AI agent with a name, description, and type. You can
-            configure advanced settings after creation.
+            Create a new AI agent by providing a name, selecting a provider, and
+            entering your API key.
           </DialogDescription>
         </DialogHeader>
 
@@ -138,47 +152,75 @@ export function NewAgentDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              placeholder="Describe what this agent will help with..."
-              className={fieldErrors.description ? "border-destructive" : ""}
-              rows={3}
-            />
-            {fieldErrors.description && (
-              <p className="text-sm text-destructive">
-                {fieldErrors.description}
-              </p>
+            <Label htmlFor="provider">Provider *</Label>
+            <Select
+              value={formData.provider}
+              onValueChange={(value: AgentProvider) =>
+                handleInputChange("provider", value)
+              }>
+              <SelectTrigger
+                className={fieldErrors.provider ? "border-destructive" : ""}>
+                <SelectValue placeholder="Select AI provider" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="openai">OpenAI</SelectItem>
+                <SelectItem value="claude">Claude</SelectItem>
+                <SelectItem value="gemini">Gemini</SelectItem>
+                <SelectItem value="groq">Groq</SelectItem>
+              </SelectContent>
+            </Select>
+            {fieldErrors.provider && (
+              <p className="text-sm text-destructive">{fieldErrors.provider}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="type">Agent Type</Label>
-            <Select
-              value={formData.type}
-              onValueChange={(value: AgentType) =>
-                handleInputChange("type", value)
-              }>
-              <SelectTrigger>
-                <SelectValue placeholder="Select agent type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="chatbot">
-                  Chatbot - Interactive conversation agent
-                </SelectItem>
-                <SelectItem value="assistant">
-                  Assistant - Task-focused helper
-                </SelectItem>
-                <SelectItem value="analyst">
-                  Analyst - Data analysis and insights
-                </SelectItem>
-                <SelectItem value="automation">
-                  Automation - Workflow automation
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="api_key">API Key *</Label>
+            <Input
+              id="api_key"
+              type="password"
+              value={formData.api_key}
+              onChange={(e) => handleInputChange("api_key", e.target.value)}
+              placeholder="Enter your API key"
+              className={fieldErrors.api_key ? "border-destructive" : ""}
+            />
+            {fieldErrors.api_key && (
+              <p className="text-sm text-destructive">{fieldErrors.api_key}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="model">Model (Optional)</Label>
+            <Input
+              id="model"
+              value={formData.model}
+              onChange={(e) => handleInputChange("model", e.target.value)}
+              placeholder="e.g. gpt-4-turbo, claude-3-opus"
+            />
+            <p className="text-sm text-muted-foreground">
+              Leave empty to use the provider's default model
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="temperature">
+              Temperature: {formData.temperature}
+            </Label>
+            <Input
+              id="temperature"
+              type="range"
+              min="0"
+              max="2"
+              step="0.1"
+              value={formData.temperature}
+              onChange={(e) =>
+                handleInputChange("temperature", parseFloat(e.target.value))
+              }
+              className="slider"
+            />
+            <p className="text-sm text-muted-foreground">
+              Controls randomness: 0 = focused, 2 = creative
+            </p>
           </div>
         </div>
 
@@ -190,7 +232,8 @@ export function NewAgentDialog({
             onClick={handleCreate}
             disabled={
               !formData.name.trim() ||
-              !formData.description.trim() ||
+              !formData.provider ||
+              !formData.api_key.trim() ||
               createAgentMutation.isPending
             }>
             {createAgentMutation.isPending ? "Creating..." : "Create Agent"}

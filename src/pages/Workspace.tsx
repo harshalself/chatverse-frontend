@@ -6,13 +6,11 @@ import { NewAgentDialog } from "@/components/agents/NewAgentDialog";
 import { AgentsView } from "./workspace/agents/AgentsView";
 import { UsageView } from "./workspace/usage/UsageView";
 import { SettingsView } from "./workspace/settings/SettingsView";
-import { mockAgents, Agent } from "./workspace/agents/agentTypes";
 
 export default function Workspace() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("agents");
   const [showNewAgentDialog, setShowNewAgentDialog] = useState(false);
-  const [agents, setAgents] = useState(mockAgents);
 
   const tabs = [
     { label: "Agents", value: "agents", isActive: activeTab === "agents" },
@@ -24,48 +22,21 @@ export default function Workspace() {
     },
   ];
 
-  const handleAgentClick = (agentId: string) => {
-    const agent = agents.find((a) => a.id === agentId);
-    if (agent) {
-      navigate(`/agent/${agentId}`, { state: { agentName: agent.name } });
-    }
-  };
-
-  const handleCreateAgent = (name: string) => {
-    const newAgent: Agent = {
-      id: Date.now().toString(),
-      name,
-      description: "New AI assistant",
-      status: "active",
-      lastTrained: "Just created",
-    };
-    setAgents([...agents, newAgent]);
-    navigate(`/agent/${newAgent.id}`, { state: { agentName: newAgent.name } });
-  };
-
-  const handleStatusChange = (
-    agentId: string,
-    newStatus: "active" | "inactive"
-  ) => {
-    setAgents(
-      agents.map((agent) =>
-        agent.id === agentId ? { ...agent, status: newStatus } : agent
-      )
-    );
+  const handleCreateAgent = (agentId: string) => {
+    // Navigate to the newly created agent
+    navigate(`/agent/${agentId}`);
   };
 
   const renderContent = () => {
     switch (activeTab) {
       case "agents":
-        return (
-          <AgentsView />
-        );
+        return <AgentsView />;
       case "usage":
         return <UsageView />;
       case "settings":
         return <SettingsView />;
       default:
-        return null;
+        return <AgentsView />;
     }
   };
 
