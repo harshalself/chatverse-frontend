@@ -47,8 +47,10 @@ export default function SignIn() {
 
   // Auto-redirect after successful login
   useEffect(() => {
+    console.log("SignIn redirect effect:", { user, isAuthLoading, from });
     if (user && !isAuthLoading) {
-      navigate(from);
+      console.log("Redirecting to:", from);
+      navigate(from, { replace: true });
     }
   }, [user, isAuthLoading, navigate, from]);
 
@@ -84,11 +86,13 @@ export default function SignIn() {
     }
 
     try {
-      await loginMutation.mutateAsync({
+      const result = await loginMutation.mutateAsync({
         email: formData.email,
         password: formData.password,
       });
 
+      console.log("Login mutation completed:", result);
+      
       // Success toast is handled in the hook
       // Redirect is handled by useEffect when user state updates
     } catch (error) {

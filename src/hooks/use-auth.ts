@@ -25,6 +25,8 @@ export const useAuth = () => {
       const storedUser = AuthService.getStoredUser();
       const hasToken = AuthService.isAuthenticated();
 
+      console.log("Auth query check:", { storedUser, hasToken, token: AuthService.getToken() });
+
       if (storedUser && hasToken) {
         return storedUser;
       }
@@ -32,6 +34,8 @@ export const useAuth = () => {
     },
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   // Check if user is authenticated
@@ -52,6 +56,8 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (credentials: LoginRequest) => AuthService.login(credentials),
     onSuccess: (data: AuthResponse) => {
+      console.log("Login success:", data);
+      
       // Cache user data and invalidate queries
       queryClient.setQueryData(QUERY_KEYS.USER, data.user);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER });
