@@ -22,9 +22,11 @@ export default function Workspace() {
     },
   ];
 
-  const handleCreateAgent = (agentId: string) => {
-    // Navigate to the newly created agent
-    navigate(`/agent/${agentId}`);
+  const handleCreateAgent = (agentId: string, agentName: string) => {
+    // Navigate to the newly created agent with agent name in state
+    navigate(`/agent/${agentId}`, {
+      state: { agentName },
+    });
   };
 
   const renderContent = () => {

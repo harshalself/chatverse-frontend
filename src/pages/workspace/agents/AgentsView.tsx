@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AgentCard } from "@/components/agents/AgentCard";
@@ -9,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 
 export function AgentsView() {
+  const navigate = useNavigate();
   const [showNewAgentDialog, setShowNewAgentDialog] = useState(false);
 
   // Fetch agents with pagination
@@ -29,9 +31,14 @@ export function AgentsView() {
   };
 
   const handleAgentClick = (agentId: string) => {
-    // Navigate to agent details/edit page
-    // This would typically use useNavigate from react-router-dom
-    console.log("Navigate to agent:", agentId);
+    // Find the agent to get its name
+    const agent = agents.find((a) => a.id === agentId);
+    if (agent) {
+      // Navigate to agent dashboard with agent name in state
+      navigate(`/agent/${agentId}`, {
+        state: { agentName: agent.name },
+      });
+    }
   };
 
   const handleStatusChange = async (

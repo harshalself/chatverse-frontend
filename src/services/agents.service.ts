@@ -39,7 +39,7 @@ export class AgentsService {
    */
   static async createAgent(data: CreateAgentRequest): Promise<Agent> {
     const response = await apiClient.post(API_ENDPOINTS.AGENTS.CREATE, data);
-    return response; // Backend returns agent directly, not wrapped in data
+    return response.data; // Backend returns agent directly, not wrapped in data
   }
 
   /**

@@ -24,7 +24,7 @@ import { AgentProvider } from "@/types/agent.types";
 interface NewAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateAgent?: (agentId: string) => void;
+  onCreateAgent?: (agentId: string, agentName: string) => void;
 }
 
 export function NewAgentDialog({
@@ -97,8 +97,8 @@ export function NewAgentDialog({
       // Close dialog
       onOpenChange(false);
 
-      // Notify parent component
-      onCreateAgent?.(newAgent.id);
+      // Notify parent component with both agent ID and name
+      onCreateAgent?.(newAgent.id, formData.name.trim());
     } catch (error) {
       console.error("Failed to create agent:", error);
     }

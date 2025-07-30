@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { Bot, ChevronDown, User, LogOut, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useLogout } from "@/hooks/use-auth";
@@ -20,27 +21,31 @@ interface HeaderProps {
   children?: React.ReactNode;
 }
 
-export function Header({ breadcrumbs, children }: HeaderProps) {
+function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { mutate: logout } = useLogout();
 
-  const handleBreadcrumbClick = (index: number) => {
-    if (index === 0) {
-      // Workspace
-      navigate("/workspace");
-    }
-    // For agent names, we don't navigate since we're already on that page
-  };
+  // Optimize with useCallback to prevent unnecessary function recreations
+  const handleBreadcrumbClick = useCallback(
+    (index: number) => {
+      if (index === 0) {
+        // Workspace
+        navigate("/workspace");
+      }
+      // For agent names, we don't navigate since we're already on that page
+    },
+    [navigate]
+  );
 
-  const handleLogoClick = () => {
+  const handleLogoClick = useCallback(() => {
     navigate("/");
-  };
+  }, [navigate]);
 
-  const handleSignOut = () => {
+  const handleSignOut = useCallback(() => {
     logout();
     navigate("/");
-  };
+  }, [logout, navigate]);
 
   return (
     <header className="border-b bg-background px-6 py-2">
@@ -178,3 +183,6 @@ export function Header({ breadcrumbs, children }: HeaderProps) {
     </header>
   );
 }
+
+// Optimize rendering with React.memo to prevent unnecessary re-renders
+export const Header = memo(HeaderComponent);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Navigation } from "@/components/layout/Navigation";
@@ -7,11 +7,29 @@ import { PlaygroundView } from "./dashboard/playground/PlaygroundView";
 import { ActivityView } from "./dashboard/activity/ActivityView";
 import { AnalyticsView } from "./dashboard/analytics/AnalyticsView";
 import { SettingsView } from "./dashboard/settings/SettingsView";
+import { useAgent } from "@/hooks/use-agents";
 
 export default function Dashboard() {
   const { agentId } = useParams();
   const location = useLocation();
-  const agentName = location.state?.agentName || "Unknown Agent";
+
+  // Try to get agent name from location state first, then fetch if needed
+  const [agentName, setAgentName] = useState(
+    location.state?.agentName || "Loading..."
+  );
+
+  // Fetch agent details if we don't have the name
+  const { data: agentResponse } = useAgent(
+    agentId || "",
+    !location.state?.agentName && !!agentId
+  );
+
+  // Update agent name when data is fetched
+  useEffect(() => {
+    if (agentResponse?.data && !location.state?.agentName) {
+      setAgentName(agentResponse.data.name);
+    }
+  }, [agentResponse, location.state?.agentName]);
 
   const [activeTab, setActiveTab] = useState("sources");
   const [activeSource, setActiveSource] = useState("files");

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { MessageSquare, AlertCircle, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -42,7 +43,7 @@ const getStatusIcon = (status: AgentCardStatus) => {
   }
 };
 
-export function AgentCard({
+function AgentCardComponent({
   id,
   name,
   description,
@@ -101,3 +102,6 @@ export function AgentCard({
     </Card>
   );
 }
+
+// Optimize rendering with React.memo to prevent unnecessary re-renders
+export const AgentCard = memo(AgentCardComponent);
