@@ -1,8 +1,11 @@
-import { memo, useCallback } from "react";
-import { Bot, ChevronDown, User, LogOut, Bell } from "lucide-react";
+import { memo, useCallback, useState, useEffect } from "react";
+import { Bot, ChevronDown, User, LogOut, Bell, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useLogout } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { UserService } from "@/services/user.service";
+import { User as UserType } from "@/types/user.types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,8 +26,31 @@ interface HeaderProps {
 
 function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const { mutate: logout } = useLogout();
+  const [userData, setUserData] = useState<UserType | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch real user data from API
+  useEffect(() => {
+    async function fetchUserData() {
+      if (!authUser?.id) return;
+      
+      try {
+        setIsLoading(true);
+        const response = await UserService.getUser(authUser.id);
+        setUserData(response.data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        // Fallback to auth user data if API fails
+        setUserData(authUser as UserType);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchUserData();
+  }, [authUser]);
 
   // Optimize with useCallback to prevent unnecessary function recreations
   const handleBreadcrumbClick = useCallback(
@@ -82,7 +108,7 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
         </div>
         <div className="flex items-center space-x-4">
           {children}
-          {user && (
+          {authUser && (
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -149,24 +175,33 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
               </PopoverContent>
             </Popover>
           )}
-          {user && (
+          {authUser && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="flex items-center space-x-2 h-8">
-                  <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">{user.name}</span>
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Avatar className="h-6 w-6 mr-1">
+                      <AvatarImage src="" />
+                      <AvatarFallback className="text-xs">
+                        {userData?.name?.charAt(0) || authUser.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  <span className="hidden sm:inline">{userData?.name || authUser.name}</span>
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem disabled>
                   <div className="flex flex-col">
-                    <span className="font-medium">{user.name}</span>
+                    <span className="font-medium">{userData?.name || authUser.name}</span>
                     <span className="text-xs text-muted-foreground">
-                      {user.email}
+                      {userData?.email || authUser.email}
                     </span>
                   </div>
                 </DropdownMenuItem>

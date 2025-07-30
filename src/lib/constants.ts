@@ -24,6 +24,12 @@ export const QUERY_KEYS = {
   USER: ["user"],
   AUTH: ["auth"],
 
+  // Users
+  USERS: {
+    LIST: ["users"],
+    GET: (id: string) => ["users", id],
+  },
+
   // Agents
   AGENTS: ["agents"],
   AGENT: (id: string) => ["agents", id],
