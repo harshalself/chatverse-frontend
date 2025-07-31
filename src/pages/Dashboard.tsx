@@ -7,11 +7,15 @@ import { PlaygroundView } from "./dashboard/playground/PlaygroundView";
 import { ActivityView } from "./dashboard/activity/ActivityView";
 import { AnalyticsView } from "./dashboard/analytics/AnalyticsView";
 import { SettingsView } from "./dashboard/settings/SettingsView";
-import { useAgent } from "@/hooks/use-agents";
+import { useAgent as useAgentDetails } from "@/hooks/use-agents";
+import { useAgent } from "@/contexts";
 
 export default function Dashboard() {
   const { agentId } = useParams();
   const location = useLocation();
+
+  // Use the agent context
+  const { setCurrentAgentId } = useAgent();
 
   // Try to get agent name from location state first, then fetch if needed
   const [agentName, setAgentName] = useState(
@@ -19,7 +23,7 @@ export default function Dashboard() {
   );
 
   // Fetch agent details if we don't have the name
-  const { data: agentResponse } = useAgent(
+  const { data: agentResponse } = useAgentDetails(
     agentId || "",
     !location.state?.agentName && !!agentId
   );
@@ -30,6 +34,18 @@ export default function Dashboard() {
       setAgentName(agentResponse.data.name);
     }
   }, [agentResponse, location.state?.agentName]);
+
+  // Update agent context with the agent ID from URL
+  useEffect(() => {
+    if (agentId) {
+      const numericId = parseInt(agentId, 10);
+      if (!isNaN(numericId)) {
+        setCurrentAgentId(numericId);
+      }
+    }
+    // Clean up when component unmounts
+    return () => setCurrentAgentId(null);
+  }, [agentId, setCurrentAgentId]);
 
   const [activeTab, setActiveTab] = useState("sources");
   const [activeSource, setActiveSource] = useState("files");

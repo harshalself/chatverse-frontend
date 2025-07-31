@@ -38,6 +38,10 @@ export interface FileUpload {
   id?: string;
 }
 
+// Note: File Source API Types are now in source.types.ts
+
+// Note: FileSourceUploadRequest and MultipleFilesUploadRequest are now in source.types.ts
+
 // Sort and Filter Types
 export interface SortOptions {
   field: string;

@@ -14,38 +14,46 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useAgent } from "@/contexts";
 import {
   useSources,
-  useUploadFile,
-  useDeleteSource,
   useProcessSource,
   useBulkDeleteSources,
   useSourcesByType,
+  useFileSources,
+  useUploadFileSource,
+  useDeleteFileSource,
 } from "@/hooks/use-sources";
+import { FileSource } from "@/types/source.types";
 
 export function DocumentFiles() {
-  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Data hooks
+  // Get the current agent ID from context
+  const { currentAgentId, isAgentSelected } = useAgent();
+
+  // Data hooks using the new File Sources API
   const {
-    data: documentsData,
+    data: fileSources,
     isLoading: documentsLoading,
     error: documentsError,
     refetch: refetchDocuments,
-  } = useSourcesByType("file");
+  } = useFileSources(currentAgentId || 0, isAgentSelected);
 
-  const { mutate: uploadFile, isPending: uploadLoading } = useUploadFile();
+  const { mutate: uploadFileSource, isPending: uploadLoading } =
+    useUploadFileSource();
 
-  const { mutate: deleteSource } = useDeleteSource();
+  const { mutate: deleteFileSource } = useDeleteFileSource();
 
+  // We'll keep these hooks as fallbacks or for additional functionality
   const { mutate: bulkDeleteSources } = useBulkDeleteSources();
-
   const { mutate: processSource } = useProcessSource();
 
-  const documents = documentsData?.data || [];
+  // Use the file sources data
+  const documents = fileSources || [];
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -56,7 +64,7 @@ export function DocumentFiles() {
     setSelectAll(!selectAll);
   };
 
-  const handleSelectDoc = (docId: string) => {
+  const handleSelectDoc = (docId: number) => {
     setSelectedDocs((prev) =>
       prev.includes(docId)
         ? prev.filter((id) => id !== docId)
@@ -70,10 +78,25 @@ export function DocumentFiles() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
+
+    // Check if agent is selected
+    if (!currentAgentId) {
+      toast({
+        title: "No agent selected",
+        description: "Please select an agent before uploading files.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (files && files.length > 0) {
       Array.from(files).forEach((file) => {
-        uploadFile(
-          { file },
+        uploadFileSource(
+          {
+            agentId: currentAgentId,
+            file,
+            name: file.name,
+          },
           {
             onSuccess: (data) => {
               toast({
@@ -101,7 +124,7 @@ export function DocumentFiles() {
 
   const handleDeleteSelected = () => {
     if (selectedDocs.length === 1) {
-      deleteSource(selectedDocs[0], {
+      deleteFileSource(selectedDocs[0], {
         onSuccess: () => {
           toast({
             title: "Document deleted",
@@ -113,27 +136,40 @@ export function DocumentFiles() {
         },
       });
     } else if (selectedDocs.length > 1) {
-      bulkDeleteSources(selectedDocs, {
-        onSuccess: () => {
-          toast({
-            title: "Documents deleted",
-            description: `${selectedDocs.length} documents have been removed.`,
-          });
-          setSelectedDocs([]);
-          refetchDocuments();
-        },
+      // For bulk operations, we'll need to call deleteFileSource multiple times
+      // since the new API doesn't have bulk delete yet
+      const deletePromises = selectedDocs.map(
+        (id) =>
+          new Promise<void>((resolve) => {
+            deleteFileSource(id, {
+              onSuccess: () => resolve(),
+              onError: () => resolve(), // Continue even if some fail
+            });
+          })
+      );
+
+      Promise.all(deletePromises).then(() => {
+        toast({
+          title: "Documents deleted",
+          description: `${selectedDocs.length} documents have been processed for deletion.`,
+        });
+        setSelectedDocs([]);
+        refetchDocuments();
       });
     }
   };
 
-  const handleViewDocument = (docId: string) => {
+  const handleViewDocument = (docId: number) => {
     const doc = documents.find((d) => d.id === docId);
     if (doc) {
       toast({
         title: "Opening document",
         description: `Opening ${doc.name}...`,
       });
-      // TODO: Implement document viewer
+      // Open the file URL in a new tab if available
+      if (doc.file_url) {
+        window.open(doc.file_url, "_blank");
+      }
     }
   };
 
@@ -169,6 +205,14 @@ export function DocumentFiles() {
         </div>
       </div>
 
+      {!isAgentSelected && (
+        <Alert className="mb-6">
+          <AlertDescription>
+            Please select an agent to manage document files.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Upload Card */}
       <Card className="mb-6">
         <CardHeader>
@@ -183,7 +227,10 @@ export function DocumentFiles() {
             <p className="text-muted-foreground mb-4">
               Drag and drop files here or click to browse
             </p>
-            <Button onClick={handleFileSelect} disabled={uploadLoading}>
+            <Button
+              onClick={handleFileSelect}
+              disabled={uploadLoading || !isAgentSelected}
+              title={!isAgentSelected ? "Select an agent first" : ""}>
               {uploadLoading ? (
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -268,41 +315,16 @@ export function DocumentFiles() {
                         {doc.name}
                       </h3>
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <span>{doc.type}</span>
+                        <span>{doc.mime_type}</span>
                         <span>•</span>
-                        <span>{formatFileSize(doc.metadata?.size)}</span>
+                        <span>{/* Size info not available */}</span>
                         <span>•</span>
-                        <span>Updated {formatDate(doc.updatedAt)}</span>
+                        <span>Updated {formatDate(doc.updated_at)}</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge
-                      variant="secondary"
-                      className={`
-                      ${
-                        doc.status === "ready"
-                          ? "bg-success/10 text-success border-success/20"
-                          : ""
-                      }
-                      ${
-                        doc.status === "processing"
-                          ? "bg-warning/10 text-warning border-warning/20"
-                          : ""
-                      }
-                      ${
-                        doc.status === "error"
-                          ? "bg-destructive/10 text-destructive border-destructive/20"
-                          : ""
-                      }
-                      ${
-                        doc.status === "pending"
-                          ? "bg-muted/10 text-muted-foreground border-muted/20"
-                          : ""
-                      }
-                    `}>
-                      {doc.status}
-                    </Badge>
+                    <Badge variant="secondary">Ready</Badge>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -313,7 +335,7 @@ export function DocumentFiles() {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        deleteSource(doc.id, {
+                        deleteFileSource(doc.id, {
                           onSuccess: () => {
                             toast({
                               title: "Document deleted",
@@ -337,9 +359,14 @@ export function DocumentFiles() {
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No documents yet</h3>
             <p className="text-muted-foreground mb-4">
-              Upload your first document to start building your knowledge base
+              {!isAgentSelected
+                ? "Select an agent first to view its documents"
+                : "Upload your first document to start building your knowledge base"}
             </p>
-            <Button onClick={handleFileSelect}>
+            <Button
+              onClick={handleFileSelect}
+              disabled={!isAgentSelected}
+              title={!isAgentSelected ? "Select an agent first" : ""}>
               <Upload className="h-4 w-4 mr-2" />
               Upload Document
             </Button>

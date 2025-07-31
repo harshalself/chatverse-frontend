@@ -94,6 +94,55 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/sources/${id}`,
     DELETE: (id: string) => `/sources/${id}`,
     UPLOAD: "/sources/upload",
+
+    // File Sources API
+    FILE: {
+      UPLOAD: "/sources/file",
+      UPLOAD_MULTIPLE: "/sources/file/multiple",
+      GET_ALL: (agentId: number) => `/sources/file/agent/${agentId}`,
+      GET: (id: number) => `/sources/file/${id}`,
+      UPDATE: (id: number) => `/sources/file/${id}`,
+      DELETE: (id: number) => `/sources/file/${id}`,
+      EXPORT: (id: number) => `/sources/file/${id}/export`,
+    },
+
+    // Text Sources API
+    TEXT: {
+      CREATE: "/sources/text",
+      GET_ALL: (agentId: number) => `/sources/text/agent/${agentId}`,
+      GET: (id: number) => `/sources/text/${id}`,
+      UPDATE: (id: number) => `/sources/text/${id}`,
+      DELETE: (id: number) => `/sources/text/${id}`,
+    },
+
+    // Website Sources API
+    WEBSITE: {
+      CREATE: "/sources/website",
+      TEST: "/sources/website/test",
+      GET_ALL: (agentId: number) => `/sources/website/agent/${agentId}`,
+      GET: (id: number) => `/sources/website/${id}`,
+      UPDATE: (id: number) => `/sources/website/${id}`,
+      DELETE: (id: number) => `/sources/website/${id}`,
+    },
+
+    // Database Sources API
+    DATABASE: {
+      CREATE: "/sources/database",
+      TEST: "/sources/database/test",
+      GET_ALL: (agentId: number) => `/sources/database/agent/${agentId}`,
+      GET: (id: number) => `/sources/database/${id}`,
+      UPDATE: (id: number) => `/sources/database/${id}`,
+      DELETE: (id: number) => `/sources/database/${id}`,
+    },
+
+    // QA Sources API
+    QA: {
+      CREATE: "/sources/qa",
+      GET_ALL: (agentId: number) => `/sources/qa/agent/${agentId}`,
+      GET: (id: number) => `/sources/qa/${id}`,
+      UPDATE: (id: number) => `/sources/qa/${id}`,
+      DELETE: (id: number) => `/sources/qa/${id}`,
+    },
   },
 
   // Playground

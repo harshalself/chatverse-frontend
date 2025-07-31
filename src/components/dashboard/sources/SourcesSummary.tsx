@@ -12,64 +12,40 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { DataSource } from "@/types/source.types";
+import { useAgent } from "@/contexts";
+import { useSources, useDeleteSource } from "@/hooks/use-sources";
 import {
   AllSourcesTable,
-  Source,
   sourceIcons as importedSourceIcons,
   sourceLabels as importedSourceLabels,
 } from "./AllSourcesTable";
 
-// Mock data - all sources added by the user
-const allMockSources: Source[] = [
-  {
-    id: "1",
-    type: "files",
-    name: "Product Documentation.pdf",
-    count: 1,
-    dateAdded: "2025-07-25",
-  },
-  {
-    id: "2",
-    type: "text",
-    name: "Company Policies",
-    count: 3,
-    dateAdded: "2025-07-26",
-  },
-  {
-    id: "3",
-    type: "website",
-    name: "example.com",
-    count: 1,
-    dateAdded: "2025-07-27",
-  },
-  {
-    id: "4",
-    type: "qa",
-    name: "FAQ Pairs",
-    count: 12,
-    dateAdded: "2025-07-28",
-  },
-  {
-    id: "5",
-    type: "files",
-    name: "User Manual.pdf",
-    count: 2,
-    dateAdded: "2025-07-29",
-  },
-  {
-    id: "6",
-    type: "database",
-    name: "Customer Database",
-    count: 5,
-    dateAdded: "2025-07-30",
-  },
-];
+// Create a helper function to get count from metadata or properties
+const getSourceCount = (source: DataSource): number => {
+  // For TextSource
+  if (source.type === "text") {
+    return 1;
+  }
 
-// Mock data for current session
-const currentSessionSources: Source[] = [
-  { id: "5", type: "files", name: "User Manual.pdf", count: 2 },
-  { id: "6", type: "database", name: "Customer Database", count: 5 },
-];
+  // For WebsiteSource
+  if (source.type === "website") {
+    return source.pageCount || 0;
+  }
+
+  // For DatabaseSource
+  if (source.type === "database") {
+    return source.recordCount || 0;
+  }
+
+  // For QASource
+  if (source.type === "qa") {
+    return source.questions?.length || 0;
+  }
+
+  // Default fallback
+  return 0;
+};
 
 // Re-export the icons and labels
 const sourceIcons = importedSourceIcons;
@@ -78,14 +54,50 @@ const sourceLabels = importedSourceLabels;
 export function SourcesSummary() {
   const [isAllSourcesOpen, setIsAllSourcesOpen] = useState(false);
 
+  // Get the current agent ID from context
+  const { currentAgentId, isAgentSelected } = useAgent();
+
+  // Fetch all sources using the hook with agent context
+  const {
+    data: sourcesData,
+    isLoading,
+    refetch,
+  } = useSources({
+    page: 1,
+    limit: 50,
+    filter: currentAgentId ? { agentId: currentAgentId } : {},
+  });
+
+  // For delete functionality
+  const { mutate: deleteSource } = useDeleteSource();
+
+  // All sources from the API
+  const allSources = useMemo(() => sourcesData?.data || [], [sourcesData]);
+
+  // Current session sources - for this example, we'll use the 2 most recent sources
+  const currentSessionSources = useMemo(() => {
+    const sortedSources = [...allSources]
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+      .slice(0, 2);
+
+    return sortedSources;
+  }, [allSources]);
+
   // Calculate totals
   const totalAllSources = useMemo(
-    () => allMockSources.reduce((acc, source) => acc + source.count, 0),
-    [allMockSources]
+    () => allSources.reduce((acc, source) => acc + getSourceCount(source), 0),
+    [allSources]
   );
 
   const totalCurrentSessionSources = useMemo(
-    () => currentSessionSources.reduce((acc, source) => acc + source.count, 0),
+    () =>
+      currentSessionSources.reduce(
+        (acc, source) => acc + getSourceCount(source),
+        0
+      ),
     [currentSessionSources]
   );
 
@@ -99,6 +111,12 @@ export function SourcesSummary() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {!isAgentSelected && (
+            <div className="text-sm text-amber-600 bg-amber-100/30 dark:bg-amber-900/30 p-3 rounded-md mb-3">
+              Please select an agent to view sources.
+            </div>
+          )}
+
           {/* All Sources Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -109,6 +127,7 @@ export function SourcesSummary() {
                 variant="ghost"
                 size="sm"
                 className="h-8 px-2 text-xs"
+                disabled={!isAgentSelected}
                 onClick={() => setIsAllSourcesOpen(true)}>
                 View All
                 <ChevronRight className="ml-1 h-3 w-3" />
@@ -132,29 +151,44 @@ export function SourcesSummary() {
             <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
               Current Session Sources ({totalCurrentSessionSources})
             </h4>
-            {currentSessionSources.map((source) => {
-              const Icon = sourceIcons[source.type];
-              const label = sourceLabels[source.type];
+            {isLoading ? (
+              <div className="text-sm text-muted-foreground text-center py-2">
+                Loading sources...
+              </div>
+            ) : currentSessionSources.length > 0 ? (
+              currentSessionSources.map((source) => {
+                const Icon = sourceIcons[source.type];
+                const label = sourceLabels[source.type];
+                const count = getSourceCount(source);
 
-              return (
-                <div
-                  key={source.id}
-                  className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{label}</span>
+                return (
+                  <div
+                    key={source.id}
+                    className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{label}</span>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      {count}
+                    </Badge>
                   </div>
-                  <Badge variant="secondary" className="text-xs">
-                    {source.count}
-                  </Badge>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="text-sm text-muted-foreground text-center py-2">
+                No sources in current session
+              </div>
+            )}
           </div>
 
           <Separator />
 
-          <Button className="w-full" size="lg">
+          <Button
+            className="w-full"
+            size="lg"
+            disabled={!isAgentSelected}
+            title={!isAgentSelected ? "Select an agent first" : ""}>
             <Brain className="h-4 w-4 mr-2" />
             Train Agent
           </Button>
@@ -163,9 +197,10 @@ export function SourcesSummary() {
 
       {/* All Sources Table Dialog */}
       <AllSourcesTable
-        sources={allMockSources}
+        sources={allSources}
         isOpen={isAllSourcesOpen}
         onClose={() => setIsAllSourcesOpen(false)}
+        onRefresh={() => refetch()}
       />
     </div>
   );

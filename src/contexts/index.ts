@@ -15,6 +15,7 @@ export {
   useAccessibility,
   useWorkspacePreferences,
 } from "./ThemeContext";
+export { AgentProvider, useAgent } from "./AgentContext";
 // Types
 export type { Theme, UserPreferences } from "./ThemeContext";
 
