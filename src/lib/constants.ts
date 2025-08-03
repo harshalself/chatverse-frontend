@@ -56,10 +56,6 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: "/users/login",
     REGISTER: "/users/register",
-    // Note: These endpoints don't exist in current backend
-    // LOGOUT: "/auth/logout",
-    // ME: "/auth/me",
-    // REFRESH: "/auth/refresh",
   },
 
   // Users Management
