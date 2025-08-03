@@ -39,7 +39,7 @@ export function NewAgentDialog({
 
   // Reset model when provider changes
   useEffect(() => {
-    setFormData(prev => ({ ...prev, model: "" }));
+    setFormData((prev) => ({ ...prev, model: "" }));
   }, [formData.provider]);
 
   // Show error toast for API failures
@@ -52,8 +52,6 @@ export function NewAgentDialog({
       });
     }
   }, [createAgentMutation.error]);
-
-
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -117,7 +115,10 @@ export function NewAgentDialog({
       console.error("Failed to create agent:", error);
       toast({
         title: "Failed to create agent",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
         variant: "destructive",
       });
     }

@@ -1,3 +1,85 @@
+components:
+  schemas:
+    CreateAgentRequest:
+      type: object
+      required:
+        - name
+        - provider
+        - api_key
+        - model
+        - temperature
+        - is_active
+      properties:
+        name:
+          type: string
+          example: "My Llama 4 Scout Agent"
+        provider:
+          type: string
+          example: "groq"
+        api_key:
+          type: string
+          example: "sk-your-openai-key-here"
+        model:
+          type: string
+          example: "meta-llama/llama-4-scout-17b-16e-instruct"
+        temperature:
+          type: number
+          example: 0.7
+        is_active:
+          type: integer
+          example: 1
+    AgentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "My Llama 4 Scout Agent"
+        provider:
+          type: string
+          example: "groq"
+        model:
+          type: string
+          example: "meta-llama/llama-4-scout-17b-16e-instruct"
+        temperature:
+          type: number
+          example: 0.7
+        is_active:
+          type: integer
+          example: 1
+        created_by:
+          type: integer
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-07-29T10:00:00.000Z"
+        updated_by:
+          type: integer
+          example: 1
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-07-29T10:00:00.000Z"
+        is_deleted:
+          type: boolean
+          example: false
+        deleted_by:
+          type: integer
+        deleted_at:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        message:
+          type: string
+          example: "An error occurred."
 paths:
   /agents:
     post:
@@ -14,23 +96,15 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateAgentRequest"
             examples:
-              groq_agent:
-                summary: Groq Llama Agent
+              create_agent:
+                summary: Create agent
                 value:
-                  name: "Groq Llama Agent"
+                  name: "My Llama 4 Scout Agent"
                   provider: "groq"
-                  api_key: "sk-your-groq-key-here"
+                  api_key: "sk-your-openai-key-here"
                   model: "meta-llama/llama-4-scout-17b-16e-instruct"
                   temperature: 0.7
                   is_active: 1
-              gemini_agent:
-                summary: Gemini Flash Agent
-                value:
-                  name: "Gemini Flash Agent"
-                  provider: "gemini"
-                  api_key: "gemini-api-key-here"
-                  model: "gemini-1.5-flash"
-                  temperature: 0.5
       responses:
         "201":
           description: Agent created successfully
@@ -85,37 +159,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
-  /agents/models:
-    get:
-      tags:
-        - Agents
-      summary: Get provider models
-      description: Returns available models for AI providers (requires authentication)
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: provider
-          in: query
-          required: false
-          description: Specific provider to get models for
-          schema:
-            type: string
-            enum: [openai, claude, gemini, groq]
-            example: "openai"
-      responses:
-        "200":
-          description: Provider models retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/ProviderModelsResponse"
-                  message:
-                    type: string
-                    example: "Provider models retrieved successfully"
 
   /agents/{id}:
     get:
@@ -181,15 +224,12 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdateAgentRequest"
             examples:
-              update_basic:
+              update_agent:
                 summary: Update agent name and temperature
                 value:
-                  name: "Updated Agent Name"
+                  name: "My Llama 4 Scout Agent"
                   temperature: 0.5
-              update_status:
-                summary: Deactivate agent
-                value:
-                  is_active: 0
+                  is_active: 1
       responses:
         "200":
           description: Agent updated successfully
@@ -267,17 +307,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Agent not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
 components:
   schemas:
     Agent:
@@ -303,7 +332,7 @@ components:
         name:
           type: string
           description: The name of the agent
-          example: "My GPT-4 Assistant"
+          example: "My Llama 4 Scout Agent"
         user_id:
           type: integer
           description: ID of the user who owns this agent
@@ -311,11 +340,11 @@ components:
         provider:
           type: string
           description: The LLM provider
-          example: "openai"
+          example: "groq"
         model:
           type: string
           description: The AI model being used
-          example: "gpt-4-turbo"
+          example: "meta-llama/llama-4-scout-17b-16e-instruct"
         temperature:
           type: number
           description: Temperature setting
