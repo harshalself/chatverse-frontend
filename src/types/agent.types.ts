@@ -18,6 +18,7 @@ export interface Agent {
   created_at: Timestamp;
   updated_by: ID;
   updated_at: Timestamp;
+  trained_on?: Timestamp;
   is_deleted: boolean;
   deleted_by?: ID;
   deleted_at?: Timestamp;

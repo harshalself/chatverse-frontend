@@ -119,7 +119,7 @@ export function AgentsView() {
                 agent.model || "Default model"
               }`}
               status={agent.is_active ? "active" : "inactive"}
-              lastTrained={agent.updated_at}
+              trainedOn={agent.trained_on}
               onClick={handleAgentClick}
               onStatusChange={handleStatusChange}
             />

@@ -1,0 +1,366 @@
+paths:
+  /agents:
+    post:
+      tags:
+        - Agents
+      summary: Create a new agent
+      description: Creates a new AI agent with the specified configuration (requires authentication). API keys are automatically encrypted before storage.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAgentRequest"
+            examples:
+              groq_agent:
+                summary: Groq Llama Agent
+                value:
+                  name: "Groq Llama Agent"
+                  provider: "groq"
+                  api_key: "sk-your-groq-key-here"
+                  model: "meta-llama/llama-4-scout-17b-16e-instruct"
+                  temperature: 0.7
+                  is_active: 1
+              gemini_agent:
+                summary: Gemini Flash Agent
+                value:
+                  name: "Gemini Flash Agent"
+                  provider: "gemini"
+                  api_key: "gemini-api-key-here"
+                  model: "gemini-1.5-flash"
+                  temperature: 0.5
+      responses:
+        "201":
+          description: Agent created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentResponse"
+        "400":
+          description: Invalid input data or model not compatible with provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Agent with this name already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      tags:
+        - Agents
+      summary: Get all agents
+      description: Retrieves all agents belonging to the authenticated user (requires authentication)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Agents retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AgentResponse"
+                  message:
+                    type: string
+                    example: "Agents retrieved successfully"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /agents/models:
+    get:
+      tags:
+        - Agents
+      summary: Get provider models
+      description: Returns available models for AI providers (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: query
+          required: false
+          description: Specific provider to get models for
+          schema:
+            type: string
+            enum: [openai, claude, gemini, groq]
+            example: "openai"
+      responses:
+        "200":
+          description: Provider models retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ProviderModelsResponse"
+                  message:
+                    type: string
+                    example: "Provider models retrieved successfully"
+
+  /agents/{id}:
+    get:
+      tags:
+        - Agents
+      summary: Get agent by ID
+      description: Retrieves a specific agent by its ID (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Agent ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Agent retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AgentResponse"
+                  message:
+                    type: string
+                    example: "Agent retrieved successfully"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags:
+        - Agents
+      summary: Update agent
+      description: Updates an existing agent (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Agent ID
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAgentRequest"
+            examples:
+              update_basic:
+                summary: Update agent name and temperature
+                value:
+                  name: "Updated Agent Name"
+                  temperature: 0.5
+              update_status:
+                summary: Deactivate agent
+                value:
+                  is_active: 0
+      responses:
+        "200":
+          description: Agent updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AgentResponse"
+                  message:
+                    type: string
+                    example: "Agent updated successfully"
+        "400":
+          description: Invalid input data or model not compatible with provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Agent with this name already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - Agents
+      summary: Delete agent
+      description: Soft deletes an agent (marks as deleted, doesn't actually remove from database) (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Agent ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Agent deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Agent deleted successfully"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Agent:
+      type: object
+      required:
+        - id
+        - name
+        - user_id
+        - provider
+        - model
+        - encrypted_api_key
+        - encryption_salt
+        - is_active
+        - trained_on
+        - created_by
+        - created_at
+        - is_deleted
+      properties:
+        id:
+          type: integer
+          description: Agent's unique identifier
+          example: 1
+        name:
+          type: string
+          description: The name of the agent
+          example: "My GPT-4 Assistant"
+        user_id:
+          type: integer
+          description: ID of the user who owns this agent
+          example: 1
+        provider:
+          type: string
+          description: The LLM provider
+          example: "openai"
+        model:
+          type: string
+          description: The AI model being used
+          example: "gpt-4-turbo"
+        temperature:
+          type: number
+          description: Temperature setting
+          example: 0.7
+        encrypted_api_key:
+          type: string
+          description: Encrypted API key
+        encryption_salt:
+          type: string
+          description: Salt used for API key encryption
+        is_active:
+          type: integer
+          description: Whether the agent is active (0 or 1)
+          example: 1
+        trained_on:
+          type: string
+          format: date-time
+          description: When the agent was trained
+          example: "2025-07-29T10:00:00.000Z"
+        created_by:
+          type: integer
+          description: ID of the user who created this agent
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          description: Agent creation timestamp
+          example: "2025-07-29T10:00:00.000Z"
+        updated_by:
+          type: integer
+          description: ID of the user who last updated this agent
+          example: 1
+        updated_at:
+          type: string
+          format: date-time
+          description: Agent last update timestamp
+          example: "2025-07-29T10:00:00.000Z"
+        is_deleted:
+          type: boolean
+          description: Whether the agent is deleted
+          example: false
+        deleted_by:
+          type: integer
+          description: ID of the user who deleted this agent
+        deleted_at:
+          type: string
+          format: date-time
+          description: Agent deletion timestamp

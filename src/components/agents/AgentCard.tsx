@@ -12,7 +12,7 @@ interface AgentCardProps {
   name: string;
   description: string;
   status: AgentCardStatus;
-  lastTrained: string;
+  trainedOn?: string; // Use backend's trained_on value
   onClick?: (id: string) => void;
   onStatusChange?: (id: string, status: "active" | "inactive") => void;
 }
@@ -48,7 +48,7 @@ function AgentCardComponent({
   name,
   description,
   status,
-  lastTrained,
+  trainedOn,
   onClick,
   onStatusChange,
 }: AgentCardProps) {
@@ -94,8 +94,12 @@ function AgentCardComponent({
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Last active:</span>
-            <span className="font-medium text-foreground">{lastTrained}</span>
+            <span className="text-muted-foreground">Last trained:</span>
+            <span className="font-medium text-foreground">
+              {trainedOn
+                ? new Date(trainedOn).toLocaleString()
+                : "Not trained yet"}
+            </span>
           </div>
         </div>
       </CardContent>
