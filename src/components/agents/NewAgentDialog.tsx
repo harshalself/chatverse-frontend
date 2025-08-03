@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,16 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCreateAgent } from "@/hooks/use-agents";
 import { toast } from "@/hooks/use-toast";
 import { AgentProvider } from "@/types/agent.types";
+import { ProviderSelect } from "@/components/ProviderSelect";
+import { ModelSelect } from "@/components/ModelSelect";
 
 interface NewAgentDialogProps {
   open: boolean;
@@ -37,11 +32,28 @@ export function NewAgentDialog({
     provider: "openai" as AgentProvider,
     api_key: "",
     model: "",
-    temperature: 0.7,
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const createAgentMutation = useCreateAgent();
+
+  // Reset model when provider changes
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, model: "" }));
+  }, [formData.provider]);
+
+  // Show error toast for API failures
+  useEffect(() => {
+    if (createAgentMutation.error) {
+      toast({
+        title: "Failed to create agent",
+        description: "There was an error creating the agent. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [createAgentMutation.error]);
+
+
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -58,6 +70,10 @@ export function NewAgentDialog({
       errors.api_key = "API key is required";
     }
 
+    if (!formData.model) {
+      errors.model = "Model is required";
+    }
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -72,8 +88,7 @@ export function NewAgentDialog({
         name: formData.name.trim(),
         provider: formData.provider,
         api_key: formData.api_key.trim(),
-        ...(formData.model && { model: formData.model }),
-        temperature: formData.temperature,
+        model: formData.model,
         is_active: 1,
       };
 
@@ -90,7 +105,6 @@ export function NewAgentDialog({
         provider: "openai",
         api_key: "",
         model: "",
-        temperature: 0.7,
       });
       setFieldErrors({});
 
@@ -101,6 +115,11 @@ export function NewAgentDialog({
       onCreateAgent?.(newAgent.id, formData.name.trim());
     } catch (error) {
       console.error("Failed to create agent:", error);
+      toast({
+        title: "Failed to create agent",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
     }
   };
 
@@ -110,7 +129,6 @@ export function NewAgentDialog({
       provider: "openai",
       api_key: "",
       model: "",
-      temperature: 0.7,
     });
     setFieldErrors({});
     onOpenChange(false);
@@ -151,28 +169,14 @@ export function NewAgentDialog({
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="provider">Provider *</Label>
-            <Select
-              value={formData.provider}
-              onValueChange={(value: AgentProvider) =>
-                handleInputChange("provider", value)
-              }>
-              <SelectTrigger
-                className={fieldErrors.provider ? "border-destructive" : ""}>
-                <SelectValue placeholder="Select AI provider" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="openai">OpenAI</SelectItem>
-                <SelectItem value="claude">Claude</SelectItem>
-                <SelectItem value="gemini">Gemini</SelectItem>
-                <SelectItem value="groq">Groq</SelectItem>
-              </SelectContent>
-            </Select>
-            {fieldErrors.provider && (
-              <p className="text-sm text-destructive">{fieldErrors.provider}</p>
-            )}
-          </div>
+          <ProviderSelect
+            value={formData.provider}
+            onValueChange={(value: AgentProvider) =>
+              handleInputChange("provider", value)
+            }
+            error={fieldErrors.provider}
+            required
+          />
 
           <div className="space-y-2">
             <Label htmlFor="api_key">API Key *</Label>
@@ -189,39 +193,13 @@ export function NewAgentDialog({
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="model">Model (Optional)</Label>
-            <Input
-              id="model"
-              value={formData.model}
-              onChange={(e) => handleInputChange("model", e.target.value)}
-              placeholder="e.g. gpt-4-turbo, claude-3-opus"
-            />
-            <p className="text-sm text-muted-foreground">
-              Leave empty to use the provider's default model
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="temperature">
-              Temperature: {formData.temperature}
-            </Label>
-            <Input
-              id="temperature"
-              type="range"
-              min="0"
-              max="2"
-              step="0.1"
-              value={formData.temperature}
-              onChange={(e) =>
-                handleInputChange("temperature", parseFloat(e.target.value))
-              }
-              className="slider"
-            />
-            <p className="text-sm text-muted-foreground">
-              Controls randomness: 0 = focused, 2 = creative
-            </p>
-          </div>
+          <ModelSelect
+            provider={formData.provider}
+            value={formData.model}
+            onValueChange={(value: string) => handleInputChange("model", value)}
+            error={fieldErrors.model}
+            required
+          />
         </div>
 
         <DialogFooter>
@@ -234,6 +212,7 @@ export function NewAgentDialog({
               !formData.name.trim() ||
               !formData.provider ||
               !formData.api_key.trim() ||
+              !formData.model ||
               createAgentMutation.isPending
             }>
             {createAgentMutation.isPending ? "Creating..." : "Create Agent"}

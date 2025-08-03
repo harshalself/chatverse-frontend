@@ -18,7 +18,7 @@ export const ROUTES = {
   AGENT_WITH_ID: (id: string) => `/agent/${id}`,
 } as const;
 
-// React Query Keys
+  // React Query Keys
 export const QUERY_KEYS = {
   // Auth
   USER: ["user"],
@@ -30,7 +30,9 @@ export const QUERY_KEYS = {
     GET: (id: string) => ["users", id],
   },
 
-  // Agents
+  // Provider Models
+  PROVIDER_MODELS: ["provider-models"],
+  PROVIDER_MODEL: (provider: string) => ["provider-models", provider],  // Agents
   AGENTS: ["agents"],
   AGENT: (id: string) => ["agents", id],
 
@@ -73,6 +75,12 @@ export const API_ENDPOINTS = {
     CREATE: "/agents",
     UPDATE: (id: string) => `/agents/${id}`,
     DELETE: (id: string) => `/agents/${id}`,
+  },
+
+  // Provider Models
+  PROVIDER_MODELS: {
+    ALL: "/provider-models", // Get all provider models
+    BY_PROVIDER: (provider: string) => `/provider-models/provider/${provider}`, // Get models for specific provider
   },
 
   // Dashboard

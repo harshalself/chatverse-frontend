@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api/client";
+import { apiClient } from "@/lib/client";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { TextSource } from "@/types/source.types";
 

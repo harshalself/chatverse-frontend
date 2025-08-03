@@ -1,4 +1,4 @@
-import { apiClient, TokenManager } from "@/lib/api/client";
+import { apiClient, TokenManager } from "@/lib/client";
 import { API_ENDPOINTS } from "@/lib/constants";
 import {
   LoginRequest,
