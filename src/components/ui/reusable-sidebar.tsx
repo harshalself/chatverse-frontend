@@ -14,14 +14,14 @@ interface ReusableSidebarProps {
   onItemChange: (item: string) => void;
 }
 
-export function ReusableSidebar({ 
-  title, 
-  items, 
-  activeItem, 
-  onItemChange 
+export function ReusableSidebar({
+  title,
+  items,
+  activeItem,
+  onItemChange,
 }: ReusableSidebarProps) {
   return (
-    <div className="w-64 border-r bg-background p-4">
+    <div className="w-64 border-r bg-background p-4 sticky top-16 z-40 self-start">
       <h3 className="font-semibold text-foreground mb-4">{title}</h3>
       <nav className="space-y-1">
         {items.map((item) => {
@@ -35,8 +35,7 @@ export function ReusableSidebar({
                 activeItem === item.id
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
+              )}>
               <Icon className="h-4 w-4" />
               <span>{item.label}</span>
             </button>

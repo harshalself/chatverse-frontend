@@ -1,0 +1,291 @@
+# Text Source API Documentation
+# This file contains text source API paths and schemas to be integrated into the main Swagger documentation
+
+paths:
+  # ==========================================
+  # TEXT SOURCE ENDPOINTS
+  # ==========================================
+  /sources/text/agent/{agentId}:
+    get:
+      tags:
+        - Text Sources
+      summary: Get all text sources for an agent
+      description: Retrieves all text sources belonging to a specific agent (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          description: Agent ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Text sources retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AllTextSourcesResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sources/text/{id}:
+    get:
+      tags:
+        - Text Sources
+      summary: Get text source by ID
+      description: Retrieves a specific text source by its ID (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Text Source ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Text source retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleTextSourceResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Text source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags:
+        - Text Sources
+      summary: Update text source
+      description: Updates an existing text source (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Text Source ID
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTextSourceDto"
+            examples:
+              update_text_source:
+                summary: Update text source content
+                value:
+                  title: "Updated Training Example Text"
+                  content: "This is updated text content for training."
+      responses:
+        "200":
+          description: Text source updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleTextSourceResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Text source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags:
+        - Text Sources
+      summary: Delete text source
+      description: Deletes a text source (soft delete - marks as deleted but doesn't physically remove)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Text Source ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Text source deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Text source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sources/text:
+    post:
+      tags:
+        - Text Sources
+      summary: Create text source
+      description: Creates a new text source (requires authentication)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTextSourceDto"
+            examples:
+              create_text_source:
+                summary: Create text source
+                value:
+                  agent_id: 1
+                  title: "Training Example Text"
+                  content: "This is an example of a text source that can be used for training or reference."
+      responses:
+        "201":
+          description: Text source created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleTextSourceResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    TextSource:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Source unique identifier
+          example: 1
+        agent_id:
+          type: integer
+          description: ID of the agent this source belongs to
+          example: 1
+        title:
+          type: string
+          description: Title of the text content
+          example: "Training Example Text"
+        content:
+          type: string
+          description: The actual text content
+          example: "This is an example of a text source that can be used for training or reference."
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the source was created
+          example: "2025-07-31T14:33:39Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the source was last updated
+          example: "2025-07-31T14:33:39Z"
+
+    CreateTextSourceDto:
+      type: object
+      required:
+        - agent_id
+        - title
+        - content
+      properties:
+        agent_id:
+          type: integer
+          description: ID of the agent this text source belongs to
+          example: 1
+        title:
+          type: string
+          description: Title of the text content
+          example: "Training Example Text"
+        content:
+          type: string
+          description: The actual text content
+          example: "This is an example of a text source that can be used for training or reference."
+
+    UpdateTextSourceDto:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Updated title
+          example: "Updated Training Example Text"
+        content:
+          type: string
+          description: Updated text content
+          example: "This is updated text content."
+
+    SingleTextSourceResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/TextSource"
+        message:
+          type: string
+          example: "Text source retrieved successfully"
+
+    AllTextSourcesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TextSource"
+        message:
+          type: string
+          example: "Text sources retrieved successfully"

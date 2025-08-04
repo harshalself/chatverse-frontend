@@ -6,8 +6,8 @@ import {
   RegisterRequest,
   AuthResponse,
   RegisterResponse,
-  User,
 } from "@/types/auth.types";
+import { User } from "@/types/user.types";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback } from "react";
 
@@ -91,7 +91,15 @@ export const useLogin = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (credentials: LoginRequest) => AuthService.login(credentials),
+    mutationFn: async (credentials: LoginRequest) => {
+      try {
+        return await AuthService.login(credentials);
+      } catch (error: any) {
+        // Log error but don't show toast here - let onError handle it
+        console.error("Login error in mutation:", error);
+        return Promise.reject(error);
+      }
+    },
     onSuccess: (data: AuthResponse) => {
       console.log("Login success:", data);
 
@@ -99,18 +107,22 @@ export const useLogin = () => {
       queryClient.setQueryData(QUERY_KEYS.USER, data.user);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER });
 
+      // Notify auth listeners
+      notifyAuthChange();
+
       toast({
         title: "Welcome back!",
         description: data.message || "You have been successfully signed in.",
       });
     },
     onError: (error: any) => {
-      console.error("Login error:", error);
+      console.error("Login error in onError:", error);
       toast({
         title: "Login Failed",
         description:
-          error.response?.data?.message ||
-          "Please check your credentials and try again.",
+          error?.response?.data?.message ||
+          error?.message ||
+          "Incorrect email or password. Please try again.",
         variant: "destructive",
       });
     },

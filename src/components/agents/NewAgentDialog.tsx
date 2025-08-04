@@ -87,10 +87,12 @@ export function NewAgentDialog({
         provider: formData.provider,
         api_key: formData.api_key.trim(),
         model: formData.model,
+        temperature: 0.7, // Default temperature, adjust as needed
         is_active: 1,
       };
 
-      const newAgent = await createAgentMutation.mutateAsync(requestData);
+      const response = await createAgentMutation.mutateAsync(requestData);
+      const newAgent = response?.data;
 
       toast({
         title: "Agent created successfully!",
@@ -110,7 +112,9 @@ export function NewAgentDialog({
       onOpenChange(false);
 
       // Notify parent component with both agent ID and name
-      onCreateAgent?.(newAgent.id, formData.name.trim());
+      if (newAgent) {
+        onCreateAgent?.(String(newAgent.id), formData.name.trim());
+      }
     } catch (error) {
       console.error("Failed to create agent:", error);
       toast({

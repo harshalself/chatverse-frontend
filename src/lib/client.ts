@@ -150,13 +150,20 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Authentication error handling
+    // Authentication error handling - but don't redirect on login/register endpoints
     if (error.response?.status === 401) {
-      TokenManager.clearTokens();
-      window.location.href = "/signin";
-      return Promise.reject(
-        new Error("Authentication failed. Please sign in again.")
-      );
+      const isLoginRequest = error.config?.url?.includes("/users/login");
+      const isRegisterRequest = error.config?.url?.includes("/users/register");
+
+      // Only clear tokens and redirect if it's NOT a login/register attempt
+      if (!isLoginRequest && !isRegisterRequest) {
+        TokenManager.clearTokens();
+        window.location.href = "/signin";
+        return Promise.reject(
+          new Error("Authentication failed. Please sign in again.")
+        );
+      }
+      // For login/register requests, just pass the error through
     }
 
     // Network error handling

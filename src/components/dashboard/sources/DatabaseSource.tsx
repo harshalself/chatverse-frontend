@@ -23,14 +23,20 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import {
-  useCreateDatabaseSource,
-  useSourcesByType,
-  useDeleteSource,
-  useTestDatabaseConnection,
-} from "@/hooks/use-sources";
+import { useDeleteSource } from "@/hooks/use-base-sources";
+// NOTE: Database source specific hooks need to be implemented
 
 export function DatabaseSource() {
+  // Data hooks - Database sources functionality needs to be implemented
+  const databaseSourcesData = { data: [] };
+  const databaseSourcesLoading = false;
+  const databaseSourcesError = null;
+  const refetchDatabaseSources = () => {};
+  const createDatabaseSource = () => {};
+  const createLoading = false;
+  const { mutate: deleteSource } = useDeleteSource();
+  const testConnection = () => {};
+  const databaseSources = databaseSourcesData?.data || [];
   const [dbType, setDbType] = useState("");
   const [host, setHost] = useState("");
   const [port, setPort] = useState("");
@@ -41,21 +47,7 @@ export function DatabaseSource() {
   const { toast } = useToast();
 
   // Data hooks
-  const {
-    data: databaseSourcesData,
-    isLoading: databaseSourcesLoading,
-    error: databaseSourcesError,
-    refetch: refetchDatabaseSources,
-  } = useSourcesByType("database");
-
-  const { mutate: createDatabaseSource, isPending: createLoading } =
-    useCreateDatabaseSource();
-
-  const { mutate: deleteSource } = useDeleteSource();
-
-  const { mutate: testConnection } = useTestDatabaseConnection();
-
-  const databaseSources = databaseSourcesData?.data || [];
+  // ...stubbed hooks and variables above...
 
   const buildConnectionString = () => {
     if (!dbType || !host || !database || !username) return "";
@@ -76,75 +68,25 @@ export function DatabaseSource() {
   };
 
   const handleTestConnection = () => {
-    const connectionString = buildConnectionString();
-    if (!connectionString) {
-      toast({
-        title: "Connection details incomplete",
-        description:
-          "Please fill in all required fields to test the connection.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsTestingConnection(true);
-    testConnection(connectionString, {
-      onSuccess: (data) => {
-        setIsTestingConnection(false);
-        toast({
-          title: "Connection successful",
-          description: `Successfully connected to ${database} database.`,
-        });
-      },
-      onError: (error) => {
-        setIsTestingConnection(false);
-        toast({
-          title: "Connection failed",
-          description: `Could not connect to the database. Please check your credentials and try again.`,
-          variant: "destructive",
-        });
-      },
+    // TODO: Implement database connection testing
+    toast({
+      title: "Not Implemented",
+      description: "Database connection testing is not yet implemented",
+      variant: "destructive",
     });
   };
 
   const handleAddDatabase = () => {
-    const connectionString = buildConnectionString();
-    if (dbType && host && database && username && connectionString) {
-      createDatabaseSource(
-        {
-          name: `${dbType}:${host}/${database}`,
-          connectionString: connectionString,
-        },
-        {
-          onSuccess: (data) => {
-            toast({
-              title: "Database source created",
-              description: `Connected to ${database} database successfully.`,
-            });
-            // Reset form
-            setDbType("");
-            setHost("");
-            setPort("");
-            setDatabase("");
-            setUsername("");
-            setPassword("");
-            refetchDatabaseSources();
-          },
-          onError: (error) => {
-            toast({
-              title: "Failed to create database source",
-              description:
-                "Please check your connection details and try again.",
-              variant: "destructive",
-            });
-          },
-        }
-      );
-    }
+    // TODO: Implement database source creation
+    toast({
+      title: "Not Implemented",
+      description: "Database source creation is not yet implemented",
+      variant: "destructive",
+    });
   };
 
   const handleDeleteDatabase = (id: string, name: string) => {
-    deleteSource(id, {
+    deleteSource(Number(id), {
       onSuccess: () => {
         toast({
           title: "Database source deleted",

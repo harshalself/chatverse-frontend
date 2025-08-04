@@ -1,9 +1,13 @@
-// Common API Response Types
+// Common API Response Types - Aligned with backend API structure
 export interface ApiResponse<T = any> {
-  success: boolean;
   data: T;
-  message?: string;
-  errors?: string[];
+  message: string;
+}
+
+export interface ApiErrorResponse {
+  status: number;
+  message: string;
+  details?: string[];
 }
 
 export interface PaginatedResponse<T = any> {

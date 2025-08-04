@@ -79,11 +79,16 @@ export default function SignUp() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (registerMutation.isPending) return false;
 
     if (!validateForm()) {
-      return;
+      return false;
     }
 
     try {
@@ -94,7 +99,9 @@ export default function SignUp() {
         password: formData.password,
       });
 
-      // Success is handled in the hook
+      // Clear any existing field errors on success
+      setFieldErrors({});
+
       // Show success message and redirect to sign in
       toast({
         title: "Registration Successful",
@@ -109,11 +116,14 @@ export default function SignUp() {
           message:
             "Registration successful! Please sign in with your new account.",
         },
+        replace: true,
       });
-    } catch (error) {
+    } catch (error: any) {
       // Error handling is done in the hook
       console.error("Registration error:", error);
     }
+
+    return false;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,7 +177,9 @@ export default function SignUp() {
 
         <Card>
           <CardHeader className="text-center px-4 sm:px-6">
-            <CardTitle className="text-xl sm:text-2xl">Create your account</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              Create your account
+            </CardTitle>
             <CardDescription className="text-sm sm:text-base">
               Get started with AgentFlow and build your first AI agent
             </CardDescription>
@@ -184,7 +196,13 @@ export default function SignUp() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit(e);
+                return false;
+              }}
+              className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
@@ -353,7 +371,8 @@ export default function SignUp() {
               </div>
 
               <Button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 className="w-full"
                 disabled={registerMutation.isPending}>
                 {registerMutation.isPending

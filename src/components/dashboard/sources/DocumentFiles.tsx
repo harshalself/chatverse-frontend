@@ -16,14 +16,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAgent } from "@/contexts";
 import {
-  useSources,
-  useProcessSource,
-  useBulkDeleteSources,
-  useSourcesByType,
   useFileSources,
   useUploadFileSource,
   useDeleteFileSource,
-} from "@/hooks/use-sources";
+} from "@/hooks/use-file-sources";
 import { FileSource } from "@/types/source.types";
 
 export function DocumentFiles() {
@@ -47,10 +43,6 @@ export function DocumentFiles() {
     useUploadFileSource();
 
   const { mutate: deleteFileSource } = useDeleteFileSource();
-
-  // We'll keep these hooks as fallbacks or for additional functionality
-  const { mutate: bulkDeleteSources } = useBulkDeleteSources();
-  const { mutate: processSource } = useProcessSource();
 
   // Use the file sources data
   const documents = fileSources || [];

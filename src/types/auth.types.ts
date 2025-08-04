@@ -1,14 +1,5 @@
-import { ID, Timestamp } from "./api.types";
-
-// User Types - Updated to match real API
-export interface User {
-  id: ID;
-  name: string;
-  email: string;
-  phone_number: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
-}
+import { ID, Timestamp, ApiResponse } from "./api.types";
+import { User } from "./user.types";
 
 export type UserRole = "admin" | "user" | "guest";
 

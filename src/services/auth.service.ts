@@ -5,8 +5,8 @@ import {
   RegisterRequest,
   AuthResponse,
   RegisterResponse,
-  User,
 } from "@/types/auth.types";
+import { User } from "@/types/user.types";
 
 class AuthService {
   /**

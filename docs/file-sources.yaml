@@ -1,0 +1,399 @@
+# File Source API Documentation
+# This file contains file source API paths and schemas to be integrated into the main Swagger documentation
+
+paths:
+  # ==========================================
+  # FILE SOURCE ENDPOINTS
+  # ==========================================
+  /sources/file:
+    post:
+      tags:
+        - File Sources
+      summary: Upload a single file
+      description: Uploads a single file as a source for an agent (requires authentication)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFileSourceRequest"
+            examples:
+              create_file_source:
+                summary: Create file source
+                value:
+                  agent_id: 1
+                  file_name: "document1"
+                  file_url: "https://storage.example.com/users/username/agents/1/files/1627634819-document1.pdf"
+                  mime_type: "application/pdf"
+                  file_size: 58924
+      responses:
+        "201":
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleFileSourceResponse"
+        "400":
+          description: Invalid input data or file validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sources/file/multiple:
+    post:
+      tags:
+        - File Sources
+      summary: Upload multiple files at once
+      description: Uploads multiple files as sources for an agent (requires authentication)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMultipleFileSourcesRequest"
+            examples:
+              create_multiple_file_sources:
+                summary: Create multiple file sources
+                value:
+                  agent_id: 1
+                  files:
+                    - file_name: "document1"
+                      file_url: "https://storage.example.com/users/username/agents/1/files/1627634819-document1.pdf"
+                      mime_type: "application/pdf"
+                      file_size: 58924
+                    - file_name: "document2"
+                      file_url: "https://storage.example.com/users/username/agents/1/files/1627634820-document2.docx"
+                      mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      file_size: 102400
+      responses:
+        "201":
+          description: Files uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MultipleFileSourcesResponse"
+        "400":
+          description: Invalid input data, file validation failed, or too many files
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sources/file/agent/{agentId}:
+    get:
+      tags:
+        - File Sources
+      summary: Get all file sources for an agent
+      description: Retrieves all file sources belonging to a specific agent (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          description: Agent ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: File sources retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AllFileSourcesResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sources/file/{id}:
+    get:
+      tags:
+        - File Sources
+      summary: Get file source by ID
+      description: Retrieves a specific file source by its ID (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: File Source ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: File source retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleFileSourceResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: File source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags:
+        - File Sources
+      summary: Update file source
+      description: Updates an existing file source (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: File Source ID
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFileSourceRequest"
+            examples:
+              update_file_source:
+                summary: Update file source name
+                value:
+                  file_name: "updated_document1"
+      responses:
+        "200":
+          description: File source updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleFileSourceResponse"
+        "400":
+          description: Invalid input data or file validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: File source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags:
+        - File Sources
+      summary: Delete file source
+      description: Deletes a file source (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: File Source ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: File source deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: File source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    FileSource:
+      type: object
+      required:
+        - id
+        - agent_id
+        - file_name
+        - file_url
+        - mime_type
+        - file_size
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: File source unique identifier
+          example: 1
+        agent_id:
+          type: integer
+          description: ID of the agent this file belongs to
+          example: 1
+        file_name:
+          type: string
+          description: Name of the file source
+          example: "document1"
+        file_url:
+          type: string
+          description: URL path to the file
+          example: "https://storage.example.com/users/username/agents/1/files/1627634819-document1.pdf"
+        mime_type:
+          type: string
+          description: MIME type of the file
+          example: "application/pdf"
+        file_size:
+          type: integer
+          description: Size of the file in bytes
+          example: 58924
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the file was uploaded
+          example: "2025-07-30T14:33:39Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the file was last updated
+          example: "2025-07-30T14:33:39Z"
+
+    CreateFileSourceRequest:
+      type: object
+      required:
+        - agent_id
+        - file_name
+        - file
+      properties:
+        agent_id:
+          type: integer
+          description: ID of the agent this file belongs to
+          example: 1
+        file_name:
+          type: string
+          description: Name of the file source
+          example: "document1"
+        file:
+          type: string
+          format: base64
+          description: Base64 encoded file content
+          example: "data:application/pdf;base64,JVBERi0xLjQKJcfsj6IKNSAwIG9iag..."
+
+    UpdateFileSourceRequest:
+      type: object
+      properties:
+        file_name:
+          type: string
+          description: Updated name of the file source
+          example: "updated_document1"
+
+    SingleFileSourceResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/FileSource"
+        message:
+          type: string
+          example: "File source retrieved successfully"
+
+    AllFileSourcesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileSource"
+        message:
+          type: string
+          example: "File sources retrieved successfully"
+
+    MultipleFileSourcesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileSource"
+        message:
+          type: string
+          example: "Multiple file sources created successfully"
+
+    CreateMultipleFileSourcesRequest:
+      type: object
+      required:
+        - agent_id
+        - files
+      properties:
+        agent_id:
+          type: integer
+          description: ID of the agent these files belong to
+          example: 1
+        files:
+          type: array
+          items:
+            type: object
+            required:
+              - file_name
+              - base64String
+            properties:
+              file_name:
+                type: string
+                description: Name of the file
+                example: "document1.pdf"
+              base64String:
+                type: string
+                format: base64
+                description: Base64 encoded file content
+                example: "JVBERi0xLjQKJcfsj6IKNSAwIG9iag..."
+
+    DeleteResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "File source deleted successfully"

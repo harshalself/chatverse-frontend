@@ -78,27 +78,36 @@ export default function SignIn() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (loginMutation.isPending) return false;
 
     if (!validateForm()) {
-      return;
+      return false;
     }
 
     try {
-      const result = await loginMutation.mutateAsync({
+      await loginMutation.mutateAsync({
         email: formData.email,
         password: formData.password,
       });
-
-      console.log("Login mutation completed:", result);
-      
-      // Success toast is handled in the hook
-      // Redirect is handled by useEffect when user state updates
-    } catch (error) {
-      // Error handling is done in the hook
+      // Success handling is done in the hook
+      // Clear any existing field errors on success
+      setFieldErrors({});
+    } catch (error: any) {
+      // Show password field error for authentication failures
+      setFieldErrors((prev) => ({
+        ...prev,
+        password: "Incorrect password. Please try again.",
+      }));
       console.error("Login error:", error);
     }
+
+    return false;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,7 +163,13 @@ export default function SignIn() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit(e);
+                return false;
+              }}
+              className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -216,7 +231,10 @@ export default function SignIn() {
               </div>
 
               <Button
-                type="submit"
+                // Use button type instead of submit to prevent native form submission
+                // We handle submission manually via handleSubmit
+                type="button"
+                onClick={handleSubmit}
                 className="w-full"
                 disabled={loginMutation.isPending}>
                 {loginMutation.isPending ? "Signing In..." : "Sign In"}

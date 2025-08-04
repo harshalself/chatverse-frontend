@@ -7,6 +7,7 @@ import {
   Database,
   HelpCircle,
   ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DataSource } from "@/types/source.types";
 import { useAgent } from "@/contexts";
-import { useSources, useDeleteSource } from "@/hooks/use-sources";
+import { useSourcesByAgent, useDeleteSource } from "@/hooks/use-base-sources";
 import {
   AllSourcesTable,
   sourceIcons as importedSourceIcons,
@@ -30,21 +31,26 @@ const getSourceCount = (source: DataSource): number => {
 
   // For WebsiteSource
   if (source.type === "website") {
-    return source.pageCount || 0;
+    return source.pageCount || source.metadata?.pageCount || 0;
   }
 
   // For DatabaseSource
   if (source.type === "database") {
-    return source.recordCount || 0;
+    return source.recordCount || source.metadata?.recordCount || 0;
   }
 
   // For QASource
   if (source.type === "qa") {
-    return source.questions?.length || 0;
+    return source.questions?.length || source.metadata?.questions?.length || 0;
+  }
+
+  // For FileSource
+  if (source.type === "file") {
+    return source.metadata?.fileCount || 1;
   }
 
   // Default fallback
-  return 0;
+  return 1;
 };
 
 // Re-export the icons and labels
@@ -59,24 +65,20 @@ export function SourcesSummary() {
 
   // Fetch all sources using the hook with agent context
   const {
-    data: sourcesData,
+    data: allSources,
     isLoading,
     refetch,
-  } = useSources({
-    page: 1,
-    limit: 50,
-    filter: currentAgentId ? { agentId: currentAgentId } : {},
-  });
+  } = useSourcesByAgent(currentAgentId || 0, isAgentSelected);
 
   // For delete functionality
   const { mutate: deleteSource } = useDeleteSource();
 
-  // All sources from the API
-  const allSources = useMemo(() => sourcesData?.data || [], [sourcesData]);
+  // Use allSources directly from the hook instead of sourcesData
+  const sources = allSources || [];
 
   // Current session sources - for this example, we'll use the 2 most recent sources
   const currentSessionSources = useMemo(() => {
-    const sortedSources = [...allSources]
+    const sortedSources = [...sources]
       .sort(
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -84,12 +86,12 @@ export function SourcesSummary() {
       .slice(0, 2);
 
     return sortedSources;
-  }, [allSources]);
+  }, [sources]);
 
   // Calculate totals
   const totalAllSources = useMemo(
-    () => allSources.reduce((acc, source) => acc + getSourceCount(source), 0),
-    [allSources]
+    () => sources.reduce((acc, source) => acc + getSourceCount(source), 0),
+    [sources]
   );
 
   const totalCurrentSessionSources = useMemo(
@@ -102,12 +104,25 @@ export function SourcesSummary() {
   );
 
   return (
-    <div className="w-80 border-l bg-background p-6">
+    <div className="w-80 border-l bg-background p-6 sticky top-16 z-40 self-start">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Brain className="h-5 w-5" />
-            <span>Sources</span>
+          <CardTitle className="flex items-center space-x-2 justify-between">
+            <span className="flex items-center space-x-2">
+              <Brain className="h-5 w-5" />
+              <span>Sources</span>
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => refetch()}
+              title="Refresh sources"
+              disabled={isLoading}>
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -146,25 +161,20 @@ export function SourcesSummary() {
 
           <Separator />
 
-          {/* Current Session Sources Section */}
+          {/* Source Type Counts Section */}
           <div className="space-y-3">
-            <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-              Current Session Sources ({totalCurrentSessionSources})
-            </h4>
             {isLoading ? (
               <div className="text-sm text-muted-foreground text-center py-2">
                 Loading sources...
               </div>
-            ) : currentSessionSources.length > 0 ? (
-              currentSessionSources.map((source) => {
-                const Icon = sourceIcons[source.type];
-                const label = sourceLabels[source.type];
-                const count = getSourceCount(source);
-
+            ) : (
+              Object.entries(sourceLabels).map(([type, label]) => {
+                const Icon = sourceIcons[type];
+                // Count all sources of this type
+                const count = sources.filter((s) => s.type === type).length;
+                if (count === 0) return null;
                 return (
-                  <div
-                    key={source.id}
-                    className="flex items-center justify-between">
+                  <div key={type} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Icon className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium">{label}</span>
@@ -175,10 +185,6 @@ export function SourcesSummary() {
                   </div>
                 );
               })
-            ) : (
-              <div className="text-sm text-muted-foreground text-center py-2">
-                No sources in current session
-              </div>
             )}
           </div>
 
@@ -197,7 +203,7 @@ export function SourcesSummary() {
 
       {/* All Sources Table Dialog */}
       <AllSourcesTable
-        sources={allSources}
+        sources={sources}
         isOpen={isAllSourcesOpen}
         onClose={() => setIsAllSourcesOpen(false)}
         onRefresh={() => refetch()}

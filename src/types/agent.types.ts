@@ -1,68 +1,46 @@
-import { ID, Timestamp } from "./api.types";
-import { User } from "./auth.types";
+import { ID, Timestamp, ApiResponse } from "./api.types";
 
 // Provider types based on backend API
 export type AgentProvider = "openai" | "claude" | "gemini" | "groq";
 
-// Agent Types based on backend API response
+// Agent Types based on backend API response - aligned with agents.yaml
 export interface Agent {
   id: ID;
   name: string;
-  api_key: string; // Will be "***hidden***" in responses
-  is_active: number; // 0 or 1
+  provider: AgentProvider;
   model: string;
   temperature: number;
-  provider: AgentProvider;
-  user_id: ID;
+  is_active: number; // 0 or 1
+  trained_on?: Timestamp; // Added field for when the agent was trained
   created_by: ID;
   created_at: Timestamp;
   updated_by: ID;
   updated_at: Timestamp;
-  trained_on?: Timestamp;
   is_deleted: boolean;
   deleted_by?: ID;
   deleted_at?: Timestamp;
 }
 
-// Legacy types for backward compatibility (can be removed later)
-export type AgentType = "chatbot" | "assistant" | "analyst" | "automation";
-export type AgentStatus = "active" | "inactive" | "training" | "error";
-
-export interface AgentConfiguration {
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  systemPrompt: string;
-  tools: string[];
-  knowledgeBase: ID[];
-}
-
-export interface AgentMetrics {
-  totalConversations: number;
-  totalMessages: number;
-  averageResponseTime: number;
-  successRate: number;
-  lastWeekUsage: number;
-}
-
-// Agent Request Types based on backend API
+// Agent Request Types based on backend API - aligned with agents.yaml
 export interface CreateAgentRequest {
   name: string;
   provider: AgentProvider;
   api_key: string;
-  model?: string; // Optional, defaults to provider's default
-  temperature?: number; // Optional, default 0.7
-  is_active?: number; // Optional, default 1
+  model: string;
+  temperature: number;
+  is_active: number;
 }
 
 export interface UpdateAgentRequest {
   name?: string;
-  provider?: AgentProvider;
-  api_key?: string;
-  model?: string;
   temperature?: number;
+  system_prompt?: string;
   is_active?: number;
 }
+
+// API Response Types
+export type AgentResponse = ApiResponse<Agent>;
+export type AgentsResponse = ApiResponse<Agent[]>;
 
 // Conversation Types
 export interface Conversation {

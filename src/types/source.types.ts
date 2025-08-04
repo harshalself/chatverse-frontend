@@ -1,12 +1,21 @@
-import { Timestamp, ID } from "./api.types";
+import { Timestamp, ID, ApiResponse } from "./api.types";
 
-// Base source interface
+// Base source interface - aligned with backend API
 export interface BaseSource {
-  id: ID;
-  name: string;
+  id: number;
+  agent_id: number;
+  source_type: "file" | "text" | "website" | "database" | "qa";
   status: SourceStatus;
+  processing_metadata?: string | null;
+  is_embedded: boolean;
+  last_processed?: Timestamp | null;
+  created_by: number;
   created_at: Timestamp;
+  updated_by?: number | null;
   updated_at: Timestamp;
+  is_deleted: boolean;
+  deleted_by?: number | null;
+  deleted_at?: Timestamp | null;
 }
 
 // File Source Types
@@ -80,30 +89,37 @@ export interface FileLegacySource extends BaseSource {
   };
 }
 
-// Combined type for all sources
-export type DataSource =
-  | TextSource
-  | WebsiteSource
-  | DatabaseSource
-  | QASource
-  | FileLegacySource;
+// Source status types - aligned with backend API
+export type SourceStatus = "pending" | "processing" | "completed" | "failed";
 
-// Source status types
-export type SourceStatus = "pending" | "processing" | "ready" | "error";
+// For backward compatibility, create DataSource type using BaseSource
+export type DataSource = BaseSource & {
+  name?: string; // For UI display purposes
+  type: BaseSource["source_type"]; // Alias for consistency
+  metadata?: Record<string, any>; // Parsed processing_metadata
 
-// Source API Request Types
+  // Legacy properties for specific source types
+  pageCount?: number; // For website sources
+  recordCount?: number; // For database sources
+  questions?: Array<{ question: string; answer: string; category?: string }>; // For QA sources
+};
+
+// Base source API request types
 export interface CreateSourceRequest {
-  name: string;
-  type: "file" | "text" | "website" | "database" | "qa";
-  content?: string;
-  metadata?: Record<string, any>;
+  agent_id: number;
+  source_type: "file" | "text" | "website" | "database" | "qa";
+  processing_metadata?: string;
 }
 
 export interface UpdateSourceRequest {
-  name?: string;
-  content?: string;
-  metadata?: Record<string, any>;
+  status?: SourceStatus;
+  processing_metadata?: string;
+  is_embedded?: boolean;
 }
+
+// API Response Types
+export type BaseSourceResponse = ApiResponse<BaseSource>;
+export type BaseSourcesResponse = ApiResponse<BaseSource[]>;
 
 export interface WebsiteSourceRequest {
   name: string;

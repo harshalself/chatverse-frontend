@@ -1,0 +1,316 @@
+# QA Source API Documentation
+# This file contains QA source API paths and schemas to be integrated into the main Swagger documentation
+
+paths:
+  # ==========================================
+  # QA SOURCE ENDPOINTS
+  # ==========================================
+  /sources/qa/agent/{agentId}:
+    get:
+      tags:
+        - QA Sources
+      summary: Get all QA sources for an agent
+      description: Retrieves all QA sources belonging to a specific agent (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          description: Agent ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: QA sources retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AllQASourcesResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sources/qa/{id}:
+    get:
+      tags:
+        - QA Sources
+      summary: Get QA source by ID
+      description: Retrieves a specific QA source by its ID (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: QA Source ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: QA source retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleQASourceResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: QA source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags:
+        - QA Sources
+      summary: Update QA source
+      description: Updates an existing QA source (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: QA Source ID
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateQASourceDto"
+      responses:
+        "200":
+          description: QA source updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleQASourceResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: QA source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags:
+        - QA Sources
+      summary: Delete QA source
+      description: Deletes a QA source (soft delete - marks as deleted but doesn't physically remove)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: QA Source ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: QA source deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: QA source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sources/qa:
+    post:
+      tags:
+        - QA Sources
+      summary: Create QA source
+      description: Creates a new QA source (requires authentication)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQASourceDto"
+            examples:
+              create_qa_source:
+                summary: Create QA source
+                value:
+                  agent_id: 1
+                  qa_pairs:
+                    - title: "Chatbot Purpose"
+                      question: "What is the purpose of this chatbot?"
+                      answer: "This chatbot is designed to assist users with various tasks and provide intelligent responses based on multiple knowledge sources."
+      responses:
+        "201":
+          description: QA source created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleQASourceResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    QAPair:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Title of the QA pair
+          example: "Chatbot Purpose"
+        question:
+          type: string
+          description: The question text
+          example: "What is the purpose of this chatbot?"
+        answer:
+          type: string
+          description: The answer text
+          example: "This chatbot helps users interact with AI models to get responses to their questions."
+
+    CreateQASourceDto:
+      type: object
+      required:
+        - agent_id
+        - qa_pairs
+      properties:
+        agent_id:
+          type: integer
+          description: ID of the agent this QA source belongs to
+          example: 1
+        qa_pairs:
+          type: array
+          items:
+            $ref: "#/components/schemas/QAPair"
+          description: Array of question-answer pairs
+
+    UpdateQASourceDto:
+      type: object
+      properties:
+        qa_pairs:
+          type: array
+          items:
+            $ref: "#/components/schemas/QAPair"
+          description: Updated array of question-answer pairs
+      required:
+        - qa_pairs
+
+    SingleQASourceResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            agent_id:
+              type: integer
+              example: 1
+            title:
+              type: string
+              example: "Chatbot Purpose"
+            question:
+              type: string
+              example: "What is the purpose of this chatbot?"
+            answer:
+              type: string
+              example: "This chatbot is designed to assist users with various tasks."
+            created_at:
+              type: string
+              format: date-time
+              example: "2025-07-31T14:33:39Z"
+            updated_at:
+              type: string
+              format: date-time
+              example: "2025-07-31T14:33:39Z"
+        message:
+          type: string
+          example: "QA source retrieved successfully"
+
+    AllQASourcesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              agent_id:
+                type: integer
+                example: 1
+              title:
+                type: string
+                example: "Chatbot Purpose"
+              question:
+                type: string
+                example: "What is the purpose of this chatbot?"
+              answer:
+                type: string
+                example: "This chatbot is designed to assist users with various tasks."
+              created_at:
+                type: string
+                format: date-time
+                example: "2025-07-31T14:33:39Z"
+              updated_at:
+                type: string
+                format: date-time
+                example: "2025-07-31T14:33:39Z"
+        message:
+          type: string
+          example: "QA sources retrieved successfully"

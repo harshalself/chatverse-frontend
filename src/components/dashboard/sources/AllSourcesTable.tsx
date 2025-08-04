@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { useDeleteSource } from "@/hooks/use-sources";
+import { useDeleteSource } from "@/hooks/use-base-sources";
 import {
   Search,
   FileText,
@@ -37,6 +37,7 @@ import {
   HelpCircle,
   Trash2,
   Loader2,
+  Eye,
 } from "lucide-react";
 
 // Source definitions
@@ -68,21 +69,26 @@ const getSourceCount = (source: DataSource): number => {
 
   // For WebsiteSource
   if (source.type === "website") {
-    return source.pageCount || 0;
+    return source.pageCount || source.metadata?.pageCount || 0;
   }
 
   // For DatabaseSource
   if (source.type === "database") {
-    return source.recordCount || 0;
+    return source.recordCount || source.metadata?.recordCount || 0;
   }
 
   // For QASource
   if (source.type === "qa") {
-    return source.questions?.length || 0;
+    return source.questions?.length || source.metadata?.questions?.length || 0;
+  }
+
+  // For FileSource
+  if (source.type === "file") {
+    return source.metadata?.fileCount || 1;
   }
 
   // Default fallback
-  return 0;
+  return 1;
 };
 
 interface AllSourcesTableProps {
@@ -133,7 +139,7 @@ function AllSourcesTableComponent({
       setIsDeleting(true);
       console.log("Attempting to delete source:", sourceToDelete.id);
 
-      deleteSource(sourceToDelete.id, {
+      deleteSource(Number(sourceToDelete.id), {
         onSuccess: () => {
           console.log("Source deleted successfully");
           // Toast notification is automatically handled by the hook
@@ -193,7 +199,7 @@ function AllSourcesTableComponent({
                 <TableRow>
                   <TableHead>Type</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Count</TableHead>
+                  {/* Removed Count column */}
                   <TableHead>Date Added</TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
@@ -213,25 +219,43 @@ function AllSourcesTableComponent({
                         <TableCell className="font-medium">
                           {source.name}
                         </TableCell>
-                        <TableCell>{getSourceCount(source)}</TableCell>
+                        {/* Removed Count cell */}
                         <TableCell>
                           {new Date(source.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-destructive hover:bg-red-100 hover:text-red-700"
-                            onClick={() => {
-                              console.log("Delete button clicked");
-                              handleDeleteClick(source);
-                            }}
-                            disabled={isDeleting}
-                            title="Delete source"
-                            type="button">
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted"
+                              onClick={() => {
+                                // TODO: Implement view action
+                                toast({
+                                  title: "View source",
+                                  description: `Viewing '${source.name}' (not yet implemented)`,
+                                });
+                              }}
+                              title="View source"
+                              type="button">
+                              <Eye className="h-4 w-4" />
+                              <span className="sr-only">View</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-destructive hover:bg-red-100 hover:text-red-700"
+                              onClick={() => {
+                                console.log("Delete button clicked");
+                                handleDeleteClick(source);
+                              }}
+                              disabled={isDeleting}
+                              title="Delete source"
+                              type="button">
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );

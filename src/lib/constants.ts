@@ -18,7 +18,7 @@ export const ROUTES = {
   AGENT_WITH_ID: (id: string) => `/agent/${id}`,
 } as const;
 
-  // React Query Keys
+// React Query Keys
 export const QUERY_KEYS = {
   // Auth
   USER: ["user"],
@@ -32,7 +32,7 @@ export const QUERY_KEYS = {
 
   // Provider Models
   PROVIDER_MODELS: ["provider-models"],
-  PROVIDER_MODEL: (provider: string) => ["provider-models", provider],  // Agents
+  PROVIDER_MODEL: (provider: string) => ["provider-models", provider], // Agents
   AGENTS: ["agents"],
   AGENT: (id: string) => ["agents", id],
 
@@ -90,14 +90,12 @@ export const API_ENDPOINTS = {
     USAGE: "/dashboard/usage",
   },
 
-  // Sources
+  // Sources - Base Sources API
   SOURCES: {
-    LIST: "/sources",
-    GET: (id: string) => `/sources/${id}`,
-    CREATE: "/sources",
-    UPDATE: (id: string) => `/sources/${id}`,
-    DELETE: (id: string) => `/sources/${id}`,
-    UPLOAD: "/sources/upload",
+    // Base Sources API - aligned with backend
+    LIST_BY_AGENT: (agentId: number) => `/sources/agent/${agentId}`,
+    GET: (id: number) => `/sources/${id}`,
+    DELETE: (id: number) => `/sources/${id}`,
 
     // File Sources API
     FILE: {
@@ -190,4 +188,6 @@ export const SUCCESS_MESSAGES = {
   SOURCE_DELETED: "Source deleted successfully",
   FILE_UPLOADED: "File uploaded successfully",
   SETTINGS_SAVED: "Settings saved successfully",
+  USER_UPDATED: "User updated successfully",
+  USER_DELETED: "User deleted successfully",
 } as const;

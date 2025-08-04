@@ -11,15 +11,10 @@ import {
   UpdateAgentRequest,
 } from "@/types/agent.types";
 import { PaginationOptions } from "@/types/api.types";
-import { QUERY_KEYS } from "@/lib/constants";
+import { QUERY_KEYS, SUCCESS_MESSAGES } from "@/lib/constants";
+import { ErrorHandler } from "@/lib/error-handler";
 import { toast } from "@/hooks/use-toast";
 import { useMemo } from "react";
-
-const SUCCESS_MESSAGES = {
-  AGENT_CREATED: "Agent created successfully",
-  AGENT_UPDATED: "Agent updated successfully",
-  AGENT_DELETED: "Agent deleted successfully",
-};
 
 // Helper function to prefetch agents (useful for app initialization)
 export const prefetchAgents = async (
@@ -43,7 +38,21 @@ export const useAgents = (options?: PaginationOptions) => {
 
   return useQuery({
     queryKey: [...QUERY_KEYS.AGENTS, memoizedOptions],
-    queryFn: () => AgentsService.getAgents(memoizedOptions),
+    queryFn: async () => {
+      const response: any = await AgentsService.getAgents(memoizedOptions);
+      // Debug log to see what the backend returns
+      console.log("Agents API response:", response);
+      if (response.data) {
+        if (Array.isArray(response.data)) {
+          return response.data;
+        } else if (Array.isArray(response.data.agents)) {
+          return response.data.agents;
+        } else if (Array.isArray(response.data.users)) {
+          return response.data.users;
+        }
+      }
+      return [];
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes
     placeholderData: (previousData) => previousData,
     retry: 1, // Only retry once
@@ -69,7 +78,10 @@ export const useAgent = (id: string, enabled = true) => {
 
   return useQuery({
     queryKey: QUERY_KEYS.AGENT(memoizedId),
-    queryFn: () => AgentsService.getAgent(memoizedId),
+    queryFn: async () => {
+      const response = await AgentsService.getAgent(memoizedId);
+      return response.data; // Extract data from ApiResponse
+    },
     enabled: enabled && !!memoizedId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1, // Only retry once
@@ -83,17 +95,22 @@ export const useCreateAgent = () => {
 
   return useMutation({
     mutationFn: (data: CreateAgentRequest) => AgentsService.createAgent(data),
-    onSuccess: (newAgent: Agent) => {
+    onSuccess: (response) => {
+      const newAgent = response.data;
+
       // Invalidate agents list
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENTS });
 
       // Add to cache
       queryClient.setQueryData(QUERY_KEYS.AGENT(newAgent.id), newAgent);
 
-      toast({ title: "Success", description: SUCCESS_MESSAGES.AGENT_CREATED });
+      toast({
+        title: "Success",
+        description: response.message || SUCCESS_MESSAGES.AGENT_CREATED,
+      });
     },
-    onError: (error) => {
-      console.error("Create agent error:", error);
+    onError: (error: any) => {
+      ErrorHandler.handleApiError(error, "Failed to create agent");
     },
   });
 };
@@ -114,10 +131,13 @@ export const useUpdateAgent = () => {
       // Invalidate agents list to ensure consistency
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENTS });
 
-      toast({ title: "Success", description: SUCCESS_MESSAGES.AGENT_UPDATED });
+      toast({
+        title: "Success",
+        description: response.message || SUCCESS_MESSAGES.AGENT_UPDATED,
+      });
     },
-    onError: (error) => {
-      console.error("Update agent error:", error);
+    onError: (error: any) => {
+      ErrorHandler.handleApiError(error, "Failed to update agent");
     },
   });
 };
@@ -128,17 +148,20 @@ export const useDeleteAgent = () => {
 
   return useMutation({
     mutationFn: (id: string) => AgentsService.deleteAgent(id),
-    onSuccess: (_, deletedId) => {
+    onSuccess: (response, deletedId) => {
       // Remove from cache
       queryClient.removeQueries({ queryKey: QUERY_KEYS.AGENT(deletedId) });
 
       // Invalidate agents list
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENTS });
 
-      toast({ title: "Success", description: SUCCESS_MESSAGES.AGENT_DELETED });
+      toast({
+        title: "Success",
+        description: response.message || SUCCESS_MESSAGES.AGENT_DELETED,
+      });
     },
-    onError: (error) => {
-      console.error("Delete agent error:", error);
+    onError: (error: any) => {
+      ErrorHandler.handleApiError(error, "Failed to delete agent");
     },
   });
 };

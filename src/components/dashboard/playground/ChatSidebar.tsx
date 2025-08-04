@@ -77,8 +77,8 @@ export function ChatSidebar() {
   // Only update form state from backend when agentId changes
   const lastLoadedAgentId = useRef<string | number | null>(null);
   useEffect(() => {
-    if (agentData?.data && !agentLoading) {
-      const agent = agentData.data;
+    if (agentData && !agentLoading) {
+      const agent = agentData;
       if (lastLoadedAgentId.current !== agent.id) {
         // Temperature can be a string or number from the backend
         let agentTemperature = 0.7; // default fallback

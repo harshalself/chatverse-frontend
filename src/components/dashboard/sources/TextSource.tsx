@@ -9,27 +9,32 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import {
-  useCreateTextSource,
-  useSourcesByType,
-  useDeleteSource,
-} from "@/hooks/use-sources";
+import { useDeleteSource } from "@/hooks/use-base-sources";
+// NOTE: Text source specific hooks need to be implemented
 
 export function TextSource() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const { toast } = useToast();
 
-  // Data hooks
-  const {
-    data: textSourcesData,
-    isLoading: textSourcesLoading,
-    error: textSourcesError,
-    refetch: refetchTextSources,
-  } = useSourcesByType("text");
+  // Data hooks - Text sources functionality needs to be implemented
+  // const {
+  //   data: textSourcesData,
+  //   isLoading: textSourcesLoading,
+  //   error: textSourcesError,
+  //   refetch: refetchTextSources,
+  // } = useSourcesByType("text");
 
-  const { mutate: createTextSource, isPending: createLoading } =
-    useCreateTextSource();
+  // const { mutate: createTextSource, isPending: createLoading } =
+  //   useCreateTextSource();
+
+  // Placeholder data until text sources are implemented
+  const textSourcesData = { data: [] };
+  const textSourcesLoading = false;
+  const textSourcesError = null;
+  const refetchTextSources = () => {};
+  const createTextSource = () => {};
+  const createLoading = false;
 
   const { mutate: deleteSource } = useDeleteSource();
 
@@ -37,37 +42,17 @@ export function TextSource() {
 
   const handleAddText = () => {
     if (title && content) {
-      createTextSource(
-        {
-          name: title,
-          type: "text",
-          content: content,
-          metadata: { source: "manual_entry" },
-        },
-        {
-          onSuccess: (data) => {
-            toast({
-              title: "Text source created",
-              description: `"${title}" has been added to your knowledge base.`,
-            });
-            setTitle("");
-            setContent("");
-            refetchTextSources();
-          },
-          onError: (error) => {
-            toast({
-              title: "Failed to create text source",
-              description: "Please try again later.",
-              variant: "destructive",
-            });
-          },
-        }
-      );
+      // TODO: Implement text source creation
+      toast({
+        title: "Not Implemented",
+        description: "Text source creation is not yet implemented",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDeleteText = (id: string, name: string) => {
-    deleteSource(id, {
+    deleteSource(Number(id), {
       onSuccess: () => {
         toast({
           title: "Text source deleted",

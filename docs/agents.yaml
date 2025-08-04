@@ -71,15 +71,23 @@ components:
         deleted_at:
           type: string
           format: date-time
-    ErrorResponse:
+
+    UpdateAgentRequest:
       type: object
       properties:
-        status:
+        name:
           type: string
-          example: "error"
-        message:
+          description: Updated name of the agent
+          example: "Updated Agent Name"
+        temperature:
+          type: number
+          description: Updated temperature setting
+          example: 0.8
+        system_prompt:
           type: string
-          example: "An error occurred."
+          description: Updated system prompt
+          example: "You are an updated AI assistant"
+
 paths:
   /agents:
     post:
@@ -117,19 +125,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
         "409":
           description: Agent with this name already exists
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
 
     get:
       tags:
@@ -158,7 +166,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
 
   /agents/{id}:
     get:
@@ -194,13 +202,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
         "404":
           description: Agent not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
 
     put:
       tags:
@@ -248,25 +256,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
         "404":
           description: Agent not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
         "409":
           description: Agent with this name already exists
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
 
     delete:
       tags:
@@ -299,13 +307,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
         "404":
           description: Agent not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:

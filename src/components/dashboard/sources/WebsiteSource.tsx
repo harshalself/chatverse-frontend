@@ -24,12 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import {
-  useCreateWebsiteSource,
-  useSourcesByType,
-  useDeleteSource,
-  useTestWebsiteConnection,
-} from "@/hooks/use-sources";
+import { useDeleteSource } from "@/hooks/use-base-sources";
+// NOTE: Website source specific hooks need to be implemented
 
 export function WebsiteSource() {
   const [url, setUrl] = useState("");
@@ -37,20 +33,32 @@ export function WebsiteSource() {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const { toast } = useToast();
 
-  // Data hooks
-  const {
-    data: websiteSourcesData,
-    isLoading: websiteSourcesLoading,
-    error: websiteSourcesError,
-    refetch: refetchWebsiteSources,
-  } = useSourcesByType("website");
-
-  const { mutate: createWebsiteSource, isPending: createLoading } =
-    useCreateWebsiteSource();
+  // TODO: Implement Website source hooks (useSourcesByType, useCreateWebsiteSource, useTestWebsiteConnection)
+  // Temporary stubs to avoid errors
+  const websiteSourcesData = { data: [] };
+  const websiteSourcesLoading = false;
+  const websiteSourcesError = null;
+  const refetchWebsiteSources = () => {};
+  const createLoading = false;
+  const createWebsiteSource = () => {
+    toast({
+      title: "Not implemented",
+      description: "Creating website sources is not yet implemented.",
+      variant: "destructive",
+    });
+  };
+  const testConnection = () => {
+    toast({
+      title: "Not implemented",
+      description: "Testing website connection is not yet implemented.",
+      variant: "destructive",
+    });
+    setIsTestingConnection(false);
+  };
 
   const { mutate: deleteSource } = useDeleteSource();
 
-  const { mutate: testConnection } = useTestWebsiteConnection();
+  // (Removed duplicate testConnection declaration)
 
   const websiteSources = websiteSourcesData?.data || [];
 
@@ -63,59 +71,18 @@ export function WebsiteSource() {
       });
       return;
     }
-
     setIsTestingConnection(true);
-    testConnection(url, {
-      onSuccess: (data) => {
-        setIsTestingConnection(false);
-        toast({
-          title: "Connection successful",
-          description: `Successfully connected to ${url}`,
-        });
-      },
-      onError: (error) => {
-        setIsTestingConnection(false);
-        toast({
-          title: "Connection failed",
-          description: `Could not connect to ${url}. Please check the URL and try again.`,
-          variant: "destructive",
-        });
-      },
-    });
+    testConnection();
   };
 
   const handleAddWebsite = () => {
     if (url && crawlDepth) {
-      createWebsiteSource(
-        {
-          name: new URL(url).hostname,
-          url: url,
-          crawlDepth: parseInt(crawlDepth),
-        },
-        {
-          onSuccess: (data) => {
-            toast({
-              title: "Website source created",
-              description: `Started crawling ${url}. This may take a few minutes.`,
-            });
-            setUrl("");
-            setCrawlDepth("1");
-            refetchWebsiteSources();
-          },
-          onError: (error) => {
-            toast({
-              title: "Failed to create website source",
-              description: "Please check the URL and try again.",
-              variant: "destructive",
-            });
-          },
-        }
-      );
+      createWebsiteSource();
     }
   };
 
   const handleDeleteWebsite = (id: string, name: string) => {
-    deleteSource(id, {
+    deleteSource(Number(id), {
       onSuccess: () => {
         toast({
           title: "Website source deleted",

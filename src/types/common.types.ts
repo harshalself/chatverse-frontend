@@ -1,6 +1,5 @@
 // Re-export all types for easy importing
 export * from "./api.types";
-export * from "./auth.types";
 export * from "./agent.types";
 
 // Additional common types that don't fit in other files
