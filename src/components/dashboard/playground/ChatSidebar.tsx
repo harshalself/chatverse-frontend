@@ -8,7 +8,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Textarea as ShadcnTextarea } from "@/components/ui/textarea";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   useAgent as useAgentDetails,
   useUpdateAgent,
@@ -74,27 +74,40 @@ export function ChatSidebar() {
     }
   }, [selectedProvider, availableModels, modelsLoading, selectedModel]);
 
-  // Set initial values from backend when agent data loads
+  // Only update form state from backend when agentId changes
+  const lastLoadedAgentId = useRef<string | number | null>(null);
   useEffect(() => {
     if (agentData?.data && !agentLoading) {
       const agent = agentData.data;
-      const agentTemperature =
-        typeof agent.temperature === "number" ? agent.temperature : 0.7;
+      if (lastLoadedAgentId.current !== agent.id) {
+        // Temperature can be a string or number from the backend
+        let agentTemperature = 0.7; // default fallback
+        if (agent.temperature !== null && agent.temperature !== undefined) {
+          const parsedTemp =
+            typeof agent.temperature === "string"
+              ? parseFloat(agent.temperature)
+              : agent.temperature;
+          if (!isNaN(parsedTemp) && parsedTemp >= 0 && parsedTemp <= 1) {
+            agentTemperature = parsedTemp;
+          }
+        }
 
-      const values = {
-        provider: agent.provider || "",
-        model: agent.model || "",
-        temperature: agentTemperature,
-        systemPrompt: "sales", // Default since this isn't in backend yet
-        instructions: "", // Default since this isn't in backend yet
-      };
+        const values = {
+          provider: agent.provider || "",
+          model: agent.model || "",
+          temperature: agentTemperature,
+          systemPrompt: "sales", // Default since this isn't in backend yet
+          instructions: "", // Default since this isn't in backend yet
+        };
 
-      setSelectedProvider(agent.provider || "");
-      setSelectedModel(agent.model || "");
-      setTemperature(agentTemperature);
-      setSystemPrompt("sales");
-      setInstructions("");
-      setInitialValues(values);
+        setSelectedProvider(agent.provider || "");
+        setSelectedModel(agent.model || "");
+        setTemperature(agentTemperature);
+        setSystemPrompt("sales");
+        setInstructions("");
+        setInitialValues(values);
+        lastLoadedAgentId.current = agent.id;
+      }
     }
   }, [agentData, agentLoading]);
 
@@ -119,10 +132,11 @@ export function ChatSidebar() {
   function handleSaveAgent() {
     if (!currentAgentId || !hasChanges) return;
 
+    // Temperature is always a number
     const updateData = {
       provider: selectedProvider as AgentProvider,
       model: selectedModel,
-      temperature: typeof temperature === "number" ? temperature : 0.7,
+      temperature: temperature,
       // Note: systemPrompt and instructions would need to be added to backend schema
     };
 
@@ -134,7 +148,7 @@ export function ChatSidebar() {
           setInitialValues({
             provider: selectedProvider,
             model: selectedModel,
-            temperature: typeof temperature === "number" ? temperature : 0.7,
+            temperature: temperature,
             systemPrompt: systemPrompt,
             instructions: instructions,
           });
@@ -252,21 +266,28 @@ export function ChatSidebar() {
         <label className="block mb-1 text-sm font-medium">
           Temperature{" "}
           <span className="ml-2 text-xs text-gray-500">
-            {typeof temperature === "number" ? temperature.toFixed(2) : "0.70"}
+            {temperature.toFixed(1)}
           </span>
         </label>
         <input
           type="range"
           min={0}
           max={1}
-          step={0.01}
-          value={typeof temperature === "number" ? temperature : 0.7}
+          step={0.1}
+          value={temperature}
           onChange={(e) => {
-            const value = parseFloat(e.target.value);
-            setTemperature(isNaN(value) ? 0.7 : value);
+            // Snap to nearest 0.1 step
+            let value = Math.round(parseFloat(e.target.value) * 10) / 10;
+            if (isNaN(value)) value = 0.7;
+            setTemperature(value);
           }}
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
         />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          {[...Array(11)].map((_, i) => (
+            <span key={i}>{(i / 10).toFixed(1)}</span>
+          ))}
+        </div>
       </div>
 
       <div>
