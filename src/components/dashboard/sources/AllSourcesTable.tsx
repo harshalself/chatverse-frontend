@@ -115,7 +115,8 @@ function AllSourcesTableComponent({
   // Filter sources based on search query
   const filteredSources = sources.filter(
     (source) =>
-      source.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      // Safely handle undefined name property
+      (source.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       sourceLabels[source.type]
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
@@ -217,7 +218,7 @@ function AllSourcesTableComponent({
                           </div>
                         </TableCell>
                         <TableCell className="font-medium">
-                          {source.name}
+                          {source.name || "Unnamed Source"}
                         </TableCell>
                         {/* Removed Count cell */}
                         <TableCell>

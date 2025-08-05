@@ -33,7 +33,8 @@ paths:
                 value:
                   agent_id: 1
                   source_type: "file"
-                  processing_metadata: '{"initial_processing": true}'
+                  name: "Important Document"
+                  description: "A critical document for the chatbot"
       responses:
         "201":
           description: Source created successfully
@@ -114,6 +115,8 @@ paths:
               update_source:
                 summary: Update source status
                 value:
+                  name: "Updated Document Name"
+                  description: "Updated description"
                   status: "completed"
                   is_embedded: true
       responses:
@@ -229,26 +232,24 @@ components:
           enum: [file, text, website, database, qa]
           description: Type of source
           example: "file"
+        name:
+          type: string
+          description: Name/title of the source
+          example: "Important Document"
+        description:
+          type: string
+          nullable: true
+          description: Optional description of the source
+          example: "A critical document for the chatbot"
         status:
           type: string
           enum: [pending, processing, completed, failed]
           description: Processing status of the source
           example: "completed"
-        processing_metadata:
-          type: string
-          nullable: true
-          description: JSON string containing processing details and metadata
-          example: '{"tokens": 1500, "chunks": 3, "last_processed": "2025-07-30T14:33:39Z"}'
         is_embedded:
           type: boolean
           description: Whether the source content has been vectorized for embeddings
           example: true
-        last_processed:
-          type: string
-          format: date-time
-          nullable: true
-          description: Timestamp when the source was last processed
-          example: "2025-07-30T14:33:39Z"
         created_by:
           type: integer
           description: User ID who created this source
@@ -289,6 +290,7 @@ components:
       required:
         - agent_id
         - source_type
+        - name
       properties:
         agent_id:
           type: integer
@@ -299,23 +301,31 @@ components:
           enum: [file, text, website, database, qa]
           description: Type of source
           example: "file"
-        processing_metadata:
+        name:
           type: string
-          description: JSON string containing processing details and metadata
-          example: '{"initial_processing": true}'
+          description: Name/title of the source
+          example: "Important Document"
+        description:
+          type: string
+          description: Optional description of the source
+          example: "A critical document for the chatbot"
 
     UpdateSourceDto:
       type: object
       properties:
+        name:
+          type: string
+          description: Name/title of the source
+          example: "Updated Document Name"
+        description:
+          type: string
+          description: Optional description of the source
+          example: "Updated description"
         status:
           type: string
           enum: [pending, processing, completed, failed]
           description: Processing status of the source
           example: "completed"
-        processing_metadata:
-          type: string
-          description: JSON string containing processing details and metadata
-          example: '{"tokens": 1500, "chunks": 3}'
         is_embedded:
           type: boolean
           description: Whether the source content has been vectorized for embeddings

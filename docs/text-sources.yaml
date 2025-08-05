@@ -2,15 +2,12 @@
 # This file contains text source API paths and schemas to be integrated into the main Swagger documentation
 
 paths:
-  # ==========================================
-  # TEXT SOURCE ENDPOINTS
-  # ==========================================
   /sources/text/agent/{agentId}:
     get:
       tags:
         - Text Sources
       summary: Get all text sources for an agent
-      description: Retrieves all text sources belonging to a specific agent (requires authentication)
+      description: Retrieves all text sources for a given agent (requires authentication)
       security:
         - bearerAuth: []
       parameters:
@@ -102,7 +99,6 @@ paths:
               update_text_source:
                 summary: Update text source content
                 value:
-                  title: "Updated Training Example Text"
                   content: "This is updated text content for training."
       responses:
         "200":
@@ -117,41 +113,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "404":
-          description: Text source not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-    delete:
-      tags:
-        - Text Sources
-      summary: Delete text source
-      description: Deletes a text source (soft delete - marks as deleted but doesn't physically remove)
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Text Source ID
-          schema:
-            type: integer
-            example: 1
-      responses:
-        "200":
-          description: Text source deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DeleteResponse"
         "401":
           description: Unauthorized
           content:
@@ -184,7 +145,8 @@ paths:
                 summary: Create text source
                 value:
                   agent_id: 1
-                  title: "Training Example Text"
+                  name: "Training Example Text"
+                  description: "This is an example text source for training purposes"
                   content: "This is an example of a text source that can be used for training or reference."
       responses:
         "201":
@@ -210,49 +172,115 @@ components:
   schemas:
     TextSource:
       type: object
+      description: Complete text source with joined source and text_sources table data
+      required:
+        - id
+        - agent_id
+        - source_type
+        - name
+        - status
+        - is_embedded
+        - created_by
+        - created_at
+        - updated_at
+        - is_deleted
+        - source_id
+        - content
       properties:
+        # Fields from sources table
         id:
           type: integer
-          description: Source unique identifier
+          description: Source ID (primary key from sources table)
           example: 1
         agent_id:
           type: integer
           description: ID of the agent this source belongs to
           example: 1
-        title:
+        source_type:
           type: string
-          description: Title of the text content
+          description: Type of source (always 'text' for text sources)
+          example: "text"
+        name:
+          type: string
+          description: Name of the source
           example: "Training Example Text"
+        description:
+          type: string
+          nullable: true
+          description: Description of the source
+          example: "This is an example text source for training purposes"
+        status:
+          type: string
+          description: Processing status of the source
+          enum: [pending, processing, completed, failed]
+          example: "pending"
+        is_embedded:
+          type: boolean
+          description: Whether the source content has been vectorized
+          example: false
+        created_by:
+          type: integer
+          description: ID of user who created the source
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2025-08-05T14:33:39Z"
+        updated_by:
+          type: integer
+          nullable: true
+          description: ID of user who last updated the source
+          example: 1
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2025-08-05T14:33:39Z"
+        is_deleted:
+          type: boolean
+          description: Whether the source is soft deleted
+          example: false
+        deleted_by:
+          type: integer
+          nullable: true
+          description: ID of user who deleted the source
+          example: null
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Deletion timestamp
+          example: null
+        # Fields from text_sources table
+        source_id:
+          type: integer
+          description: Reference to the source record (same as id for joined responses)
+          example: 1
         content:
           type: string
           description: The actual text content
           example: "This is an example of a text source that can be used for training or reference."
-        created_at:
-          type: string
-          format: date-time
-          description: Timestamp when the source was created
-          example: "2025-07-31T14:33:39Z"
-        updated_at:
-          type: string
-          format: date-time
-          description: Timestamp when the source was last updated
-          example: "2025-07-31T14:33:39Z"
 
     CreateTextSourceDto:
       type: object
       required:
         - agent_id
-        - title
+        - name
         - content
       properties:
         agent_id:
           type: integer
           description: ID of the agent this text source belongs to
           example: 1
-        title:
+        name:
           type: string
-          description: Title of the text content
+          description: Name of the text source
           example: "Training Example Text"
+        description:
+          type: string
+          description: Optional description of the text source
+          example: "This is an example text source for training purposes"
         content:
           type: string
           description: The actual text content
@@ -261,10 +289,6 @@ components:
     UpdateTextSourceDto:
       type: object
       properties:
-        title:
-          type: string
-          description: Updated title
-          example: "Updated Training Example Text"
         content:
           type: string
           description: Updated text content
@@ -289,3 +313,10 @@ components:
         message:
           type: string
           example: "Text sources retrieved successfully"
+
+    DeleteResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Text source deleted successfully"

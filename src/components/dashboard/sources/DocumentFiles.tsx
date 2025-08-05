@@ -15,12 +15,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAgent } from "@/contexts";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  useFileSources,
   useUploadFileSource,
   useDeleteFileSource,
 } from "@/hooks/use-file-sources";
+import { useSourcesByAgent } from "@/hooks/use-base-sources";
 import { FileSource } from "@/types/source.types";
+import { UI_CONSTANTS } from "@/lib/constants";
 
 export function DocumentFiles() {
   const [selectedDocs, setSelectedDocs] = useState<number[]>([]);
@@ -31,21 +33,23 @@ export function DocumentFiles() {
   // Get the current agent ID from context
   const { currentAgentId, isAgentSelected } = useAgent();
 
-  // Data hooks using the new File Sources API
+  // Use the same sources as AllSourcesTable, then filter for file type
   const {
-    data: fileSources,
+    data: allSources,
     isLoading: documentsLoading,
     error: documentsError,
     refetch: refetchDocuments,
-  } = useFileSources(currentAgentId || 0, isAgentSelected);
+  } = useSourcesByAgent(currentAgentId || 0, isAgentSelected);
 
   const { mutate: uploadFileSource, isPending: uploadLoading } =
     useUploadFileSource();
+  // Query client for invalidating sources summary
+  const queryClient = useQueryClient();
 
   const { mutate: deleteFileSource } = useDeleteFileSource();
 
-  // Use the file sources data
-  const documents = fileSources || [];
+  // Only show sources of type 'file' (document files)
+  const documents = (allSources || []).filter((src) => src.type === "file");
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -82,7 +86,49 @@ export function DocumentFiles() {
     }
 
     if (files && files.length > 0) {
-      Array.from(files).forEach((file) => {
+      // Validate file count
+      if (files.length > UI_CONSTANTS.MAX_FILES_PER_UPLOAD) {
+        toast({
+          title: "Too many files",
+          description: `Maximum ${UI_CONSTANTS.MAX_FILES_PER_UPLOAD} files allowed per upload.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate each file
+      const validFiles: File[] = [];
+      for (const file of Array.from(files)) {
+        // Check file size
+        if (file.size > UI_CONSTANTS.MAX_FILE_SIZE) {
+          toast({
+            title: "File too large",
+            description: `${file.name} exceeds the 10MB limit.`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        // Check file type
+        const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
+        if (!UI_CONSTANTS.SUPPORTED_FILE_TYPES.includes(fileExtension as any)) {
+          toast({
+            title: "Unsupported file type",
+            description: `${
+              file.name
+            } is not a supported file type. Supported: ${UI_CONSTANTS.SUPPORTED_FILE_TYPES.join(
+              ", "
+            )}`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        validFiles.push(file);
+      }
+
+      // Upload valid files
+      validFiles.forEach((file) => {
         uploadFileSource(
           {
             agentId: currentAgentId,
@@ -96,6 +142,10 @@ export function DocumentFiles() {
                 description: `${file.name} has been uploaded and is being processed.`,
               });
               refetchDocuments();
+              // Invalidate sources summary query to refresh SourcesSummary
+              queryClient.invalidateQueries({
+                queryKey: ["sources", "by-agent", currentAgentId],
+              });
             },
             onError: (error) => {
               toast({
@@ -158,30 +208,28 @@ export function DocumentFiles() {
         title: "Opening document",
         description: `Opening ${doc.name}...`,
       });
-      // Open the file URL in a new tab if available
-      if (doc.file_url) {
-        window.open(doc.file_url, "_blank");
+      // Open the file URL in a new tab if available (from metadata)
+      const fileUrl = doc.metadata?.file_url;
+      if (fileUrl) {
+        window.open(fileUrl, "_blank");
       }
     }
   };
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return "Unknown size";
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
-  };
+  // File size logic removed as per request
 
+  // Show date and time for all dates
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Unknown";
     const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
   return (
@@ -197,6 +245,7 @@ export function DocumentFiles() {
         </div>
       </div>
 
+      {/* Show alert if agent is not selected */}
       {!isAgentSelected && (
         <Alert className="mb-6">
           <AlertDescription>
@@ -218,6 +267,10 @@ export function DocumentFiles() {
             <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground mb-4">
               Drag and drop files here or click to browse
+              <br />
+              <span className="text-xs">
+                Supported: PDF, DOC, DOCX, TXT (max 10MB each, up to 10 files)
+              </span>
             </p>
             <Button
               onClick={handleFileSelect}
@@ -234,7 +287,7 @@ export function DocumentFiles() {
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".pdf,.doc,.docx,.txt,.md"
+              accept=".pdf,.doc,.docx,.txt"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -307,16 +360,42 @@ export function DocumentFiles() {
                         {doc.name}
                       </h3>
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <span>{doc.mime_type}</span>
+                        {/* File type: Prefer mime_type, else use file extension, else Unknown */}
+                        <span>
+                          {doc.metadata?.mime_type
+                            ? doc.metadata.mime_type
+                            : doc.name && doc.name.includes(".")
+                            ? doc.name
+                                .substring(doc.name.lastIndexOf(".") + 1)
+                                .toUpperCase() + " file"
+                            : "Unknown type"}
+                        </span>
                         <span>•</span>
-                        <span>{/* Size info not available */}</span>
-                        <span>•</span>
+                        {/* File size removed as per request */}
+                        {/* Updated date: Show 'Yesterday', 'X days ago', or formatted date */}
                         <span>Updated {formatDate(doc.updated_at)}</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant="secondary">Ready</Badge>
+                    <Badge
+                      variant={
+                        doc.status === "completed"
+                          ? "default"
+                          : doc.status === "processing"
+                          ? "secondary"
+                          : doc.status === "failed"
+                          ? "destructive"
+                          : "outline"
+                      }>
+                      {doc.status === "completed"
+                        ? "Ready"
+                        : doc.status === "processing"
+                        ? "Processing"
+                        : doc.status === "failed"
+                        ? "Failed"
+                        : "Pending"}
+                    </Badge>
                     <Button
                       variant="ghost"
                       size="sm"

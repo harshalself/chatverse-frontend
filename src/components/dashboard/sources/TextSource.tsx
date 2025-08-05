@@ -9,50 +9,77 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useDeleteSource } from "@/hooks/use-base-sources";
-// NOTE: Text source specific hooks need to be implemented
+import { useAgent } from "@/contexts";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useTextSources,
+  useCreateTextSource,
+  useDeleteTextSource,
+} from "@/hooks/use-text-sources";
 
 export function TextSource() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [description, setDescription] = useState("");
   const { toast } = useToast();
 
-  // Data hooks - Text sources functionality needs to be implemented
-  // const {
-  //   data: textSourcesData,
-  //   isLoading: textSourcesLoading,
-  //   error: textSourcesError,
-  //   refetch: refetchTextSources,
-  // } = useSourcesByType("text");
+  // Get the current agent ID from context
+  const { currentAgentId, isAgentSelected } = useAgent();
 
-  // const { mutate: createTextSource, isPending: createLoading } =
-  //   useCreateTextSource();
+  // Query client for invalidating queries
+  const queryClient = useQueryClient();
 
-  // Placeholder data until text sources are implemented
-  const textSourcesData = { data: [] };
-  const textSourcesLoading = false;
-  const textSourcesError = null;
-  const refetchTextSources = () => {};
-  const createTextSource = () => {};
-  const createLoading = false;
+  // Text sources hooks
+  const {
+    data: textSources,
+    isLoading: textSourcesLoading,
+    error: textSourcesError,
+    refetch: refetchTextSources,
+  } = useTextSources(currentAgentId || 0, isAgentSelected);
 
-  const { mutate: deleteSource } = useDeleteSource();
+  const { mutate: createTextSource, isPending: createLoading } =
+    useCreateTextSource();
 
-  const textSources = textSourcesData?.data || [];
+  const { mutate: deleteTextSource } = useDeleteTextSource();
 
   const handleAddText = () => {
-    if (title && content) {
-      // TODO: Implement text source creation
+    // Check if agent is selected
+    if (!currentAgentId) {
       toast({
-        title: "Not Implemented",
-        description: "Text source creation is not yet implemented",
+        title: "No agent selected",
+        description: "Please select an agent before creating text sources.",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (title && content) {
+      createTextSource(
+        {
+          agent_id: currentAgentId,
+          name: title,
+          description: description || undefined,
+          content,
+        },
+        {
+          onSuccess: () => {
+            // Clear form
+            setTitle("");
+            setContent("");
+            setDescription("");
+            refetchTextSources();
+            // Invalidate sources summary query to refresh SourcesSummary
+            queryClient.invalidateQueries({
+              queryKey: ["sources", "by-agent", currentAgentId],
+            });
+          },
+        }
+      );
     }
   };
 
-  const handleDeleteText = (id: string, name: string) => {
-    deleteSource(Number(id), {
+  const handleDeleteText = (id: number, name: string) => {
+    deleteTextSource(id, {
       onSuccess: () => {
         toast({
           title: "Text source deleted",
@@ -60,26 +87,21 @@ export function TextSource() {
         });
         refetchTextSources();
       },
-      onError: () => {
-        toast({
-          title: "Failed to delete text source",
-          description: "Please try again later.",
-          variant: "destructive",
-        });
-      },
     });
   };
 
+  // Show date and time for all dates
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Unknown";
     const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
   return (
@@ -94,6 +116,15 @@ export function TextSource() {
           </p>
         </div>
       </div>
+
+      {/* Show alert if agent is not selected */}
+      {!isAgentSelected && (
+        <Alert className="mb-6">
+          <AlertDescription>
+            Please select an agent to manage text sources.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
@@ -114,6 +145,16 @@ export function TextSource() {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Input
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter a description for your text content"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="content">Content</Label>
             <Textarea
               id="content"
@@ -126,7 +167,8 @@ export function TextSource() {
 
           <Button
             onClick={handleAddText}
-            disabled={!title || !content || createLoading}>
+            disabled={!title || !content || createLoading || !isAgentSelected}
+            title={!isAgentSelected ? "Select an agent first" : ""}>
             {createLoading ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -160,7 +202,7 @@ export function TextSource() {
               </Button>
             </AlertDescription>
           </Alert>
-        ) : textSources.length > 0 ? (
+        ) : textSources && textSources.length > 0 ? (
           <div className="space-y-4">
             {textSources.map((source) => (
               <Card key={source.id}>
@@ -174,48 +216,41 @@ export function TextSource() {
                         <h4 className="font-medium text-foreground">
                           {source.name}
                         </h4>
+                        {source.description && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {source.description}
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {source.metadata?.content?.substring(0, 150) ||
-                            source.metadata?.preview ||
+                          {source.content?.substring(0, 150) ||
                             "No preview available"}
-                          {(source.metadata?.content?.length || 0) > 150 &&
-                            "..."}
+                          {(source.content?.length || 0) > 150 && "..."}
                         </p>
                         <div className="flex items-center space-x-2 text-xs text-muted-foreground mt-2">
-                          <span>Updated {formatDate(source.updatedAt)}</span>
+                          <span>Updated {formatDate(source.updated_at)}</span>
                           <span>•</span>
-                          <span>
-                            {source.metadata?.content?.length || 0} characters
-                          </span>
+                          <span>{source.content?.length || 0} characters</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge
-                        variant="secondary"
-                        className={`
-                        ${
-                          source.status === "ready"
-                            ? "bg-success/10 text-success border-success/20"
-                            : ""
-                        }
-                        ${
-                          source.status === "processing"
-                            ? "bg-warning/10 text-warning border-warning/20"
-                            : ""
-                        }
-                        ${
-                          source.status === "error"
-                            ? "bg-destructive/10 text-destructive border-destructive/20"
-                            : ""
-                        }
-                        ${
-                          source.status === "pending"
-                            ? "bg-muted/10 text-muted-foreground border-muted/20"
-                            : ""
-                        }
-                      `}>
-                        {source.status}
+                        variant={
+                          source.status === "completed"
+                            ? "default"
+                            : source.status === "processing"
+                            ? "secondary"
+                            : source.status === "failed"
+                            ? "destructive"
+                            : "outline"
+                        }>
+                        {source.status === "completed"
+                          ? "Ready"
+                          : source.status === "processing"
+                          ? "Processing"
+                          : source.status === "failed"
+                          ? "Failed"
+                          : "Pending"}
                       </Badge>
                       <Button
                         variant="ghost"
@@ -225,7 +260,7 @@ export function TextSource() {
                             title: "Opening text source",
                             description: `Opening "${source.name}"...`,
                           });
-                          // TODO: Implement text viewer
+                          // TODO: Implement text viewer modal
                         }}>
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -248,9 +283,18 @@ export function TextSource() {
             <CardContent className="p-8 text-center">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h4 className="text-lg font-medium mb-2">No text sources yet</h4>
-              <p className="text-muted-foreground">
-                Create your first text source using the form above
+              <p className="text-muted-foreground mb-4">
+                {!isAgentSelected
+                  ? "Select an agent first to view its text sources"
+                  : "Create your first text source using the form above"}
               </p>
+              <Button
+                onClick={() => document.getElementById("title")?.focus()}
+                disabled={!isAgentSelected}
+                title={!isAgentSelected ? "Select an agent first" : ""}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Text Source
+              </Button>
             </CardContent>
           </Card>
         )}

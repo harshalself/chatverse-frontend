@@ -5,10 +5,10 @@ export interface BaseSource {
   id: number;
   agent_id: number;
   source_type: "file" | "text" | "website" | "database" | "qa";
+  name: string;
+  description?: string | null;
   status: SourceStatus;
-  processing_metadata?: string | null;
   is_embedded: boolean;
-  last_processed?: Timestamp | null;
   created_by: number;
   created_at: Timestamp;
   updated_by?: number | null;
@@ -18,35 +18,118 @@ export interface BaseSource {
   deleted_at?: Timestamp | null;
 }
 
-// File Source Types
+// File Source Types - Complete schema with joined source and file_sources table data
 export interface FileSource {
+  // Fields from sources table
   id: number;
   agent_id: number;
+  source_type: "file";
   name: string;
-  file_name: string;
+  description?: string | null;
+  status: SourceStatus;
+  is_embedded: boolean;
+  created_by: number;
+  created_at: Timestamp;
+  updated_by?: number | null;
+  updated_at: Timestamp;
+  is_deleted: boolean;
+  deleted_by?: number | null;
+  deleted_at?: Timestamp | null;
+  // Fields from file_sources table
+  source_id: number;
   file_url: string;
-  mime_type: string;
-  created_at: string;
-  updated_at: string;
+  mime_type?: string | null;
+  file_size: number | string; // Accept int8 as string or number
+  text_content?: string | null;
 }
 
 export interface FileSourceUploadRequest {
   agent_id: number;
   name: string;
-  file: File; // File object for FormData
+  description?: string;
+  file: File; // Actual File object for multipart/form-data
 }
 
 export interface MultipleFilesUploadRequest {
   agent_id: number;
   files: File[];
-  names?: string[]; // Optional array of custom names
+  names: string[];
+  descriptions?: string[];
 }
 
-// Text Source Types
-export interface TextSource extends BaseSource {
-  type: "text";
+export interface UpdateFileSourceRequest {
+  file_url?: string;
+  mime_type?: string;
+  file_size?: number;
+  text_content?: string;
+}
+
+// Text Source Types - Complete schema with joined source and text_sources table data
+export interface TextSource {
+  // Fields from sources table
+  id: number;
+  agent_id: number;
+  source_type: "text";
+  name: string;
+  description?: string | null;
+  status: SourceStatus;
+  is_embedded: boolean;
+  created_by: number;
+  created_at: Timestamp;
+  updated_by?: number | null;
+  updated_at: Timestamp;
+  is_deleted: boolean;
+  deleted_by?: number | null;
+  deleted_at?: Timestamp | null;
+  // Fields from text_sources table
+  source_id: number;
   content: string;
-  metadata?: Record<string, any>;
+}
+
+export interface CreateTextSourceRequest {
+  agent_id: number;
+  name: string;
+  description?: string;
+  content: string;
+}
+
+export interface UpdateTextSourceRequest {
+  content?: string;
+}
+
+// QA Source Types
+export interface QAPair {
+  question: string;
+  answer: string;
+}
+
+export interface QASource {
+  id: number;
+  agent_id: number;
+  source_type: "qa";
+  name: string;
+  description?: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  is_embedded: boolean;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+  source_id: number;
+  question: string;
+  answer: string;
+}
+
+export interface CreateQASourceRequest {
+  agent_id: number;
+  name?: string;
+  description?: string;
+  qa_pairs: QAPair[];
+}
+
+export interface UpdateQASourceRequest {
+  question?: string;
+  answer?: string;
 }
 
 // Website Source Types
@@ -108,18 +191,26 @@ export type DataSource = BaseSource & {
 export interface CreateSourceRequest {
   agent_id: number;
   source_type: "file" | "text" | "website" | "database" | "qa";
-  processing_metadata?: string;
+  name: string;
+  description?: string;
 }
 
 export interface UpdateSourceRequest {
+  name?: string;
+  description?: string;
   status?: SourceStatus;
-  processing_metadata?: string;
   is_embedded?: boolean;
 }
 
 // API Response Types
 export type BaseSourceResponse = ApiResponse<BaseSource>;
 export type BaseSourcesResponse = ApiResponse<BaseSource[]>;
+export type FileSourceResponse = ApiResponse<FileSource>;
+export type FileSourcesResponse = ApiResponse<FileSource[]>;
+export type TextSourceResponse = ApiResponse<TextSource>;
+export type TextSourcesResponse = ApiResponse<TextSource[]>;
+export type QASourceResponse = ApiResponse<QASource>;
+export type QASourcesResponse = ApiResponse<QASource[]>;
 
 export interface WebsiteSourceRequest {
   name: string;

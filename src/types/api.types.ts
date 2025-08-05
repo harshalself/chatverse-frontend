@@ -62,3 +62,14 @@ export interface PaginationOptions {
   sort?: SortOptions;
   filter?: FilterOptions;
 }
+
+// Provider Model Response Types
+export interface ProviderModelResponse {
+  data: import("./common.types").ProviderModel;
+  message: string;
+}
+
+export interface ProviderModelsResponse {
+  data: import("./common.types").ProviderModel[];
+  message: string;
+}

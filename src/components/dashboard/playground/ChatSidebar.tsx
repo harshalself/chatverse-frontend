@@ -215,11 +215,26 @@ export function ChatSidebar() {
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {providers.map((provider) => (
-                <SelectItem key={provider.provider} value={provider.provider}>
-                  {provider.displayName}
+              {providersLoading ? (
+                <SelectItem value="__loading__" disabled>
+                  Loading providers...
                 </SelectItem>
-              ))}
+              ) : providers.length === 0 ? (
+                <SelectItem value="__no-providers__" disabled>
+                  No providers available
+                </SelectItem>
+              ) : (
+                providers.map((provider) => (
+                  <SelectItem
+                    key={provider.provider}
+                    value={provider.provider}
+                    disabled={
+                      !provider.provider || provider.provider.trim() === ""
+                    }>
+                    {provider.displayName}
+                  </SelectItem>
+                ))
+              )}
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -244,15 +259,26 @@ export function ChatSidebar() {
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {availableModels.length === 0 &&
-              selectedProvider &&
-              !modelsLoading ? (
-                <SelectItem value="" disabled>
+              {!selectedProvider ? (
+                <SelectItem value="__no-provider__" disabled>
+                  Select a provider first
+                </SelectItem>
+              ) : modelsLoading ? (
+                <SelectItem value="__loading__" disabled>
+                  Loading models...
+                </SelectItem>
+              ) : availableModels.length === 0 ? (
+                <SelectItem value="__no-models__" disabled>
                   No models available for {selectedProvider}
                 </SelectItem>
               ) : (
                 availableModels.map((model) => (
-                  <SelectItem key={model.id} value={model.model_name}>
+                  <SelectItem
+                    key={model.id}
+                    value={model.model_name}
+                    disabled={
+                      !model.model_name || model.model_name.trim() === ""
+                    }>
                     {model.model_name}
                   </SelectItem>
                 ))

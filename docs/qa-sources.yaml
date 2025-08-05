@@ -163,8 +163,8 @@ paths:
     post:
       tags:
         - QA Sources
-      summary: Create QA source
-      description: Creates a new QA source (requires authentication)
+      summary: Create QA sources
+      description: Creates new QA sources from question-answer pairs (requires authentication)
       security:
         - bearerAuth: []
       requestBody:
@@ -175,20 +175,23 @@ paths:
               $ref: "#/components/schemas/CreateQASourceDto"
             examples:
               create_qa_source:
-                summary: Create QA source
+                summary: Create QA sources
                 value:
                   agent_id: 1
+                  name: "Customer Support FAQ"
+                  description: "Frequently asked questions about our service"
                   qa_pairs:
-                    - title: "Chatbot Purpose"
-                      question: "What is the purpose of this chatbot?"
+                    - question: "What is the purpose of this chatbot?"
                       answer: "This chatbot is designed to assist users with various tasks and provide intelligent responses based on multiple knowledge sources."
+                    - question: "How do I reset my password?"
+                      answer: "You can reset your password by clicking the 'Forgot Password' link on the login page."
       responses:
         "201":
-          description: QA source created successfully
+          description: QA sources created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SingleQASourceResponse"
+                $ref: "#/components/schemas/AllQASourcesResponse"
         "400":
           description: Invalid request body
           content:
@@ -206,11 +209,10 @@ components:
   schemas:
     QAPair:
       type: object
+      required:
+        - question
+        - answer
       properties:
-        title:
-          type: string
-          description: Title of the QA pair
-          example: "Chatbot Purpose"
         question:
           type: string
           description: The question text
@@ -230,52 +232,99 @@ components:
           type: integer
           description: ID of the agent this QA source belongs to
           example: 1
+        name:
+          type: string
+          description: Name for the QA source (optional, will be auto-generated if not provided)
+          example: "Customer Support FAQ"
+        description:
+          type: string
+          description: Description of the QA source
+          example: "Frequently asked questions about our service"
         qa_pairs:
           type: array
           items:
             $ref: "#/components/schemas/QAPair"
           description: Array of question-answer pairs
+          minItems: 1
 
     UpdateQASourceDto:
       type: object
       properties:
-        qa_pairs:
-          type: array
-          items:
-            $ref: "#/components/schemas/QAPair"
-          description: Updated array of question-answer pairs
-      required:
-        - qa_pairs
+        question:
+          type: string
+          description: Updated question text
+          example: "What is the purpose of this chatbot?"
+        answer:
+          type: string
+          description: Updated answer text
+          example: "This chatbot is designed to assist users with various tasks."
+
+    QASource:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Source ID
+          example: 1
+        agent_id:
+          type: integer
+          description: Agent ID
+          example: 1
+        source_type:
+          type: string
+          description: Type of source (always 'qa' for QA sources)
+          example: "qa"
+        name:
+          type: string
+          description: Name of the source
+          example: "QA: What is the purpose of this chatbot?..."
+        description:
+          type: string
+          description: Description of the source
+          example: "Customer support FAQ"
+        status:
+          type: string
+          description: Processing status
+          enum: [pending, processing, completed, failed]
+          example: "pending"
+        is_embedded:
+          type: boolean
+          description: Whether the source has been embedded
+          example: false
+        created_by:
+          type: integer
+          description: ID of user who created the source
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-07-31T14:33:39Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-07-31T14:33:39Z"
+        is_deleted:
+          type: boolean
+          description: Whether the source is deleted
+          example: false
+        source_id:
+          type: integer
+          description: Reference to source table
+          example: 1
+        question:
+          type: string
+          description: The question text
+          example: "What is the purpose of this chatbot?"
+        answer:
+          type: string
+          description: The answer text
+          example: "This chatbot is designed to assist users with various tasks."
 
     SingleQASourceResponse:
       type: object
       properties:
         data:
-          type: object
-          properties:
-            id:
-              type: integer
-              example: 1
-            agent_id:
-              type: integer
-              example: 1
-            title:
-              type: string
-              example: "Chatbot Purpose"
-            question:
-              type: string
-              example: "What is the purpose of this chatbot?"
-            answer:
-              type: string
-              example: "This chatbot is designed to assist users with various tasks."
-            created_at:
-              type: string
-              format: date-time
-              example: "2025-07-31T14:33:39Z"
-            updated_at:
-              type: string
-              format: date-time
-              example: "2025-07-31T14:33:39Z"
+          $ref: "#/components/schemas/QASource"
         message:
           type: string
           example: "QA source retrieved successfully"
@@ -286,31 +335,7 @@ components:
         data:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: integer
-                example: 1
-              agent_id:
-                type: integer
-                example: 1
-              title:
-                type: string
-                example: "Chatbot Purpose"
-              question:
-                type: string
-                example: "What is the purpose of this chatbot?"
-              answer:
-                type: string
-                example: "This chatbot is designed to assist users with various tasks."
-              created_at:
-                type: string
-                format: date-time
-                example: "2025-07-31T14:33:39Z"
-              updated_at:
-                type: string
-                format: date-time
-                example: "2025-07-31T14:33:39Z"
+            $ref: "#/components/schemas/QASource"
         message:
           type: string
           example: "QA sources retrieved successfully"

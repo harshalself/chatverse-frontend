@@ -81,6 +81,10 @@ export const API_ENDPOINTS = {
   PROVIDER_MODELS: {
     ALL: "/provider-models", // Get all provider models
     BY_PROVIDER: (provider: string) => `/provider-models/provider/${provider}`, // Get models for specific provider
+    GET: (id: number) => `/provider-models/${id}`, // Get provider model by ID
+    CREATE: "/provider-models", // Create new provider model
+    UPDATE: (id: number) => `/provider-models/${id}`, // Update provider model
+    DELETE: (id: number) => `/provider-models/${id}`, // Delete provider model
   },
 
   // Dashboard
@@ -94,7 +98,9 @@ export const API_ENDPOINTS = {
   SOURCES: {
     // Base Sources API - aligned with backend
     LIST_BY_AGENT: (agentId: number) => `/sources/agent/${agentId}`,
+    CREATE_FOR_AGENT: (agentId: number) => `/sources/agent/${agentId}`,
     GET: (id: number) => `/sources/${id}`,
+    UPDATE: (id: number) => `/sources/${id}`,
     DELETE: (id: number) => `/sources/${id}`,
 
     // File Sources API
@@ -105,7 +111,7 @@ export const API_ENDPOINTS = {
       GET: (id: number) => `/sources/file/${id}`,
       UPDATE: (id: number) => `/sources/file/${id}`,
       DELETE: (id: number) => `/sources/file/${id}`,
-      EXPORT: (id: number) => `/sources/file/${id}/export`,
+      // EXPORT: (id: number) => `/sources/file/${id}/export`, // Not available in backend yet
     },
 
     // Text Sources API
@@ -159,8 +165,15 @@ export const UI_CONSTANTS = {
   TOAST_DURATION: 5000,
   DEBOUNCE_DELAY: 300,
   PAGINATION_SIZE: 10,
-  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  SUPPORTED_FILE_TYPES: [".pdf", ".doc", ".docx", ".txt", ".csv"],
+  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB as per API docs
+  MAX_FILES_PER_UPLOAD: 10, // Maximum files per batch upload
+  SUPPORTED_FILE_TYPES: [".pdf", ".doc", ".docx", ".txt"], // Updated to match API docs
+  SUPPORTED_MIME_TYPES: [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+  ],
 } as const;
 
 // Error Messages
@@ -186,6 +199,9 @@ export const SUCCESS_MESSAGES = {
   SOURCE_CREATED: "Source created successfully",
   SOURCE_UPDATED: "Source updated successfully",
   SOURCE_DELETED: "Source deleted successfully",
+  TEXT_SOURCE_CREATED: "Text source created successfully",
+  TEXT_SOURCE_UPDATED: "Text source updated successfully",
+  TEXT_SOURCE_DELETED: "Text source deleted successfully",
   FILE_UPLOADED: "File uploaded successfully",
   SETTINGS_SAVED: "Settings saved successfully",
   USER_UPDATED: "User updated successfully",

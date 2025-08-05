@@ -38,30 +38,33 @@ export function ProviderSelect({
       <Select
         value={value}
         onValueChange={onValueChange}
-        disabled={disabled || providersQuery.isLoading}
-      >
+        disabled={disabled || providersQuery.isLoading}>
         <SelectTrigger
           className={error ? "border-destructive" : ""}
-          id="provider"
-        >
+          id="provider">
           <SelectValue placeholder="Select AI provider" />
         </SelectTrigger>
         <SelectContent>
           {providersQuery.isLoading ? (
-            <SelectItem value="loading" disabled>
+            <SelectItem value="__loading__" disabled>
               Loading providers...
             </SelectItem>
           ) : providersQuery.error ? (
-            <SelectItem value="error" disabled>
+            <SelectItem value="__error__" disabled>
               Error loading providers
             </SelectItem>
           ) : !providersQuery.data?.data.length ? (
-            <SelectItem value="no-providers" disabled>
+            <SelectItem value="__no-providers__" disabled>
               No providers available
             </SelectItem>
           ) : (
             providersQuery.data.data.map((provider) => (
-              <SelectItem key={provider.provider} value={provider.provider}>
+              <SelectItem
+                key={provider.provider}
+                value={provider.provider}
+                disabled={
+                  !provider.provider || provider.provider.trim() === ""
+                }>
                 {provider.displayName}
               </SelectItem>
             ))

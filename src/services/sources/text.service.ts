@@ -1,6 +1,12 @@
 import { apiClient } from "@/lib/client";
 import { API_ENDPOINTS } from "@/lib/constants";
-import { TextSource } from "@/types/source.types";
+import {
+  TextSource,
+  CreateTextSourceRequest,
+  UpdateTextSourceRequest,
+  TextSourceResponse,
+  TextSourcesResponse,
+} from "@/types/source.types";
 
 /**
  * Text sources service for handling text-based sources
@@ -10,55 +16,56 @@ export class TextSourcesService {
    * Create a new text source
    */
   static async createTextSource(
-    agentId: number,
-    name: string,
-    content: string,
-    metadata?: Record<string, any>
+    request: CreateTextSourceRequest
   ): Promise<TextSource> {
-    const payload = {
-      agent_id: agentId,
-      name,
-      content,
-      metadata
-    };
-    
-    const response = await apiClient.post(
+    const response = await apiClient.post<TextSourceResponse>(
       API_ENDPOINTS.SOURCES.TEXT.CREATE,
-      payload
+      request
     );
-    return response.data;
+    // Return response.data.data if present, else response.data if it looks like a TextSource, else empty object
+    const d: any = response.data?.data || response.data;
+    return d &&
+      typeof d === "object" &&
+      "id" in d &&
+      "agent_id" in d &&
+      "name" in d &&
+      "content" in d
+      ? (d as TextSource)
+      : ({} as TextSource);
   }
 
   /**
    * Get all text sources for an agent
    */
   static async getTextSources(agentId: number): Promise<TextSource[]> {
-    const response = await apiClient.get(
+    const response = await apiClient.get<TextSourcesResponse>(
       API_ENDPOINTS.SOURCES.TEXT.GET_ALL(agentId)
     );
-    return response.data;
+    return response.data.data;
   }
 
   /**
    * Get a single text source by ID
    */
   static async getTextSource(id: number): Promise<TextSource> {
-    const response = await apiClient.get(API_ENDPOINTS.SOURCES.TEXT.GET(id));
-    return response.data;
+    const response = await apiClient.get<TextSourceResponse>(
+      API_ENDPOINTS.SOURCES.TEXT.GET(id)
+    );
+    return response.data.data;
   }
 
   /**
    * Update a text source
    */
   static async updateTextSource(
-    id: number, 
-    data: { name?: string; content?: string; metadata?: Record<string, any> }
+    id: number,
+    request: UpdateTextSourceRequest
   ): Promise<TextSource> {
-    const response = await apiClient.put(
+    const response = await apiClient.put<TextSourceResponse>(
       API_ENDPOINTS.SOURCES.TEXT.UPDATE(id),
-      data
+      request
     );
-    return response.data;
+    return response.data.data;
   }
 
   /**

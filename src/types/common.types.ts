@@ -100,3 +100,27 @@ export interface PrivacySettings {
   dataSharing: boolean;
   analytics: boolean;
 }
+
+// Provider Model Types
+export interface ProviderModel {
+  id: number;
+  provider: string;
+  model_name: string;
+  created_by: number;
+  created_at: string;
+  updated_by?: number;
+  updated_at: string;
+  is_deleted: boolean;
+  deleted_by?: number;
+  deleted_at?: string;
+}
+
+export interface CreateProviderModelRequest {
+  provider: string;
+  model_name: string;
+}
+
+export interface UpdateProviderModelRequest {
+  provider?: string;
+  model_name?: string;
+}

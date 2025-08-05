@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileSourcesService } from "@/services/sources/file.service";
-import { FileSource } from "@/types/source.types";
+import { FileSourcesService } from "@/services/sources";
+import { FileSource, UpdateFileSourceRequest } from "@/types/source.types";
 import { QUERY_KEYS, SUCCESS_MESSAGES } from "@/lib/constants";
 import { ErrorHandler } from "@/lib/error-handler";
 import { toast } from "@/hooks/use-toast";
@@ -11,7 +11,13 @@ import { toast } from "@/hooks/use-toast";
 export const useFileSources = (agentId: number, enabled = true) => {
   return useQuery({
     queryKey: ["file-sources", agentId],
-    queryFn: () => FileSourcesService.getFileSources(agentId),
+    queryFn: async () => {
+      if (!agentId) {
+        return [];
+      }
+      const fileSources = await FileSourcesService.getFileSources(agentId);
+      return fileSources || [];
+    },
     enabled: enabled && !!agentId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -27,7 +33,7 @@ export const useFileSource = (id: number, enabled = true) => {
   });
 };
 
-// Upload a file source
+// Upload a single file source
 export const useUploadFileSource = () => {
   const queryClient = useQueryClient();
 
@@ -36,14 +42,23 @@ export const useUploadFileSource = () => {
       agentId,
       file,
       name,
+      description,
       onProgress,
     }: {
       agentId: number;
       file: File;
       name?: string;
+      description?: string;
       onProgress?: (progress: number) => void;
-    }) => FileSourcesService.uploadFileSource(agentId, file, name, onProgress),
-    onSuccess: (fileSource, variables) => {
+    }) =>
+      FileSourcesService.uploadFileSource(
+        agentId,
+        file,
+        name,
+        description,
+        onProgress
+      ),
+    onSuccess: (fileSource: FileSource, variables) => {
       // Invalidate file sources list for the agent
       queryClient.invalidateQueries({
         queryKey: ["file-sources", variables.agentId],
@@ -71,14 +86,24 @@ export const useUploadMultipleFileSources = () => {
     mutationFn: ({
       agentId,
       files,
+      names,
+      descriptions,
       onProgress,
     }: {
       agentId: number;
       files: File[];
+      names: string[];
+      descriptions?: string[];
       onProgress?: (fileIndex: number, progress: number) => void;
     }) =>
-      FileSourcesService.uploadMultipleFileSources(agentId, files, onProgress),
-    onSuccess: (fileSources, variables) => {
+      FileSourcesService.uploadMultipleFileSources(
+        agentId,
+        files,
+        names,
+        descriptions,
+        onProgress
+      ),
+    onSuccess: (fileSources: FileSource[], variables) => {
       // Invalidate file sources list for the agent
       queryClient.invalidateQueries({
         queryKey: ["file-sources", variables.agentId],
@@ -100,14 +125,14 @@ export const useUploadMultipleFileSources = () => {
   });
 };
 
-// Update a file source name
+// Update a file source
 export const useUpdateFileSource = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) =>
-      FileSourcesService.updateFileSource(id, name),
-    onSuccess: (fileSource) => {
+    mutationFn: ({ id, data }: { id: number; data: UpdateFileSourceRequest }) =>
+      FileSourcesService.updateFileSource(id, data),
+    onSuccess: (fileSource: FileSource) => {
       // Update cache
       queryClient.setQueryData(["file-source", fileSource.id], fileSource);
 

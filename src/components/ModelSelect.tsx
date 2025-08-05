@@ -39,34 +39,33 @@ export function ModelSelect({
       <Select
         value={value}
         onValueChange={onValueChange}
-        disabled={disabled || !provider || providerModels.isLoading}
-      >
-        <SelectTrigger
-          className={error ? "border-destructive" : ""}
-          id="model"
-        >
+        disabled={disabled || !provider || providerModels.isLoading}>
+        <SelectTrigger className={error ? "border-destructive" : ""} id="model">
           <SelectValue placeholder="Select a model" />
         </SelectTrigger>
         <SelectContent>
           {!provider ? (
-            <SelectItem value="no-provider" disabled>
+            <SelectItem value="__no-provider__" disabled>
               Select a provider first
             </SelectItem>
           ) : providerModels.isLoading ? (
-            <SelectItem value="loading" disabled>
+            <SelectItem value="__loading__" disabled>
               Loading models...
             </SelectItem>
           ) : providerModels.error ? (
-            <SelectItem value="error" disabled>
+            <SelectItem value="__error__" disabled>
               Error loading models
             </SelectItem>
           ) : !providerModels.data?.data.length ? (
-            <SelectItem value="no-models" disabled>
+            <SelectItem value="__no-models__" disabled>
               No models available for this provider
             </SelectItem>
           ) : (
             providerModels.data.data.map((model) => (
-              <SelectItem key={model.id} value={model.model_name}>
+              <SelectItem
+                key={model.id}
+                value={model.model_name}
+                disabled={!model.model_name || model.model_name.trim() === ""}>
                 {model.model_name}
               </SelectItem>
             ))

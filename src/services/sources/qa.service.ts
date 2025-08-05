@@ -1,60 +1,62 @@
 import { apiClient } from "@/lib/client";
 import { API_ENDPOINTS } from "@/lib/constants";
-import { QASource, QASourceRequest } from "@/types/source.types";
+import {
+  QASource,
+  CreateQASourceRequest,
+  UpdateQASourceRequest,
+  QASourceResponse,
+  QASourcesResponse,
+} from "@/types/source.types";
 
 /**
  * QA sources service for handling Q&A-based sources
  */
 export class QASourcesService {
   /**
-   * Create a new QA source
+   * Create QA sources from question-answer pairs
    */
   static async createQASource(
-    agentId: number,
-    data: QASourceRequest
-  ): Promise<QASource> {
-    const payload = {
-      agent_id: agentId,
-      ...data
-    };
-    
-    const response = await apiClient.post(
+    request: CreateQASourceRequest
+  ): Promise<QASource[]> {
+    const response = await apiClient.post<QASourcesResponse>(
       API_ENDPOINTS.SOURCES.QA.CREATE,
-      payload
+      request
     );
-    return response.data;
+    return response.data.data;
   }
 
   /**
    * Get all QA sources for an agent
    */
   static async getQASources(agentId: number): Promise<QASource[]> {
-    const response = await apiClient.get(
+    const response = await apiClient.get<QASourcesResponse>(
       API_ENDPOINTS.SOURCES.QA.GET_ALL(agentId)
     );
-    return response.data;
+    return response.data.data;
   }
 
   /**
    * Get a single QA source by ID
    */
   static async getQASource(id: number): Promise<QASource> {
-    const response = await apiClient.get(API_ENDPOINTS.SOURCES.QA.GET(id));
-    return response.data;
+    const response = await apiClient.get<QASourceResponse>(
+      API_ENDPOINTS.SOURCES.QA.GET(id)
+    );
+    return response.data.data;
   }
 
   /**
    * Update a QA source
    */
   static async updateQASource(
-    id: number, 
-    data: Partial<QASourceRequest>
+    id: number,
+    request: UpdateQASourceRequest
   ): Promise<QASource> {
-    const response = await apiClient.put(
+    const response = await apiClient.put<QASourceResponse>(
       API_ENDPOINTS.SOURCES.QA.UPDATE(id),
-      data
+      request
     );
-    return response.data;
+    return response.data.data;
   }
 
   /**

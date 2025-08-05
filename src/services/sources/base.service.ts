@@ -4,12 +4,27 @@ import {
   BaseSource,
   BaseSourceResponse,
   BaseSourcesResponse,
+  CreateSourceRequest,
+  UpdateSourceRequest,
 } from "@/types/source.types";
 
 /**
  * Base sources service aligned with backend API
  */
 export class BaseSourcesService {
+  /**
+   * Create a new source for an agent
+   */
+  static async createSource(
+    agentId: number,
+    data: CreateSourceRequest
+  ): Promise<BaseSourceResponse> {
+    return apiClient.post(
+      API_ENDPOINTS.SOURCES.CREATE_FOR_AGENT(agentId),
+      data
+    );
+  }
+
   /**
    * Get all sources for a specific agent
    */
@@ -24,6 +39,16 @@ export class BaseSourcesService {
    */
   static async getSource(id: number): Promise<BaseSourceResponse> {
     return apiClient.get(API_ENDPOINTS.SOURCES.GET(id));
+  }
+
+  /**
+   * Update source
+   */
+  static async updateSource(
+    id: number,
+    data: UpdateSourceRequest
+  ): Promise<BaseSourceResponse> {
+    return apiClient.put(API_ENDPOINTS.SOURCES.UPDATE(id), data);
   }
 
   /**

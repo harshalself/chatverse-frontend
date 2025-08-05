@@ -10,24 +10,39 @@ paths:
       tags:
         - File Sources
       summary: Upload a single file
-      description: Uploads a single file as a source for an agent (requires authentication)
+      description: Uploads a single file as a source for an agent using multipart/form-data (recommended method)
       security:
         - bearerAuth: []
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/CreateFileSourceRequest"
-            examples:
-              create_file_source:
-                summary: Create file source
-                value:
-                  agent_id: 1
-                  file_name: "document1"
-                  file_url: "https://storage.example.com/users/username/agents/1/files/1627634819-document1.pdf"
-                  mime_type: "application/pdf"
-                  file_size: 58924
+              type: object
+              required:
+                - agent_id
+                - name
+                - file
+              properties:
+                agent_id:
+                  type: integer
+                  description: ID of the agent this file belongs to
+                  example: 1
+                name:
+                  type: string
+                  description: Name for the file source (required; comes from sources table)
+                  example: "Important Document"
+                description:
+                  type: string
+                  description: Optional description of the file source
+                  example: "A critical document for the chatbot"
+                file:
+                  type: string
+                  format: binary
+                  description: The file to upload (PDF, TXT, DOC, DOCX - max 10MB)
+            encoding:
+              file:
+                contentType: application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, text/plain
       responses:
         "201":
           description: File uploaded successfully
@@ -36,7 +51,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SingleFileSourceResponse"
         "400":
-          description: Invalid input data or file validation failed
+          description: Invalid input data, file validation failed, or no file uploaded
           content:
             application/json:
               schema:
@@ -53,29 +68,46 @@ paths:
       tags:
         - File Sources
       summary: Upload multiple files at once
-      description: Uploads multiple files as sources for an agent (requires authentication)
+      description: Uploads multiple files as sources for an agent using multipart/form-data (recommended method)
       security:
         - bearerAuth: []
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/CreateMultipleFileSourcesRequest"
-            examples:
-              create_multiple_file_sources:
-                summary: Create multiple file sources
-                value:
-                  agent_id: 1
-                  files:
-                    - file_name: "document1"
-                      file_url: "https://storage.example.com/users/username/agents/1/files/1627634819-document1.pdf"
-                      mime_type: "application/pdf"
-                      file_size: 58924
-                    - file_name: "document2"
-                      file_url: "https://storage.example.com/users/username/agents/1/files/1627634820-document2.docx"
-                      mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                      file_size: 102400
+              type: object
+              required:
+                - agent_id
+                - files
+                - names
+              properties:
+                agent_id:
+                  type: integer
+                  description: ID of the agent these files belong to
+                  example: 1
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: The files to upload (max 10 files, each max 10MB)
+                  maxItems: 10
+                names:
+                  type: array
+                  items:
+                    type: string
+                  description: Names for each file (order matches files array, required; comes from sources table)
+                  example: ["Document 1", "Document 2"]
+                descriptions:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional descriptions for each file (order matches files array)
+                  example: ["First document", "Second document"]
+            encoding:
+              files:
+                contentType: application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, text/plain
       responses:
         "201":
           description: Files uploaded successfully
@@ -84,7 +116,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/MultipleFileSourcesResponse"
         "400":
-          description: Invalid input data, file validation failed, or too many files
+          description: Invalid input data, file validation failed, too many files, or no files uploaded
           content:
             application/json:
               schema:
@@ -191,9 +223,12 @@ paths:
               $ref: "#/components/schemas/UpdateFileSourceRequest"
             examples:
               update_file_source:
-                summary: Update file source name
+                summary: Update file source
                 value:
-                  file_name: "updated_document1"
+                  file_url: "https://storage.example.com/users/username/agents/1/files/updated-document.pdf"
+                  mime_type: "application/pdf"
+                  file_size: 65536
+                  text_content: "Updated extracted text content..."
       responses:
         "200":
           description: File source updated successfully
@@ -259,78 +294,130 @@ components:
   schemas:
     FileSource:
       type: object
+      description: Complete file source with joined source and file_sources table data
       required:
         - id
         - agent_id
-        - file_name
-        - file_url
-        - mime_type
-        - file_size
+        - source_type
+        - name
+        - status
+        - is_embedded
+        - created_by
         - created_at
+        - updated_at
+        - is_deleted
+        - source_id
+        - file_url
+        - file_size
       properties:
+        # Fields from sources table
         id:
           type: integer
-          description: File source unique identifier
+          description: Source ID (primary key from sources table)
           example: 1
         agent_id:
           type: integer
-          description: ID of the agent this file belongs to
+          description: ID of the agent this source belongs to
           example: 1
-        file_name:
+        source_type:
           type: string
-          description: Name of the file source
-          example: "document1"
+          description: Type of source (always 'file' for file sources)
+          example: "file"
+        name:
+          type: string
+          description: Name of the source
+          example: "Important Document"
+        description:
+          type: string
+          nullable: true
+          description: Description of the source
+          example: "A critical document for the chatbot"
+        status:
+          type: string
+          description: Processing status of the source
+          enum: [pending, processing, completed, failed]
+          example: "pending"
+        is_embedded:
+          type: boolean
+          description: Whether the source content has been vectorized
+          example: false
+        created_by:
+          type: integer
+          description: ID of user who created the source
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2025-08-05T14:33:39Z"
+        updated_by:
+          type: integer
+          nullable: true
+          description: ID of user who last updated the source
+          example: 1
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2025-08-05T14:33:39Z"
+        is_deleted:
+          type: boolean
+          description: Whether the source is soft deleted
+          example: false
+        deleted_by:
+          type: integer
+          nullable: true
+          description: ID of user who deleted the source
+          example: null
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Deletion timestamp
+          example: null
+        # Fields from file_sources table
+        source_id:
+          type: integer
+          description: Reference to the source record (same as id for joined responses)
+          example: 1
         file_url:
           type: string
-          description: URL path to the file
+          description: URL path to the uploaded file
           example: "https://storage.example.com/users/username/agents/1/files/1627634819-document1.pdf"
         mime_type:
           type: string
+          nullable: true
           description: MIME type of the file
           example: "application/pdf"
         file_size:
           type: integer
           description: Size of the file in bytes
           example: 58924
-        created_at:
+        text_content:
           type: string
-          format: date-time
-          description: Timestamp when the file was uploaded
-          example: "2025-07-30T14:33:39Z"
-        updated_at:
-          type: string
-          format: date-time
-          description: Timestamp when the file was last updated
-          example: "2025-07-30T14:33:39Z"
-
-    CreateFileSourceRequest:
-      type: object
-      required:
-        - agent_id
-        - file_name
-        - file
-      properties:
-        agent_id:
-          type: integer
-          description: ID of the agent this file belongs to
-          example: 1
-        file_name:
-          type: string
-          description: Name of the file source
-          example: "document1"
-        file:
-          type: string
-          format: base64
-          description: Base64 encoded file content
-          example: "data:application/pdf;base64,JVBERi0xLjQKJcfsj6IKNSAwIG9iag..."
+          nullable: true
+          description: Extracted text content from the file for search/embedding
+          example: "This is the extracted text content from the document..."
 
     UpdateFileSourceRequest:
       type: object
       properties:
-        file_name:
+        file_url:
           type: string
-          description: Updated name of the file source
-          example: "updated_document1"
+          description: Updated URL of the file
+          example: "https://storage.example.com/users/username/agents/1/files/updated-document.pdf"
+        mime_type:
+          type: string
+          description: Updated MIME type of the file
+          example: "application/pdf"
+        file_size:
+          type: integer
+          description: Updated size of the file in bytes
+          example: 65536
+        text_content:
+          type: string
+          description: Updated extracted text content
+          example: "Updated text content..."
 
     SingleFileSourceResponse:
       type: object
@@ -339,7 +426,7 @@ components:
           $ref: "#/components/schemas/FileSource"
         message:
           type: string
-          example: "File source retrieved successfully"
+          example: "File source created successfully from upload"
 
     AllFileSourcesResponse:
       type: object
@@ -361,35 +448,7 @@ components:
             $ref: "#/components/schemas/FileSource"
         message:
           type: string
-          example: "Multiple file sources created successfully"
-
-    CreateMultipleFileSourcesRequest:
-      type: object
-      required:
-        - agent_id
-        - files
-      properties:
-        agent_id:
-          type: integer
-          description: ID of the agent these files belong to
-          example: 1
-        files:
-          type: array
-          items:
-            type: object
-            required:
-              - file_name
-              - base64String
-            properties:
-              file_name:
-                type: string
-                description: Name of the file
-                example: "document1.pdf"
-              base64String:
-                type: string
-                format: base64
-                description: Base64 encoded file content
-                example: "JVBERi0xLjQKJcfsj6IKNSAwIG9iag..."
+          example: "Multiple file sources created successfully from upload"
 
     DeleteResponse:
       type: object
