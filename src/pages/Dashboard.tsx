@@ -30,8 +30,8 @@ export default function Dashboard() {
 
   // Update agent name when data is fetched
   useEffect(() => {
-    if (agentResponse?.data && !location.state?.agentName) {
-      setAgentName(agentResponse.data.name);
+    if (agentResponse && !location.state?.agentName) {
+      setAgentName(agentResponse.name);
     }
   }, [agentResponse, location.state?.agentName]);
 
