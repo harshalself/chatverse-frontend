@@ -50,6 +50,11 @@ export const useCreateTextSource = () => {
         queryKey: ["text-sources", variables.agent_id],
       });
 
+      // Also invalidate the base sources cache since TextSource component now uses that
+      queryClient.invalidateQueries({
+        queryKey: ["sources", "by-agent", variables.agent_id],
+      });
+
       // Add to cache
       queryClient.setQueryData(["text-source", textSource.id], textSource);
 
@@ -80,6 +85,11 @@ export const useUpdateTextSource = () => {
         queryKey: ["text-sources"],
       });
 
+      // Also invalidate the base sources cache since TextSource component now uses that
+      queryClient.invalidateQueries({
+        queryKey: ["sources"],
+      });
+
       toast({
         title: "Success",
         description: SUCCESS_MESSAGES.SOURCE_UPDATED,
@@ -106,6 +116,11 @@ export const useDeleteTextSource = () => {
       // Invalidate text sources list
       queryClient.invalidateQueries({
         queryKey: ["text-sources"],
+      });
+
+      // Also invalidate the base sources cache since TextSource component now uses that
+      queryClient.invalidateQueries({
+        queryKey: ["sources"],
       });
 
       toast({

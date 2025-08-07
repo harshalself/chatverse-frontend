@@ -41,7 +41,8 @@ export class TextSourcesService {
     const response = await apiClient.get<TextSourcesResponse>(
       API_ENDPOINTS.SOURCES.TEXT.GET_ALL(agentId)
     );
-    return response.data.data;
+    // Always return an array, even if backend returns null/undefined
+    return response.data?.data || [];
   }
 
   /**

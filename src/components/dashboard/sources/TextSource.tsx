@@ -1,4 +1,11 @@
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Plus, RefreshCw, FileText, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,15 +19,40 @@ import { useToast } from "@/hooks/use-toast";
 import { useAgent } from "@/contexts";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  useTextSources,
   useCreateTextSource,
   useDeleteTextSource,
 } from "@/hooks/use-text-sources";
+import { useSourcesByAgent } from "@/hooks/use-base-sources";
+import { TextSource as TextSourceType } from "@/types/source.types";
 
 export function TextSource() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [description, setDescription] = useState("");
+  // Selection state for text sources
+  const [selectedTexts, setSelectedTexts] = useState<number[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
+  // Modal viewer state
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerSources, setViewerSources] = useState<any[]>([]);
+  // Select all logic
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedTexts([]);
+    } else {
+      setSelectedTexts((textSources || []).map((src) => src.id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  // Select individual text source
+  const handleSelectText = (textId: number) => {
+    setSelectedTexts((prev) =>
+      prev.includes(textId)
+        ? prev.filter((id) => id !== textId)
+        : [...prev, textId]
+    );
+  };
   const { toast } = useToast();
 
   // Get the current agent ID from context
@@ -29,13 +61,22 @@ export function TextSource() {
   // Query client for invalidating queries
   const queryClient = useQueryClient();
 
-  // Text sources hooks
+  // Use the same sources as AllSourcesTable, then filter for text type
   const {
-    data: textSources,
+    data: allSources,
     isLoading: textSourcesLoading,
     error: textSourcesError,
     refetch: refetchTextSources,
-  } = useTextSources(currentAgentId || 0, isAgentSelected);
+  } = useSourcesByAgent(currentAgentId || 0, isAgentSelected);
+
+  // Only show sources of type 'text' (text sources)
+  const textSources = (allSources || []).filter((src) => src.type === "text");
+
+  // Debug logs
+  console.log("[TextSource] currentAgentId:", currentAgentId);
+  console.log("[TextSource] isAgentSelected:", isAgentSelected);
+  console.log("[TextSource] allSources:", allSources);
+  console.log("[TextSource] textSources:", textSources);
 
   const { mutate: createTextSource, isPending: createLoading } =
     useCreateTextSource();
@@ -109,10 +150,10 @@ export function TextSource() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-semibold text-foreground">
-            Text Source
+            Text Sources
           </h2>
           <p className="text-muted-foreground">
-            Add custom text content to your knowledge base
+            Upload and manage your knowledge base text content
           </p>
         </div>
       </div>
@@ -140,20 +181,16 @@ export function TextSource() {
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter a title for your text content"
             />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="description">Description (Optional)</Label>
             <Input
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter a description for your text content"
             />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="content">Content</Label>
             <Textarea
@@ -164,7 +201,6 @@ export function TextSource() {
               className="min-h-[200px]"
             />
           </div>
-
           <Button
             onClick={handleAddText}
             disabled={!title || !content || createLoading || !isAgentSelected}
@@ -181,10 +217,9 @@ export function TextSource() {
 
       {/* Existing Text Sources */}
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Existing Text Sources</h3>
-
         {textSourcesLoading ? (
           <div className="space-y-4">
+            <Skeleton className="h-16 w-full" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
           </div>
@@ -204,79 +239,117 @@ export function TextSource() {
           </Alert>
         ) : textSources && textSources.length > 0 ? (
           <div className="space-y-4">
-            {textSources.map((source) => (
-              <Card key={source.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      <div className="p-2 bg-muted rounded-lg">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-foreground">
-                          {source.name}
-                        </h4>
-                        {source.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {source.description}
+            <div className="flex items-center space-x-4 p-4 bg-muted/20 rounded-lg">
+              <input
+                type="checkbox"
+                checked={selectAll}
+                onChange={handleSelectAll}
+                className="accent-primary h-4 w-4 rounded border"
+              />
+              <span className="text-sm font-medium">
+                Select All Text Sources
+              </span>
+              {selectedTexts.length > 0 && (
+                <div className="flex items-center space-x-2 ml-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const selected = textSources.filter((src) =>
+                        selectedTexts.includes(src.id)
+                      );
+                      setViewerSources(selected);
+                      setViewerOpen(true);
+                    }}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    View ({selectedTexts.length})
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      selectedTexts.forEach((id) => handleDeleteText(id, ""));
+                      setSelectedTexts([]);
+                    }}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete ({selectedTexts.length})
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {textSources.map((source) => {
+              const textSource = source as any as TextSourceType;
+              return (
+                <Card key={source.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        {/* Use Checkbox component for consistency */}
+                        <Checkbox
+                          checked={selectedTexts.includes(source.id)}
+                          onCheckedChange={() => handleSelectText(source.id)}
+                        />
+                        <div className="p-2 bg-muted rounded-lg">
+                          <FileText className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-foreground">
+                            {source.name}
+                          </h3>
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            <span>Text</span>
+                            <span>•</span>
+                            <span>Updated {formatDate(source.updated_at)}</span>
+                          </div>
+                          <p className="flex items-center space-x-2 text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {textSource.content?.substring(0, 150)}
+                            {(textSource.content?.length || 0) > 150 && "..."}
                           </p>
-                        )}
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {source.content?.substring(0, 150) ||
-                            "No preview available"}
-                          {(source.content?.length || 0) > 150 && "..."}
-                        </p>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground mt-2">
-                          <span>Updated {formatDate(source.updated_at)}</span>
-                          <span>•</span>
-                          <span>{source.content?.length || 0} characters</span>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge
-                        variant={
-                          source.status === "completed"
-                            ? "default"
+                      <div className="flex items-center space-x-2">
+                        <Badge
+                          variant={
+                            source.status === "completed"
+                              ? "default"
+                              : source.status === "processing"
+                              ? "secondary"
+                              : source.status === "failed"
+                              ? "destructive"
+                              : "outline"
+                          }>
+                          {source.status === "completed"
+                            ? "Ready"
                             : source.status === "processing"
-                            ? "secondary"
+                            ? "Processing"
                             : source.status === "failed"
-                            ? "destructive"
-                            : "outline"
-                        }>
-                        {source.status === "completed"
-                          ? "Ready"
-                          : source.status === "processing"
-                          ? "Processing"
-                          : source.status === "failed"
-                          ? "Failed"
-                          : "Pending"}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          toast({
-                            title: "Opening text source",
-                            description: `Opening "${source.name}"...`,
-                          });
-                          // TODO: Implement text viewer modal
-                        }}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          handleDeleteText(source.id, source.name)
-                        }>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                            ? "Failed"
+                            : "Pending"}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setViewerSources([source]);
+                            setViewerOpen(true);
+                          }}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            handleDeleteText(source.id, source.name)
+                          }>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <Card>
