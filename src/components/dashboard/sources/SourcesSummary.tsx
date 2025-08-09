@@ -24,8 +24,12 @@ import {
 
 // Create a helper function to get count from metadata or properties
 const getSourceCount = (source: DataSource): number => {
-  // For TextSource
-  if (source.type === "text") {
+  // For TextSource, FileSource, QASource: count as 1 per source
+  if (
+    source.type === "text" ||
+    source.type === "file" ||
+    source.type === "qa"
+  ) {
     return 1;
   }
 
@@ -37,16 +41,6 @@ const getSourceCount = (source: DataSource): number => {
   // For DatabaseSource
   if (source.type === "database") {
     return source.recordCount || source.metadata?.recordCount || 0;
-  }
-
-  // For QASource
-  if (source.type === "qa") {
-    return source.questions?.length || source.metadata?.questions?.length || 0;
-  }
-
-  // For FileSource
-  if (source.type === "file") {
-    return source.metadata?.fileCount || 1;
   }
 
   // Default fallback

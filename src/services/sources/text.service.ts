@@ -73,6 +73,6 @@ export class TextSourcesService {
    * Delete a text source
    */
   static async deleteTextSource(id: number): Promise<void> {
-    await apiClient.delete(API_ENDPOINTS.SOURCES.TEXT.DELETE(id));
+    await apiClient.delete(API_ENDPOINTS.SOURCES.DELETE(id));
   }
 }

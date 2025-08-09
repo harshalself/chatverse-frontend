@@ -250,7 +250,7 @@ export class FileSourcesService {
    * Delete a file source
    */
   static async deleteFileSource(id: number): Promise<void> {
-    await apiClient.delete(API_ENDPOINTS.SOURCES.FILE.DELETE(id));
+    await apiClient.delete(API_ENDPOINTS.SOURCES.DELETE(id));
   }
 
   /**

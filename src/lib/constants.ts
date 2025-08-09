@@ -110,7 +110,6 @@ export const API_ENDPOINTS = {
       GET_ALL: (agentId: number) => `/sources/file/agent/${agentId}`,
       GET: (id: number) => `/sources/file/${id}`,
       UPDATE: (id: number) => `/sources/file/${id}`,
-      DELETE: (id: number) => `/sources/file/${id}`,
       // EXPORT: (id: number) => `/sources/file/${id}/export`, // Not available in backend yet
     },
 
@@ -120,7 +119,6 @@ export const API_ENDPOINTS = {
       GET_ALL: (agentId: number) => `/sources/text/agent/${agentId}`,
       GET: (id: number) => `/sources/text/${id}`,
       UPDATE: (id: number) => `/sources/text/${id}`,
-      DELETE: (id: number) => `/sources/text/${id}`,
     },
 
     // Website Sources API
@@ -130,7 +128,6 @@ export const API_ENDPOINTS = {
       GET_ALL: (agentId: number) => `/sources/website/agent/${agentId}`,
       GET: (id: number) => `/sources/website/${id}`,
       UPDATE: (id: number) => `/sources/website/${id}`,
-      DELETE: (id: number) => `/sources/website/${id}`,
     },
 
     // Database Sources API
@@ -140,7 +137,6 @@ export const API_ENDPOINTS = {
       GET_ALL: (agentId: number) => `/sources/database/agent/${agentId}`,
       GET: (id: number) => `/sources/database/${id}`,
       UPDATE: (id: number) => `/sources/database/${id}`,
-      DELETE: (id: number) => `/sources/database/${id}`,
     },
 
     // QA Sources API
@@ -149,7 +145,6 @@ export const API_ENDPOINTS = {
       GET_ALL: (agentId: number) => `/sources/qa/agent/${agentId}`,
       GET: (id: number) => `/sources/qa/${id}`,
       UPDATE: (id: number) => `/sources/qa/${id}`,
-      DELETE: (id: number) => `/sources/qa/${id}`,
     },
   },
 

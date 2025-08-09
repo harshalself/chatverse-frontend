@@ -158,23 +158,21 @@ export const useDeleteFileSource = () => {
 
   return useMutation({
     mutationFn: (id: number) => FileSourcesService.deleteFileSource(id),
-    onSuccess: (_, id) => {
+    onSuccess: (response, deletedId) => {
       // Remove from cache
       queryClient.removeQueries({
-        queryKey: ["file-source", id],
+        queryKey: QUERY_KEYS.SOURCE(String(deletedId)),
       });
 
-      // Invalidate file sources list
-      queryClient.invalidateQueries({
-        queryKey: ["file-sources"],
-      });
+      // Invalidate sources list
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOURCES });
 
       toast({
         title: "Success",
         description: SUCCESS_MESSAGES.SOURCE_DELETED,
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       ErrorHandler.handleApiError(error, "Failed to delete file source");
     },
   });
