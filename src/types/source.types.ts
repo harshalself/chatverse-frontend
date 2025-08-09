@@ -104,17 +104,22 @@ export interface QAPair {
 }
 
 export interface QASource {
+  // Fields from sources table
   id: number;
   agent_id: number;
   source_type: "qa";
   name: string;
-  description?: string;
-  status: "pending" | "processing" | "completed" | "failed";
+  description?: string | null;
+  status: SourceStatus;
   is_embedded: boolean;
   created_by: number;
-  created_at: string;
-  updated_at: string;
+  created_at: Timestamp;
+  updated_by?: number | null;
+  updated_at: Timestamp;
   is_deleted: boolean;
+  deleted_by?: number | null;
+  deleted_at?: Timestamp | null;
+  // Fields from qa_sources table
   source_id: number;
   question: string;
   answer: string;
@@ -151,16 +156,6 @@ export interface DatabaseSource extends BaseSource {
   tables?: string[];
   lastSynced?: Timestamp;
   recordCount?: number;
-}
-
-// Q&A Source Types
-export interface QASource extends BaseSource {
-  type: "qa";
-  questions: Array<{
-    question: string;
-    answer: string;
-    category?: string;
-  }>;
 }
 
 // File Source as legacy DataSource type (for compatibility)

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HelpCircle, Plus, RefreshCw, Eye, Trash2 } from "lucide-react";
+import { HelpCircle, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,52 +9,73 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useDeleteSource } from "@/hooks/use-base-sources";
-// NOTE: QA source specific hooks need to be implemented
+import { useSourcesByAgent } from "@/hooks/use-base-sources";
+import { useCreateQASource, useDeleteQASource } from "@/hooks/use-qa-sources";
+import { useAgent } from "@/contexts/AgentContext";
 
 export function QASource() {
   const [questionTitle, setQuestionTitle] = useState("");
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const { toast } = useToast();
+  const { currentAgentId } = useAgent();
 
-  // TODO: Implement QA source hooks (useSourcesByType, useCreateQASource)
-  // Temporary stubs to avoid errors
-  const qaSourcesData = { data: [] };
-  const qaSourcesLoading = false;
-  const qaSourcesError = null;
-  const refetchQASources = () => {};
-  const createLoading = false;
-  const createQASource = () => {
-    toast({
-      title: "Not implemented",
-      description: "Creating Q&A sources is not yet implemented.",
-      variant: "destructive",
-    });
-  };
+  // Get all sources for this agent and filter for QA sources
+  const {
+    data: sourcesData,
+    isLoading: sourcesLoading,
+    error: sourcesError,
+    refetch: refetchSources,
+  } = useSourcesByAgent(currentAgentId || 0, !!currentAgentId);
 
-  const { mutate: deleteSource } = useDeleteSource();
+  const { mutate: createQASource, isPending: createLoading } =
+    useCreateQASource();
+  const { mutate: deleteQASource } = useDeleteQASource();
 
-  const qaSources = qaSourcesData?.data || [];
+  // Filter sources to only include QA type
+  const qaSources = (sourcesData || []).filter(
+    (source) => source.source_type === "qa"
+  );
 
   const handleAddQA = () => {
+    if (!currentAgentId) {
+      toast({
+        title: "Error",
+        description: "Please select an agent first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (questionTitle && question && answer) {
-      createQASource();
+      createQASource(
+        {
+          agent_id: currentAgentId,
+          name: questionTitle,
+          qa_pairs: [{ question, answer }],
+        },
+        {
+          onSuccess: () => {
+            setQuestionTitle("");
+            setQuestion("");
+            setAnswer("");
+          },
+        }
+      );
     }
   };
 
-  const handleDeleteQA = (id: string, name: string) => {
-    deleteSource(Number(id), {
+  const handleDeleteQA = (id: number, name: string) => {
+    deleteQASource(id, {
       onSuccess: () => {
         toast({
-          title: "Q&A source deleted",
+          title: "QA source deleted",
           description: `"${name}" has been removed from your knowledge base.`,
         });
-        refetchQASources();
       },
       onError: () => {
         toast({
-          title: "Failed to delete Q&A source",
+          title: "Failed to delete QA source",
           description: "Please try again later.",
           variant: "destructive",
         });
@@ -62,16 +83,18 @@ export function QASource() {
     });
   };
 
+  // Show date and time for all dates (same format as TextSource)
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Unknown";
     const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
   return (
@@ -142,19 +165,19 @@ export function QASource() {
       <div className="mt-6">
         <h3 className="text-lg font-semibold mb-4">Existing Q&A Sources</h3>
 
-        {qaSourcesLoading ? (
+        {sourcesLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
           </div>
-        ) : qaSourcesError ? (
+        ) : sourcesError ? (
           <Alert variant="destructive">
             <AlertDescription>
               Failed to load Q&A sources.
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => refetchQASources()}
+                onClick={() => refetchSources()}
                 className="ml-2">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Retry
@@ -166,89 +189,71 @@ export function QASource() {
             {qaSources.map((source) => (
               <Card key={source.id}>
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
                       <div className="p-2 bg-muted rounded-lg">
                         <HelpCircle className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-foreground">
+                      <div>
+                        <h3 className="font-medium text-foreground">
                           {source.name}
-                        </h4>
-                        <div className="mt-2 space-y-2">
-                          {source.metadata?.questions
-                            ?.slice(0, 2)
-                            .map((qa: any, index: number) => (
-                              <div
-                                key={index}
-                                className="p-2 bg-muted/50 rounded text-sm">
-                                <p className="font-medium text-foreground">
-                                  {qa.question}
-                                </p>
-                                <p className="text-muted-foreground mt-1 line-clamp-2">
-                                  {qa.answer?.substring(0, 100)}
-                                  {(qa.answer?.length || 0) > 100 && "..."}
-                                </p>
-                              </div>
-                            )) || (
-                            <p className="text-sm text-muted-foreground">
-                              No Q&A pairs available
-                            </p>
-                          )}
-                          {(source.metadata?.questions?.length || 0) > 2 && (
-                            <p className="text-xs text-muted-foreground">
-                              +{(source.metadata?.questions?.length || 0) - 2}{" "}
-                              more Q&A pairs
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground mt-2">
-                          <span>Updated {formatDate(source.updatedAt)}</span>
+                        </h3>
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <span>Q&A</span>
                           <span>•</span>
-                          <span>
-                            {source.metadata?.questions?.length || 0} Q&A pairs
-                          </span>
+                          <span>Updated {formatDate(source.updated_at)}</span>
                         </div>
+                        {source.description && (
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {source.description}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge
-                        variant="secondary"
-                        className={`
-                        ${
-                          source.status === "ready"
-                            ? "bg-success/10 text-success border-success/20"
-                            : ""
-                        }
-                        ${
-                          source.status === "processing"
-                            ? "bg-warning/10 text-warning border-warning/20"
-                            : ""
-                        }
-                        ${
-                          source.status === "error"
-                            ? "bg-destructive/10 text-destructive border-destructive/20"
-                            : ""
-                        }
-                        ${
-                          source.status === "pending"
-                            ? "bg-muted/10 text-muted-foreground border-muted/20"
-                            : ""
-                        }
-                      `}>
-                        {source.status}
+                        variant={
+                          source.status === "completed"
+                            ? "default"
+                            : source.status === "processing"
+                            ? "secondary"
+                            : source.status === "failed"
+                            ? "destructive"
+                            : "outline"
+                        }>
+                        {source.status === "completed"
+                          ? "Ready"
+                          : source.status === "processing"
+                          ? "Processing"
+                          : source.status === "failed"
+                          ? "Failed"
+                          : "Pending"}
                       </Badge>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          toast({
-                            title: "Opening Q&A source",
-                            description: `Opening "${source.name}"...`,
-                          });
-                          // TODO: Implement Q&A viewer
+                          /* TODO: Implement QA viewer if needed */
                         }}>
-                        <Eye className="h-4 w-4" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
                       </Button>
                       <Button
                         variant="ghost"

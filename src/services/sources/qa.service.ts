@@ -22,7 +22,8 @@ export class QASourcesService {
       API_ENDPOINTS.SOURCES.QA.CREATE,
       request
     );
-    return response.data.data;
+    // Always return an array, even if backend returns null/undefined
+    return response.data?.data || [];
   }
 
   /**
@@ -32,7 +33,8 @@ export class QASourcesService {
     const response = await apiClient.get<QASourcesResponse>(
       API_ENDPOINTS.SOURCES.QA.GET_ALL(agentId)
     );
-    return response.data.data;
+    // Always return an array, even if backend returns null/undefined
+    return response.data?.data || [];
   }
 
   /**
