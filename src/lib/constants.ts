@@ -35,6 +35,12 @@ export const QUERY_KEYS = {
   PROVIDER_MODEL: (provider: string) => ["provider-models", provider], // Agents
   AGENTS: ["agents"],
   AGENT: (id: string) => ["agents", id],
+  AGENT_TRAINING_STATUS: (id: string) => ["agents", id, "training-status"],
+  AGENT_TRAINING_ANALYTICS: (id: string) => [
+    "agents",
+    id,
+    "training-analytics",
+  ],
 
   // Dashboard
   DASHBOARD: ["dashboard"],
@@ -75,6 +81,10 @@ export const API_ENDPOINTS = {
     CREATE: "/agents",
     UPDATE: (id: string) => `/agents/${id}`,
     DELETE: (id: string) => `/agents/${id}`,
+    TRAIN: (id: string) => `/agents/${id}/train`,
+    RETRAIN: (id: string) => `/agents/${id}/retrain`,
+    TRAINING_STATUS: (id: string) => `/agents/${id}/training-status`,
+    TRAINING_ANALYTICS: (id: string) => `/agents/${id}/training-analytics`,
   },
 
   // Provider Models
@@ -191,6 +201,11 @@ export const SUCCESS_MESSAGES = {
   AGENT_CREATED: "Agent created successfully",
   AGENT_UPDATED: "Agent updated successfully",
   AGENT_DELETED: "Agent deleted successfully",
+  AGENT_TRAINING_STARTED: "Agent training started successfully",
+  AGENT_RETRAINING_STARTED: "Agent retraining started successfully",
+  AGENT_TRAINING_COMPLETED: "Agent training completed successfully",
+  AGENT_TRAINING_FAILED: "Agent training failed",
+  AGENT_TRAINING_CANCELLED: "Agent training was cancelled",
   SOURCE_CREATED: "Source created successfully",
   SOURCE_UPDATED: "Source updated successfully",
   SOURCE_DELETED: "Source deleted successfully",

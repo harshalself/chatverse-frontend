@@ -9,12 +9,15 @@ import {
   Agent,
   CreateAgentRequest,
   UpdateAgentRequest,
+  TrainAgentRequest,
+  TrainingStatus,
+  TrainingAnalytics,
 } from "@/types/agent.types";
 import { PaginationOptions } from "@/types/api.types";
 import { QUERY_KEYS, SUCCESS_MESSAGES } from "@/lib/constants";
 import { ErrorHandler } from "@/lib/error-handler";
 import { toast } from "@/hooks/use-toast";
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 
 // Helper function to prefetch agents (useful for app initialization)
 export const prefetchAgents = async (
@@ -163,5 +166,245 @@ export const useDeleteAgent = () => {
     onError: (error: any) => {
       ErrorHandler.handleApiError(error, "Failed to delete agent");
     },
+  });
+};
+
+// Train agent mutation
+export const useTrainAgent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data?: TrainAgentRequest }) =>
+      AgentsService.trainAgent(id, data),
+    onSuccess: (response, { id }) => {
+      // Immediately invalidate training status to start polling
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.AGENT_TRAINING_STATUS(id),
+      });
+
+      // Invalidate agent data to refresh trained_on timestamp
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENT(id) });
+
+      // Force an immediate refetch of training status to start polling
+      setTimeout(() => {
+        queryClient.refetchQueries({
+          queryKey: QUERY_KEYS.AGENT_TRAINING_STATUS(id),
+        });
+      }, 500); // Small delay to let the backend update
+
+      toast({
+        title: "Training Started! 🚀",
+        description:
+          response.message || SUCCESS_MESSAGES.AGENT_TRAINING_STARTED,
+      });
+    },
+    onError: (error: any) => {
+      ErrorHandler.handleApiError(error, "Failed to start agent training");
+    },
+  });
+};
+
+// Retrain agent mutation
+export const useRetrainAgent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => AgentsService.retrainAgent(id),
+    onSuccess: (response, id) => {
+      // Invalidate training status to refresh it
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.AGENT_TRAINING_STATUS(id),
+      });
+
+      // Invalidate agent data to refresh trained_on timestamp
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENT(id) });
+
+      toast({
+        title: "Success",
+        description:
+          response.message || SUCCESS_MESSAGES.AGENT_RETRAINING_STARTED,
+      });
+    },
+    onError: (error: any) => {
+      ErrorHandler.handleApiError(error, "Failed to start agent retraining");
+    },
+  });
+};
+
+// Get training status with polling and completion notifications
+export const useTrainingStatus = (
+  id: string,
+  enabled = true,
+  pollInterval = 2000
+) => {
+  const memoizedId = useMemo(() => id, [id]);
+  const previousStatusRef = useRef<string | null>(null);
+  const queryClient = useQueryClient();
+  const hasShownCompletionToast = useRef<boolean>(false);
+
+  const query = useQuery({
+    queryKey: QUERY_KEYS.AGENT_TRAINING_STATUS(memoizedId),
+    queryFn: async () => {
+      const response = await AgentsService.getTrainingStatus(memoizedId);
+      console.log(
+        `Training status API response for agent ${memoizedId}:`,
+        response.data
+      );
+      return response.data as TrainingStatus;
+    },
+    enabled: enabled && !!memoizedId,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      console.log(`Refetch interval check - Status: ${data?.status}`);
+
+      // Stop polling if training is completed, failed, or cancelled
+      if (
+        data?.status &&
+        ["completed", "failed", "cancelled"].includes(data.status)
+      ) {
+        console.log(
+          `Stopping polling - training finished with status: ${data.status}`
+        );
+        return false;
+      }
+
+      // Poll every 2 seconds if training is in progress for faster updates
+      if (data?.status && ["pending", "processing"].includes(data.status)) {
+        console.log(
+          `Continuing polling - training in progress: ${data.status}`
+        );
+        return 500; // Faster polling during training
+      }
+
+      // For not_started status, poll every 5 seconds in case training starts
+      if (data?.status === "not_started") {
+        return 2000;
+      }
+
+      // Default: no polling
+      return false;
+    },
+    staleTime: 0, // Always consider stale for real-time updates
+    retry: 1,
+    refetchOnWindowFocus: true, // Enable refetch on focus to catch status changes
+  });
+
+  // Effect to detect status changes and show completion notifications
+  useEffect(() => {
+    const currentStatus = query.data?.status;
+
+    if (!currentStatus) return;
+
+    // Initialize previousStatus if it's the first time
+    if (previousStatusRef.current === null) {
+      previousStatusRef.current = currentStatus;
+      // Reset completion toast flag when starting fresh
+      if (currentStatus === "not_started" || currentStatus === "pending") {
+        hasShownCompletionToast.current = false;
+      }
+      return;
+    }
+
+    const previousStatus = previousStatusRef.current;
+
+    // Only show notification if status actually changed
+    if (previousStatus !== currentStatus) {
+      console.log(
+        `Training status changed: ${previousStatus} → ${currentStatus}`
+      );
+
+      // Training completed successfully
+      if (
+        (previousStatus === "processing" || previousStatus === "pending") &&
+        currentStatus === "completed" &&
+        !hasShownCompletionToast.current
+      ) {
+        hasShownCompletionToast.current = true;
+        toast({
+          title: "Training Complete! 🎉",
+          description: SUCCESS_MESSAGES.AGENT_TRAINING_COMPLETED,
+          variant: "default",
+        });
+
+        // Invalidate related queries to refresh UI
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.AGENT(memoizedId),
+        });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENTS });
+      }
+
+      // Training failed
+      else if (
+        (previousStatus === "processing" || previousStatus === "pending") &&
+        currentStatus === "failed" &&
+        !hasShownCompletionToast.current
+      ) {
+        hasShownCompletionToast.current = true;
+        toast({
+          title: "Training Failed ❌",
+          description:
+            query.data?.error?.message ||
+            SUCCESS_MESSAGES.AGENT_TRAINING_FAILED,
+          variant: "destructive",
+        });
+      }
+
+      // Training cancelled
+      else if (
+        (previousStatus === "processing" || previousStatus === "pending") &&
+        currentStatus === "cancelled" &&
+        !hasShownCompletionToast.current
+      ) {
+        hasShownCompletionToast.current = true;
+        toast({
+          title: "Training Cancelled ⏹️",
+          description: SUCCESS_MESSAGES.AGENT_TRAINING_CANCELLED,
+          variant: "default",
+        });
+      }
+
+      // Update the previous status reference
+      previousStatusRef.current = currentStatus;
+    }
+  }, [query.data?.status, query.data?.error?.message, memoizedId, queryClient]);
+
+  // Reset completion toast flag when training starts again
+  useEffect(() => {
+    const currentStatus = query.data?.status;
+    if (currentStatus === "pending" || currentStatus === "processing") {
+      hasShownCompletionToast.current = false;
+    }
+  }, [query.data?.status]);
+
+  return query;
+};
+
+// Get training analytics
+export const useTrainingAnalytics = (
+  id: string,
+  enabled = true,
+  timeRange: string = "30d",
+  includeRecommendations = true
+) => {
+  const memoizedId = useMemo(() => id, [id]);
+
+  return useQuery({
+    queryKey: [
+      ...QUERY_KEYS.AGENT_TRAINING_ANALYTICS(memoizedId),
+      timeRange,
+      includeRecommendations,
+    ],
+    queryFn: async () => {
+      const response = await AgentsService.getTrainingAnalytics(
+        memoizedId,
+        timeRange,
+        includeRecommendations
+      );
+      return response.data as TrainingAnalytics;
+    },
+    enabled: enabled && !!memoizedId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 };

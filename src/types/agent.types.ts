@@ -42,6 +42,58 @@ export interface UpdateAgentRequest {
 export type AgentResponse = ApiResponse<Agent>;
 export type AgentsResponse = ApiResponse<Agent[]>;
 
+// Training Types
+export interface TrainAgentRequest {
+  forceRetrain?: boolean;
+  cleanupExisting?: boolean;
+}
+
+export interface TrainingStatus {
+  agentId: ID;
+  status:
+    | "not_started"
+    | "pending"
+    | "processing"
+    | "completed"
+    | "failed"
+    | "cancelled";
+  progress?: number;
+  startedAt?: Timestamp;
+  completedAt?: Timestamp;
+  error?: {
+    message: string;
+    code: string;
+    details?: string;
+  };
+  metrics?: {
+    sourcesProcessed: number;
+    totalSources: number;
+    vectorsCreated: number;
+    processingTime?: number;
+  };
+}
+
+export interface TrainingAnalytics {
+  agentId: ID;
+  totalTrainingSessions: number;
+  lastTrainingDate?: Timestamp;
+  averageTrainingTime: number;
+  successRate: number;
+  vectorCount: number;
+  sourceBreakdown: {
+    [key: string]: {
+      count: number;
+      processingTime: number;
+      successRate: number;
+    };
+  };
+  recommendations?: string[];
+}
+
+export type TrainAgentResponse = ApiResponse<{ agentId: ID }>;
+export type TrainingStatusResponse = ApiResponse<TrainingStatus>;
+export type TrainingAnalyticsResponse = ApiResponse<TrainingAnalytics>;
+
 // Conversation Types
 export interface Conversation {
   id: ID;

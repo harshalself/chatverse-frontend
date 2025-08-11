@@ -6,6 +6,10 @@ import {
   UpdateAgentRequest,
   AgentResponse,
   AgentsResponse,
+  TrainAgentRequest,
+  TrainAgentResponse,
+  TrainingStatusResponse,
+  TrainingAnalyticsResponse,
 } from "@/types/agent.types";
 import { PaginationOptions } from "@/types/api.types";
 
@@ -56,5 +60,52 @@ export class AgentsService {
    */
   static async deleteAgent(id: string): Promise<{ message: string }> {
     return apiClient.delete(API_ENDPOINTS.AGENTS.DELETE(id));
+  }
+
+  /**
+   * Train agent - starts agent training process
+   */
+  static async trainAgent(
+    id: string,
+    data?: TrainAgentRequest
+  ): Promise<TrainAgentResponse> {
+    return apiClient.post(API_ENDPOINTS.AGENTS.TRAIN(id), data || {});
+  }
+
+  /**
+   * Retrain agent - forces complete retraining
+   */
+  static async retrainAgent(id: string): Promise<TrainAgentResponse> {
+    return apiClient.post(API_ENDPOINTS.AGENTS.RETRAIN(id), {});
+  }
+
+  /**
+   * Get training status for agent
+   */
+  static async getTrainingStatus(
+    id: string,
+    includeHistory = false
+  ): Promise<TrainingStatusResponse> {
+    const params = includeHistory ? "?includeHistory=true" : "";
+    return apiClient.get(
+      `${API_ENDPOINTS.AGENTS.TRAINING_STATUS(id)}${params}`
+    );
+  }
+
+  /**
+   * Get training analytics for agent
+   */
+  static async getTrainingAnalytics(
+    id: string,
+    timeRange = "30d",
+    includeRecommendations = true
+  ): Promise<TrainingAnalyticsResponse> {
+    const params = new URLSearchParams({
+      timeRange,
+      includeRecommendations: includeRecommendations.toString(),
+    });
+    return apiClient.get(
+      `${API_ENDPOINTS.AGENTS.TRAINING_ANALYTICS(id)}?${params}`
+    );
   }
 }

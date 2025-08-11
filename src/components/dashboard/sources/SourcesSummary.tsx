@@ -8,6 +8,7 @@ import {
   HelpCircle,
   ChevronRight,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,11 +17,13 @@ import { Separator } from "@/components/ui/separator";
 import { DataSource } from "@/types/source.types";
 import { useAgent } from "@/contexts";
 import { useSourcesByAgent, useDeleteSource } from "@/hooks/use-base-sources";
+import { useTrainAgent, useTrainingStatus } from "@/hooks/use-agents";
 import {
   AllSourcesTable,
   sourceIcons as importedSourceIcons,
   sourceLabels as importedSourceLabels,
 } from "./AllSourcesTable";
+import { TrainingStatus } from "./TrainingStatus";
 
 // Create a helper function to get count from metadata or properties
 const getSourceCount = (source: DataSource): number => {
@@ -67,20 +70,13 @@ export function SourcesSummary() {
   // For delete functionality
   const { mutate: deleteSource } = useDeleteSource();
 
+  // Training hooks
+  const { mutate: trainAgent, isPending: isTraining } = useTrainAgent();
+  const { data: trainingStatus, isLoading: isTrainingStatusLoading } =
+    useTrainingStatus(currentAgentId?.toString() || "", isAgentSelected);
+
   // Use allSources directly from the hook instead of sourcesData
   const sources = allSources || [];
-
-  // Current session sources - for this example, we'll use the 2 most recent sources
-  const currentSessionSources = useMemo(() => {
-    const sortedSources = [...sources]
-      .sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )
-      .slice(0, 2);
-
-    return sortedSources;
-  }, [sources]);
 
   // Calculate totals
   const totalAllSources = useMemo(
@@ -88,14 +84,27 @@ export function SourcesSummary() {
     [sources]
   );
 
-  const totalCurrentSessionSources = useMemo(
-    () =>
-      currentSessionSources.reduce(
-        (acc, source) => acc + getSourceCount(source),
-        0
-      ),
-    [currentSessionSources]
-  );
+  // Training functions
+  const handleTrainAgent = () => {
+    if (currentAgentId) {
+      trainAgent({
+        id: currentAgentId.toString(),
+        data: { forceRetrain: false, cleanupExisting: true },
+      });
+    }
+  };
+
+  const isTrainingInProgress =
+    trainingStatus?.status === "processing" ||
+    trainingStatus?.status === "pending";
+  const canTrain =
+    isAgentSelected &&
+    totalAllSources > 0 &&
+    !isTraining &&
+    !isTrainingInProgress;
+
+  // Always show training status component when agent is selected - let the component handle visibility
+  const showTrainingStatus = isAgentSelected && currentAgentId;
 
   return (
     <div className="w-80 border-l bg-background p-6 sticky top-16 z-40 self-start">
@@ -187,11 +196,32 @@ export function SourcesSummary() {
           <Button
             className="w-full"
             size="lg"
-            disabled={!isAgentSelected}
-            title={!isAgentSelected ? "Select an agent first" : ""}>
-            <Brain className="h-4 w-4 mr-2" />
-            Train Agent
+            disabled={!canTrain}
+            onClick={handleTrainAgent}
+            title={
+              !isAgentSelected
+                ? "Select an agent first"
+                : totalAllSources === 0
+                ? "Add sources before training"
+                : isTrainingInProgress
+                ? "Training in progress"
+                : ""
+            }>
+            {isTraining || isTrainingInProgress ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Brain className="h-4 w-4 mr-2" />
+            )}
+            {isTrainingInProgress ? "Training..." : "Train Agent"}
           </Button>
+
+          {/* Training Status Component */}
+          {showTrainingStatus && currentAgentId && (
+            <TrainingStatus
+              agentId={currentAgentId.toString()}
+              isVisible={true}
+            />
+          )}
         </CardContent>
       </Card>
 
