@@ -2,8 +2,163 @@ import { useState, memo, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Textarea as ShadcnTextarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { useSendChatMessage } from "@/hooks/use-chat";
+import type {
+  UIMessage as ChatUIMessage,
+  Message as ChatMessage,
+} from "@/types/chat.types";
+
+// Markdown component configuration
+const components: Partial<Components> = {
+  pre: ({ children }) => <>{children}</>,
+  ol: ({ node, children, ...props }) => (
+    <ol className="list-decimal list-outside ml-4" {...props}>
+      {children}
+    </ol>
+  ),
+  li: ({ node, children, ...props }) => (
+    <li className="py-1" {...props}>
+      {children}
+    </li>
+  ),
+  ul: ({ node, children, ...props }) => (
+    <ul className="list-disc list-outside ml-4" {...props}>
+      {children}
+    </ul>
+  ),
+  strong: ({ node, children, ...props }) => (
+    <span className="font-semibold" {...props}>
+      {children}
+    </span>
+  ),
+  a: ({ node, children, href, ...props }) => (
+    <a
+      className="text-blue-500 hover:underline"
+      target="_blank"
+      rel="noreferrer"
+      href={href || "#"}
+      {...props}>
+      {children}
+    </a>
+  ),
+  h1: ({ node, children, ...props }) => (
+    <h1 className="text-3xl font-semibold mt-6 mb-2" {...props}>
+      {children}
+    </h1>
+  ),
+  h2: ({ node, children, ...props }) => (
+    <h2 className="text-2xl font-semibold mt-6 mb-2" {...props}>
+      {children}
+    </h2>
+  ),
+  h3: ({ node, children, ...props }) => (
+    <h3 className="text-xl font-semibold mt-6 mb-2" {...props}>
+      {children}
+    </h3>
+  ),
+  h4: ({ node, children, ...props }) => (
+    <h4 className="text-lg font-semibold mt-6 mb-2" {...props}>
+      {children}
+    </h4>
+  ),
+  h5: ({ node, children, ...props }) => (
+    <h5 className="text-base font-semibold mt-6 mb-2" {...props}>
+      {children}
+    </h5>
+  ),
+  h6: ({ node, children, ...props }) => (
+    <h6 className="text-sm font-semibold mt-6 mb-2" {...props}>
+      {children}
+    </h6>
+  ),
+};
+
+const remarkPlugins = [remarkGfm];
+
+const Markdown = memo(({ children }: { children: string }) => (
+  <ReactMarkdown remarkPlugins={remarkPlugins} components={components}>
+    {children}
+  </ReactMarkdown>
+));
+
+// ReasoningMessagePart component
+function ReasoningMessagePart({
+  part,
+  isReasoning,
+}: {
+  part: { type: string; text?: string };
+  isReasoning: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const variants = {
+    collapsed: { height: 0, opacity: 0, marginTop: 0, marginBottom: 0 },
+    expanded: {
+      height: "auto",
+      opacity: 1,
+      marginTop: "1rem",
+      marginBottom: 0,
+    },
+  };
+
+  const memoizedSetIsExpanded = useCallback((value: boolean) => {
+    setIsExpanded(value);
+  }, []);
+
+  useEffect(() => {
+    memoizedSetIsExpanded(isReasoning);
+  }, [isReasoning, memoizedSetIsExpanded]);
+
+  return (
+    <div className="flex flex-col">
+      {isReasoning ? (
+        <div className="flex flex-row gap-2 items-center">
+          <div className="font-medium text-sm">Reasoning</div>
+          <div className="animate-spin">
+            <SpinnerIcon />
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-row gap-2 items-center">
+          <div className="font-medium text-sm">Reasoned for a few seconds</div>
+          <button
+            className={cn(
+              "cursor-pointer rounded-full dark:hover:bg-zinc-800 hover:bg-zinc-200",
+              {
+                "dark:bg-zinc-800 bg-zinc-200": isExpanded,
+              }
+            )}
+            onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronUp className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+      )}
+
+      <AnimatePresence initial={false}>
+        {isExpanded && part.text && (
+          <motion.div
+            key="reasoning"
+            className="text-sm dark:text-zinc-400 text-zinc-600 flex flex-col gap-4 border-l pl-3 dark:border-zinc-800"
+            initial="collapsed"
+            animate="expanded"
+            exit="collapsed"
+            variants={variants}
+            transition={{ duration: 0.2, ease: "easeInOut" }}>
+            <Markdown>{part.text}</Markdown>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 // SpinnerIcon component
 function SpinnerIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -91,9 +246,23 @@ const PureMessage = ({
                         "bg-secondary text-secondary-foreground px-3 py-2 rounded-tl-xl rounded-tr-xl rounded-bl-xl":
                           message.role === "user",
                       })}>
-                      {part.text}
+                      <Markdown>{part.text || ""}</Markdown>
                     </div>
                   </motion.div>
+                );
+              }
+              if (part.type === "reasoning") {
+                return (
+                  <ReasoningMessagePart
+                    key={`message-${message.id}-${i}`}
+                    part={part}
+                    isReasoning={
+                      (message.parts &&
+                        status === "streaming" &&
+                        i === message.parts.length - 1) ??
+                      false
+                    }
+                  />
                 );
               }
               return null;
@@ -218,18 +387,6 @@ function createUIMessage({
   };
 }
 
-// Mock chat service
-const mockSendChatMessage = async (
-  messages: UIMessage[]
-): Promise<{ message: string }> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return {
-    message:
-      "This is a mock response from the AI assistant. In a real implementation, this would be connected to your AI service.",
-  };
-};
-
 export function Chat() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<UIMessage[]>([]);
@@ -237,37 +394,54 @@ export function Chat() {
     "ready" | "streaming" | "submitted" | "error"
   >("ready");
 
+  // Use the real chat API hook
+  const { mutate: sendChatMessage, isPending } = useSendChatMessage();
+
   async function sendMessage() {
     if (!input.trim()) return;
+
     const userMessage = createUIMessage({ role: "user", content: input });
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setStatus("submitted");
     setInput("");
-    try {
-      const data = await mockSendChatMessage(newMessages);
-      const assistantMessage = createUIMessage({
-        role: "assistant",
-        content: data.message,
-      });
-      setMessages([...newMessages, assistantMessage]);
-      setStatus("ready");
-    } catch (error: any) {
-      toast.error(
-        error.message || "An error occurred. Please try again later.",
-        {
-          position: "top-center",
-        }
-      );
-      setStatus("error");
-    }
+
+    // Convert UI messages to API messages
+    const apiMessages: ChatMessage[] = newMessages.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+
+    sendChatMessage(
+      { messages: apiMessages },
+      {
+        onSuccess: (data) => {
+          const assistantMessage = createUIMessage({
+            role: "assistant",
+            content: data.message,
+          });
+          setMessages([...newMessages, assistantMessage]);
+          setStatus("ready");
+        },
+        onError: (error: any) => {
+          toast.error(
+            error.message || "An error occurred. Please try again later.",
+            {
+              position: "top-center",
+            }
+          );
+          setStatus("error");
+        },
+      }
+    );
   }
 
   function stop() {
     setStatus("ready");
   }
 
-  const isLoading = status === "streaming" || status === "submitted";
+  const isLoading =
+    status === "streaming" || status === "submitted" || isPending;
 
   return (
     <div className="flex items-center justify-center w-full h-full">

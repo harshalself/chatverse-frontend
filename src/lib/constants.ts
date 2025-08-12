@@ -160,7 +160,7 @@ export const API_ENDPOINTS = {
 
   // Playground
   PLAYGROUND: {
-    CHAT: "/playground/chat",
+    CHAT: "/chat",
     MESSAGES: "/playground/messages",
   },
 } as const;
