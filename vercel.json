@@ -7,7 +7,7 @@
   "regions": ["iad1"],
   "functions": {
     "app/api/**": {
-      "runtime": "nodejs18.x"
+      "runtime": "vercel-nodejs@18.0.0"
     }
   },
   "rewrites": [
