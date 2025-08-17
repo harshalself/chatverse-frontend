@@ -7,15 +7,16 @@ import "./index.css";
  * This helps the browser prioritize fetching of critical resources
  */
 if (process.env.NODE_ENV === "production") {
-  // Add preload for main CSS
-  const linkPreload = document.createElement("link");
-  linkPreload.rel = "preload";
-  linkPreload.as = "style";
-  linkPreload.href = "/assets/index.css";
-  document.head.appendChild(linkPreload);
-
-  // Add DNS prefetch for API domain
-  const apiHost = new URL(import.meta.env.VITE_API_URL || "").hostname;
+  // Add DNS prefetch for API domain (safe check)
+  const apiUrl = import.meta.env.VITE_API_BASE_URL;
+  let apiHost = "";
+  try {
+    if (apiUrl) {
+      apiHost = new URL(apiUrl).hostname;
+    }
+  } catch (e) {
+    // Invalid URL, skip DNS prefetch
+  }
   if (apiHost) {
     const dnsPrefetch = document.createElement("link");
     dnsPrefetch.rel = "dns-prefetch";
