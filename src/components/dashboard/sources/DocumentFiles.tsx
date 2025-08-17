@@ -233,13 +233,13 @@ export function DocumentFiles() {
   };
 
   return (
-    <div className="flex-1 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex-1 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
             Document Files
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Upload and manage your knowledge base documents
           </p>
         </div>
@@ -247,7 +247,7 @@ export function DocumentFiles() {
 
       {/* Show alert if agent is not selected */}
       {!isAgentSelected && (
-        <Alert className="mb-6">
+        <Alert className="mb-4 sm:mb-6">
           <AlertDescription>
             Please select an agent to manage document files.
           </AlertDescription>
@@ -255,17 +255,17 @@ export function DocumentFiles() {
       )}
 
       {/* Upload Card */}
-      <Card className="mb-6">
+      <Card className="mb-4 sm:mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Upload className="h-5 w-5" />
+          <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+            <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
             <span>Upload Files</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-            <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">
+          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 sm:p-8 text-center">
+            <Upload className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+            <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">
               Drag and drop files here or click to browse
               <br />
               <span className="text-xs">
@@ -275,7 +275,8 @@ export function DocumentFiles() {
             <Button
               onClick={handleFileSelect}
               disabled={uploadLoading || !isAgentSelected}
-              title={!isAgentSelected ? "Select an agent first" : ""}>
+              title={!isAgentSelected ? "Select an agent first" : ""}
+              className="w-full sm:w-auto">
               {uploadLoading ? (
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -318,24 +319,28 @@ export function DocumentFiles() {
         </Alert>
       ) : documents.length > 0 ? (
         <div className="space-y-4">
-          <div className="flex items-center space-x-4 p-4 bg-muted/20 rounded-lg">
-            <Checkbox checked={selectAll} onCheckedChange={handleSelectAll} />
-            <span className="text-sm font-medium">Select All Documents</span>
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 bg-muted/20 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Checkbox checked={selectAll} onCheckedChange={handleSelectAll} />
+              <span className="text-sm font-medium">Select All Documents</span>
+            </div>
             {selectedDocs.length > 0 && (
-              <div className="flex items-center space-x-2 ml-auto">
+              <div className="flex items-center space-x-2 sm:ml-auto">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     selectedDocs.forEach((id) => handleViewDocument(id));
-                  }}>
+                  }}
+                  className="flex-1 sm:flex-none">
                   <Eye className="h-4 w-4 mr-2" />
                   View ({selectedDocs.length})
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={handleDeleteSelected}>
+                  onClick={handleDeleteSelected}
+                  className="flex-1 sm:flex-none">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete ({selectedDocs.length})
                 </Button>
@@ -345,23 +350,24 @@ export function DocumentFiles() {
 
           {documents.map((doc) => (
             <Card key={doc.id}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 sm:justify-between">
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
                     <Checkbox
                       checked={selectedDocs.includes(doc.id)}
                       onCheckedChange={() => handleSelectDoc(doc.id)}
+                      className="flex-shrink-0"
                     />
-                    <div className="p-2 bg-muted rounded-lg">
-                      <FileText className="h-5 w-5 text-muted-foreground" />
+                    <div className="p-2 bg-muted rounded-lg flex-shrink-0">
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     </div>
-                    <div>
-                      <h3 className="font-medium text-foreground">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-foreground truncate">
                         {doc.name}
                       </h3>
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-xs sm:text-sm text-muted-foreground">
                         {/* File type: Prefer mime_type, else use file extension, else Unknown */}
-                        <span>
+                        <span className="truncate">
                           {doc.metadata?.mime_type
                             ? doc.metadata.mime_type
                             : doc.name && doc.name.includes(".")
@@ -370,14 +376,15 @@ export function DocumentFiles() {
                                 .toUpperCase() + " file"
                             : "Unknown type"}
                         </span>
-                        <span>•</span>
-                        {/* File size removed as per request */}
+                        <span className="hidden sm:inline">•</span>
                         {/* Updated date: Show 'Yesterday', 'X days ago', or formatted date */}
-                        <span>Updated {formatDate(doc.updated_at)}</span>
+                        <span className="truncate">
+                          Updated {formatDate(doc.updated_at)}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-end space-x-2 flex-shrink-0">
                     <Badge
                       variant={
                         doc.status === "completed"
@@ -387,7 +394,8 @@ export function DocumentFiles() {
                           : doc.status === "failed"
                           ? "destructive"
                           : "outline"
-                      }>
+                      }
+                      className="text-xs">
                       {doc.status === "completed"
                         ? "Ready"
                         : doc.status === "processing"
@@ -399,7 +407,8 @@ export function DocumentFiles() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleViewDocument(doc.id)}>
+                      onClick={() => handleViewDocument(doc.id)}
+                      className="h-8 w-8 p-0">
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button
@@ -415,7 +424,8 @@ export function DocumentFiles() {
                             refetchDocuments();
                           },
                         });
-                      }}>
+                      }}
+                      className="h-8 w-8 p-0">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -426,10 +436,12 @@ export function DocumentFiles() {
         </div>
       ) : (
         <Card>
-          <CardContent className="p-8 text-center">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No documents yet</h3>
-            <p className="text-muted-foreground mb-4">
+          <CardContent className="p-6 sm:p-8 text-center">
+            <FileText className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-base sm:text-lg font-medium mb-2">
+              No documents yet
+            </h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">
               {!isAgentSelected
                 ? "Select an agent first to view its documents"
                 : "Upload your first document to start building your knowledge base"}
@@ -437,7 +449,8 @@ export function DocumentFiles() {
             <Button
               onClick={handleFileSelect}
               disabled={!isAgentSelected}
-              title={!isAgentSelected ? "Select an agent first" : ""}>
+              title={!isAgentSelected ? "Select an agent first" : ""}
+              className="w-full sm:w-auto">
               <Upload className="h-4 w-4 mr-2" />
               Upload Document
             </Button>

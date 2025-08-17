@@ -5,6 +5,7 @@ import { Trash2, Plus, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ROUTES } from "@/lib/constants";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +46,7 @@ export function SessionSidebar({
 
   const navigate = useNavigate();
   const { agentId: urlAgentId } = useParams();
+  const isMobile = useIsMobile();
 
   const { data: sessions = [], isLoading, refetch } = useChatSessions(agentId);
 
@@ -127,42 +129,44 @@ export function SessionSidebar({
   };
 
   return (
-    <div className="w-64 border-r border-border bg-background/50 backdrop-blur-sm flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-border/50">
+    <div className="w-full sm:w-64 border-r border-border bg-background/50 backdrop-blur-sm flex flex-col h-full">
+      <div className="px-3 sm:px-4 py-3 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="size-6 flex items-center rounded-full justify-center bg-primary/10">
-              <MessageSquare className="h-4 w-4 text-primary" />
+            <div className="size-5 sm:size-6 flex items-center rounded-full justify-center bg-primary/10">
+              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
             </div>
-            <span className="text-sm font-bold text-foreground">
+            <span className="text-xs sm:text-sm font-bold text-foreground">
               Chat Sessions
             </span>
           </div>
           <Button
             onClick={handleCreateSession}
             size="sm"
-            className="gap-1.5 h-7 px-2.5 text-xs"
+            className="gap-1 sm:gap-1.5 h-6 sm:h-7 px-2 sm:px-2.5 text-xs"
             disabled={isCreatingSession}>
-            <Plus className="h-3.5 w-3.5" />
-            {isCreatingSession ? "Creating..." : "New"}
+            <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden xs:inline">
+              {isCreatingSession ? "Creating..." : "New"}
+            </span>
           </Button>
         </div>
       </div>
 
       <div className="flex-1 overflow-hidden">
         {isLoading ? (
-          <div className="p-4 text-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent mx-auto mb-3"></div>
-            <span className="text-sm text-muted-foreground">
+          <div className="p-3 sm:p-4 text-center">
+            <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-2 border-primary border-t-transparent mx-auto mb-2 sm:mb-3"></div>
+            <span className="text-xs sm:text-sm text-muted-foreground">
               Loading sessions...
             </span>
           </div>
         ) : sessions.length === 0 ? (
-          <div className="p-6 text-center">
-            <div className="size-12 flex items-center rounded-full justify-center bg-muted/50 mx-auto mb-3">
-              <MessageSquare className="h-6 w-6 text-muted-foreground/50" />
+          <div className="p-4 sm:p-6 text-center">
+            <div className="size-10 sm:size-12 flex items-center rounded-full justify-center bg-muted/50 mx-auto mb-2 sm:mb-3">
+              <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground/50" />
             </div>
-            <span className="text-sm text-foreground mb-1">
+            <span className="text-xs sm:text-sm text-foreground mb-1 block">
               No conversations yet
             </span>
             <span className="text-xs text-muted-foreground">
@@ -171,44 +175,47 @@ export function SessionSidebar({
           </div>
         ) : (
           <div className="overflow-y-auto h-full">
-            <div className="p-2 space-y-1">
+            <div className="p-1.5 sm:p-2 space-y-1">
               {sessions.map((session: ChatSession) => (
                 <div
                   key={session.id}
                   className={cn(
-                    "group relative p-3 rounded-lg cursor-pointer hover:bg-muted/60 transition-all duration-200",
+                    "group relative p-2 sm:p-3 rounded-lg cursor-pointer hover:bg-muted/60 transition-all duration-200",
                     currentSessionId === session.id &&
                       "bg-primary/5 border border-primary/20 shadow-sm"
                   )}
                   onClick={() => onSessionSelect(session.id)}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0 space-y-1 sm:space-y-1.5">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                         <Badge
                           variant="secondary"
-                          className="text-xs font-mono px-1.5 py-0.5">
+                          className="text-xs font-mono px-1 sm:px-1.5 py-0.5">
                           #{session.id}
                         </Badge>
                         <Badge
                           variant="outline"
-                          className="text-xs px-1.5 py-0.5">
+                          className="text-xs px-1 sm:px-1.5 py-0.5">
                           {session.message_count}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
                           {formatSessionDate(session.last_message_time)}
                         </span>
                       </div>
-                      <span className="text-sm text-foreground leading-snug overflow-hidden">
-                        {truncateMessage(session.last_message, 60)}
+                      <span className="text-xs sm:text-sm text-foreground leading-snug overflow-hidden block">
+                        {truncateMessage(
+                          session.last_message,
+                          isMobile ? 40 : 60
+                        )}
                       </span>
                     </div>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                      className="h-6 w-6 sm:h-7 sm:w-7 p-0 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all flex-shrink-0"
                       onClick={(e) => handleDeleteClick(session, e)}
                       disabled={deletingSessionId === session.id}>
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     </Button>
                   </div>
                 </div>

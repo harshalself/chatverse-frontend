@@ -75,11 +75,11 @@ export function AnalyticsView() {
     useConversationInsights(timeRange === "24h" ? "7d" : timeRange);
 
   const renderTimeRangeSelector = () => (
-    <div className="mb-6">
+    <div className="mb-4 sm:mb-6">
       <Select
         value={timeRange}
         onValueChange={(value: typeof timeRange) => setTimeRange(value)}>
-        <SelectTrigger className="w-48">
+        <SelectTrigger className="w-full sm:w-48">
           <SelectValue placeholder="Select time range" />
         </SelectTrigger>
         <SelectContent>
@@ -95,9 +95,9 @@ export function AnalyticsView() {
   const renderOverviewSection = () => {
     if (overviewLoading) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-32" />
+            <Skeleton key={i} className="h-28 sm:h-32" />
           ))}
         </div>
       );
@@ -105,7 +105,7 @@ export function AnalyticsView() {
 
     if (overviewError) {
       return (
-        <Alert variant="destructive" className="mb-8">
+        <Alert variant="destructive" className="mb-6 sm:mb-8">
           <AlertDescription>
             Failed to load overview data. Please try again.
           </AlertDescription>
@@ -114,14 +114,16 @@ export function AnalyticsView() {
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">
+              Total Agents
+            </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl sm:text-2xl font-bold">
               {overviewData?.totalAgents || 0}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -132,11 +134,13 @@ export function AnalyticsView() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversations</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">
+              Conversations
+            </CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl sm:text-2xl font-bold">
               {overviewData?.totalConversations || 0}
             </div>
             <p className="text-xs text-muted-foreground">Total conversations</p>
@@ -145,11 +149,13 @@ export function AnalyticsView() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Response Time</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">
+              Response Time
+            </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl sm:text-2xl font-bold">
               {overviewData?.averageResponseTime || 0}ms
             </div>
             <p className="text-xs text-muted-foreground">
@@ -160,11 +166,13 @@ export function AnalyticsView() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">
+              Success Rate
+            </CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl sm:text-2xl font-bold">
               {overviewData?.successRate || 0}%
             </div>
             <p className="text-xs text-muted-foreground">
@@ -177,22 +185,24 @@ export function AnalyticsView() {
   };
 
   const renderContent = () => {
-    const commonHeader = <div className="p-6">{renderTimeRangeSelector()}</div>;
+    const commonHeader = (
+      <div className="p-4 sm:p-6">{renderTimeRangeSelector()}</div>
+    );
 
     switch (activeItem) {
       case "overview":
         return (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {renderTimeRangeSelector()}
-            <h2 className="text-2xl font-bold text-foreground mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">
               Analytics Overview
             </h2>
             {renderOverviewSection()}
 
             {analyticsLoading ? (
               <div className="space-y-4">
-                <Skeleton className="h-64 w-full" />
-                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-48 sm:h-64 w-full" />
+                <Skeleton className="h-24 sm:h-32 w-full" />
               </div>
             ) : analyticsError ? (
               <Alert variant="destructive">
@@ -208,14 +218,18 @@ export function AnalyticsView() {
                 </AlertDescription>
               </Alert>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Performance Trends</CardTitle>
-                    <CardDescription>Key metrics over time</CardDescription>
+                    <CardTitle className="text-base sm:text-lg">
+                      Performance Trends
+                    </CardTitle>
+                    <CardDescription className="text-sm">
+                      Key metrics over time
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       Chart visualization will go here
                     </p>
                   </CardContent>
@@ -227,29 +241,31 @@ export function AnalyticsView() {
 
       case "performance":
         return (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {renderTimeRangeSelector()}
-            <h2 className="text-2xl font-bold text-foreground mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">
               Performance Metrics
             </h2>
 
             {performanceLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Skeleton className="h-32" />
-                <Skeleton className="h-32" />
-                <Skeleton className="h-64 md:col-span-2" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <Skeleton className="h-28 sm:h-32" />
+                <Skeleton className="h-28 sm:h-32" />
+                <Skeleton className="h-48 sm:h-64 md:col-span-2" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Response Time</CardTitle>
+                    <CardTitle className="text-base sm:text-lg">
+                      Response Time
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
+                    <div className="text-xl sm:text-2xl font-bold">
                       {performanceData?.averageResponseTime?.[0]?.value || 0}ms
                     </div>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       Average response time
                     </p>
                   </CardContent>
@@ -257,43 +273,49 @@ export function AnalyticsView() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Throughput</CardTitle>
+                    <CardTitle className="text-base sm:text-lg">
+                      Throughput
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
+                    <div className="text-xl sm:text-2xl font-bold">
                       {performanceData?.throughput?.[0]?.value || 0}
                     </div>
-                    <p className="text-muted-foreground">Requests per minute</p>
+                    <p className="text-sm text-muted-foreground">
+                      Requests per minute
+                    </p>
                   </CardContent>
                 </Card>
 
                 <Card className="md:col-span-2">
                   <CardHeader>
-                    <CardTitle>System Resources</CardTitle>
+                    <CardTitle className="text-base sm:text-lg">
+                      System Resources
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="grid grid-cols-1 xs:grid-cols-3 gap-4 text-center">
                       <div>
-                        <div className="text-lg font-semibold">
+                        <div className="text-base sm:text-lg font-semibold">
                           {performanceData?.cpuUsage?.[0]?.value || 0}%
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           CPU Usage
                         </p>
                       </div>
                       <div>
-                        <div className="text-lg font-semibold">
+                        <div className="text-base sm:text-lg font-semibold">
                           {performanceData?.memoryUsage?.[0]?.value || 0}%
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Memory Usage
                         </p>
                       </div>
                       <div>
-                        <div className="text-lg font-semibold">
+                        <div className="text-base sm:text-lg font-semibold">
                           {performanceData?.diskUsage || 0}%
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Disk Usage
                         </p>
                       </div>
@@ -307,30 +329,32 @@ export function AnalyticsView() {
 
       case "engagement":
         return (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {renderTimeRangeSelector()}
-            <h2 className="text-2xl font-bold text-foreground mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">
               User Engagement
             </h2>
 
             {engagementLoading ? (
               <div className="space-y-4">
-                <Skeleton className="h-32" />
-                <Skeleton className="h-32" />
-                <Skeleton className="h-48" />
+                <Skeleton className="h-28 sm:h-32" />
+                <Skeleton className="h-28 sm:h-32" />
+                <Skeleton className="h-40 sm:h-48" />
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Session Duration</CardTitle>
+                      <CardTitle className="text-base sm:text-lg">
+                        Session Duration
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold">
                         {engagementData?.sessionDuration?.average || 0}min
                       </div>
-                      <p className="text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         Average session time
                       </p>
                     </CardContent>
@@ -338,27 +362,31 @@ export function AnalyticsView() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Day 1 Retention</CardTitle>
+                      <CardTitle className="text-base sm:text-lg">
+                        Day 1 Retention
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold">
                         {engagementData?.userRetention?.day1 || 0}%
                       </div>
-                      <p className="text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         Users returning after 1 day
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="sm:col-span-2 lg:col-span-1">
                     <CardHeader>
-                      <CardTitle>Day 30 Retention</CardTitle>
+                      <CardTitle className="text-base sm:text-lg">
+                        Day 30 Retention
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold">
                         {engagementData?.userRetention?.day30 || 0}%
                       </div>
-                      <p className="text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         Users returning after 30 days
                       </p>
                     </CardContent>
@@ -371,26 +399,28 @@ export function AnalyticsView() {
 
       case "conversations":
         return (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {renderTimeRangeSelector()}
-            <h2 className="text-2xl font-bold text-foreground mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">
               Conversation Insights
             </h2>
 
             {conversationLoading ? (
               <div className="space-y-4">
-                <Skeleton className="h-32" />
-                <Skeleton className="h-48" />
+                <Skeleton className="h-28 sm:h-32" />
+                <Skeleton className="h-40 sm:h-48" />
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Total Conversations</CardTitle>
+                      <CardTitle className="text-sm sm:text-base">
+                        Total Conversations
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold">
                         {conversationData?.totalConversations || 0}
                       </div>
                     </CardContent>
@@ -398,13 +428,15 @@ export function AnalyticsView() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Average Length</CardTitle>
+                      <CardTitle className="text-sm sm:text-base">
+                        Average Length
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold">
                         {conversationData?.averageLength || 0}
                       </div>
-                      <p className="text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         messages per conversation
                       </p>
                     </CardContent>
@@ -412,10 +444,12 @@ export function AnalyticsView() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Completion Rate</CardTitle>
+                      <CardTitle className="text-sm sm:text-base">
+                        Completion Rate
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold">
                         {conversationData?.completionRate || 0}%
                       </div>
                     </CardContent>
@@ -423,10 +457,12 @@ export function AnalyticsView() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Satisfaction Score</CardTitle>
+                      <CardTitle className="text-sm sm:text-base">
+                        Satisfaction Score
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold">
                         {conversationData?.satisfactionScore || 0}/5
                       </div>
                     </CardContent>
@@ -439,38 +475,42 @@ export function AnalyticsView() {
 
       case "optimization":
         return (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {renderTimeRangeSelector()}
-            <h2 className="text-2xl font-bold text-foreground mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">
               Optimization Recommendations
             </h2>
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Performance Recommendations</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">
+                    Performance Recommendations
+                  </CardTitle>
+                  <CardDescription className="text-sm">
                     Suggestions to improve your agent performance
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                      <span>
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base">
                         Consider optimizing response time for better user
                         experience
                       </span>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base">
                         Your conversation completion rate is excellent
                       </span>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span>User engagement metrics show positive trends</span>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base">
+                        User engagement metrics show positive trends
+                      </span>
                     </div>
                   </div>
                 </CardContent>

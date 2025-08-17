@@ -107,7 +107,7 @@ export function SourcesSummary() {
   const showTrainingStatus = isAgentSelected && currentAgentId;
 
   return (
-    <div className="w-80 border-l bg-background p-6 sticky top-16 z-40 self-start">
+    <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l bg-background p-4 sm:p-6 lg:sticky lg:top-16 z-40 lg:self-start">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 justify-between">
@@ -130,7 +130,7 @@ export function SourcesSummary() {
         </CardHeader>
         <CardContent className="space-y-4">
           {!isAgentSelected && (
-            <div className="text-sm text-amber-600 bg-amber-100/30 dark:bg-amber-900/30 p-3 rounded-md mb-3">
+            <div className="text-xs sm:text-sm text-amber-600 bg-amber-100/30 dark:bg-amber-900/30 p-3 rounded-md mb-3">
               Please select an agent to view sources.
             </div>
           )}
@@ -138,7 +138,7 @@ export function SourcesSummary() {
           {/* All Sources Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm text-muted-foreground">
+              <h4 className="font-medium text-xs sm:text-sm text-muted-foreground">
                 ALL SOURCES
               </h4>
               <Button
@@ -147,16 +147,16 @@ export function SourcesSummary() {
                 className="h-8 px-2 text-xs"
                 disabled={!isAgentSelected}
                 onClick={() => setIsAllSourcesOpen(true)}>
-                View All
+                <span className="hidden xs:inline">View </span>All
                 <ChevronRight className="ml-1 h-3 w-3" />
               </Button>
             </div>
 
-            <div className="text-center p-4 bg-muted/20 rounded-lg">
-              <div className="text-2xl font-bold text-foreground">
+            <div className="text-center p-3 sm:p-4 bg-muted/20 rounded-lg">
+              <div className="text-xl sm:text-2xl font-bold text-foreground">
                 {totalAllSources}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Total Sources Added
               </div>
             </div>
@@ -167,7 +167,7 @@ export function SourcesSummary() {
           {/* Source Type Counts Section */}
           <div className="space-y-3">
             {isLoading ? (
-              <div className="text-sm text-muted-foreground text-center py-2">
+              <div className="text-xs sm:text-sm text-muted-foreground text-center py-2">
                 Loading sources...
               </div>
             ) : (
@@ -180,9 +180,13 @@ export function SourcesSummary() {
                   <div key={type} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Icon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">{label}</span>
+                      <span className="text-xs sm:text-sm font-medium truncate">
+                        {label}
+                      </span>
                     </div>
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs flex-shrink-0">
                       {count}
                     </Badge>
                   </div>
@@ -194,7 +198,7 @@ export function SourcesSummary() {
           <Separator />
 
           <Button
-            className="w-full"
+            className="w-full text-sm"
             size="lg"
             disabled={!canTrain}
             onClick={handleTrainAgent}

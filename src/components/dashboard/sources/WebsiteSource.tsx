@@ -113,13 +113,13 @@ export function WebsiteSource() {
   };
 
   return (
-    <div className="flex-1 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex-1 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
             Website Source
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Crawl websites to extract content for your knowledge base
           </p>
         </div>
@@ -135,7 +135,7 @@ export function WebsiteSource() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="url">Website URL</Label>
-            <div className="flex space-x-2">
+            <div className="flex flex-col xs:flex-row gap-2">
               <Input
                 id="url"
                 type="url"
@@ -147,12 +147,14 @@ export function WebsiteSource() {
               <Button
                 variant="outline"
                 onClick={handleTestConnection}
-                disabled={!url || isTestingConnection}>
+                disabled={!url || isTestingConnection}
+                className="xs:w-auto w-full">
                 {isTestingConnection ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
                 ) : (
                   <CheckCircle className="h-4 w-4" />
                 )}
+                <span className="ml-2 xs:hidden">Test Connection</span>
               </Button>
             </div>
           </div>
@@ -160,7 +162,7 @@ export function WebsiteSource() {
           <div className="space-y-2">
             <Label htmlFor="crawlDepth">Crawl Depth</Label>
             <Select value={crawlDepth} onValueChange={setCrawlDepth}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select crawl depth" />
               </SelectTrigger>
               <SelectContent>
@@ -173,7 +175,10 @@ export function WebsiteSource() {
             </Select>
           </div>
 
-          <Button onClick={handleAddWebsite} disabled={!url || createLoading}>
+          <Button
+            onClick={handleAddWebsite}
+            disabled={!url || createLoading}
+            className="w-full sm:w-auto">
             {createLoading ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -186,7 +191,9 @@ export function WebsiteSource() {
 
       {/* Existing Website Sources */}
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Existing Website Sources</h3>
+        <h3 className="text-lg sm:text-xl font-semibold mb-4">
+          Existing Website Sources
+        </h3>
 
         {websiteSourcesLoading ? (
           <div className="space-y-4">
@@ -212,13 +219,13 @@ export function WebsiteSource() {
             {websiteSources.map((source) => (
               <Card key={source.id}>
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      <div className="p-2 bg-muted rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="flex items-start space-x-3 flex-1 min-w-0">
+                      <div className="flex-shrink-0 p-2 bg-muted rounded-lg">
                         <Globe className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-foreground">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-foreground truncate">
                           {source.name}
                         </h4>
                         <a
@@ -227,28 +234,31 @@ export function WebsiteSource() {
                           }
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-800 flex items-center mt-1">
-                          {source.metadata?.originalUrl || source.metadata?.url}
-                          <ExternalLink className="h-3 w-3 ml-1" />
+                          className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 flex items-center mt-1 truncate">
+                          <span className="truncate">
+                            {source.metadata?.originalUrl ||
+                              source.metadata?.url}
+                          </span>
+                          <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
                         </a>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground mt-2">
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs text-muted-foreground mt-2">
                           <span>Updated {formatDate(source.updatedAt)}</span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>
                             Depth:{" "}
                             {source.metadata?.crawlDepth ||
                               source.metadata?.crawlSettings?.depth ||
                               1}
                           </span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>{source.metadata?.pageCount || 0} pages</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
                       <Badge
                         variant="secondary"
-                        className={`
+                        className={`text-xs
                         ${
                           source.status === "ready"
                             ? "bg-success/10 text-success border-success/20"
@@ -281,7 +291,8 @@ export function WebsiteSource() {
                             description: `Opening "${source.name}"...`,
                           });
                           // TODO: Implement website viewer
-                        }}>
+                        }}
+                        className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button
@@ -289,7 +300,8 @@ export function WebsiteSource() {
                         size="sm"
                         onClick={() =>
                           handleDeleteWebsite(source.id, source.name)
-                        }>
+                        }
+                        className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

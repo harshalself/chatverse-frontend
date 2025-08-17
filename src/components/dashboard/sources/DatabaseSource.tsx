@@ -117,13 +117,13 @@ export function DatabaseSource() {
   };
 
   return (
-    <div className="flex-1 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex-1 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
             Database Source
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Connect to your database to extract structured data
           </p>
         </div>
@@ -140,7 +140,7 @@ export function DatabaseSource() {
           <div className="space-y-2">
             <Label htmlFor="dbType">Database Type</Label>
             <Select value={dbType} onValueChange={setDbType}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select database type" />
               </SelectTrigger>
               <SelectContent>
@@ -153,7 +153,7 @@ export function DatabaseSource() {
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="host">Host</Label>
               <Input
@@ -161,6 +161,7 @@ export function DatabaseSource() {
                 value={host}
                 onChange={(e) => setHost(e.target.value)}
                 placeholder="localhost"
+                className="w-full"
               />
             </div>
             <div className="space-y-2">
@@ -170,6 +171,7 @@ export function DatabaseSource() {
                 value={port}
                 onChange={(e) => setPort(e.target.value)}
                 placeholder="5432"
+                className="w-full"
               />
             </div>
           </div>
@@ -181,10 +183,11 @@ export function DatabaseSource() {
               value={database}
               onChange={(e) => setDatabase(e.target.value)}
               placeholder="my_database"
+              className="w-full"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
@@ -192,6 +195,7 @@ export function DatabaseSource() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="username"
+                className="w-full"
               />
             </div>
             <div className="space-y-2">
@@ -202,11 +206,12 @@ export function DatabaseSource() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="password"
+                className="w-full"
               />
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2">
             <Button
               onClick={handleAddDatabase}
               disabled={
@@ -229,12 +234,14 @@ export function DatabaseSource() {
                 !database ||
                 !username ||
                 isTestingConnection
-              }>
+              }
+              className="xs:w-auto w-full">
               {isTestingConnection ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
                 <CheckCircle className="h-4 w-4" />
               )}
+              <span className="ml-2 xs:hidden">Test Connection</span>
             </Button>
           </div>
         </CardContent>
@@ -242,7 +249,7 @@ export function DatabaseSource() {
 
       {/* Existing Database Sources */}
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">
+        <h3 className="text-lg sm:text-xl font-semibold mb-4">
           Existing Database Sources
         </h3>
 
@@ -270,34 +277,34 @@ export function DatabaseSource() {
             {databaseSources.map((source) => (
               <Card key={source.id}>
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      <div className="p-2 bg-muted rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="flex items-start space-x-3 flex-1 min-w-0">
+                      <div className="flex-shrink-0 p-2 bg-muted rounded-lg">
                         <Database className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-foreground">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-foreground truncate">
                           {source.name}
                         </h4>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
                           {source.metadata?.dbType || "Database"} •{" "}
                           {source.metadata?.host || "Unknown host"}
                         </p>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground mt-2">
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs text-muted-foreground mt-2">
                           <span>Updated {formatDate(source.updatedAt)}</span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>{source.metadata?.tableCount || 0} tables</span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>
                             {source.metadata?.recordCount || 0} records
                           </span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
                       <Badge
                         variant="secondary"
-                        className={`
+                        className={`text-xs
                         ${
                           source.status === "ready"
                             ? "bg-success/10 text-success border-success/20"
@@ -330,7 +337,8 @@ export function DatabaseSource() {
                             description: `Opening "${source.name}"...`,
                           });
                           // TODO: Implement database viewer
-                        }}>
+                        }}
+                        className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button
@@ -338,7 +346,8 @@ export function DatabaseSource() {
                         size="sm"
                         onClick={() =>
                           handleDeleteDatabase(source.id, source.name)
-                        }>
+                        }
+                        className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

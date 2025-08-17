@@ -98,11 +98,13 @@ export function QASource() {
   };
 
   return (
-    <div className="flex-1 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex-1 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Q&A Source</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
+            Q&A Source
+          </h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Add question and answer pairs to your knowledge base
           </p>
         </div>
@@ -123,6 +125,7 @@ export function QASource() {
               value={questionTitle}
               onChange={(e) => setQuestionTitle(e.target.value)}
               placeholder="Enter a title for this Q&A pair"
+              className="w-full"
             />
           </div>
 
@@ -133,7 +136,7 @@ export function QASource() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Enter the question here..."
-              className="min-h-[100px]"
+              className="min-h-[80px] sm:min-h-[100px] w-full"
             />
           </div>
 
@@ -144,13 +147,14 @@ export function QASource() {
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Enter the answer here..."
-              className="min-h-[150px]"
+              className="min-h-[120px] sm:min-h-[150px] w-full"
             />
           </div>
 
           <Button
             onClick={handleAddQA}
-            disabled={!questionTitle || !question || !answer || createLoading}>
+            disabled={!questionTitle || !question || !answer || createLoading}
+            className="w-full sm:w-auto">
             {createLoading ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -163,7 +167,9 @@ export function QASource() {
 
       {/* Existing Q&A Sources */}
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Existing Q&A Sources</h3>
+        <h3 className="text-lg sm:text-xl font-semibold mb-4">
+          Existing Q&A Sources
+        </h3>
 
         {sourcesLoading ? (
           <div className="space-y-4">
@@ -189,28 +195,30 @@ export function QASource() {
             {qaSources.map((source) => (
               <Card key={source.id}>
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-muted rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start sm:items-center space-x-3 flex-1 min-w-0">
+                      <div className="flex-shrink-0 p-2 bg-muted rounded-lg">
                         <HelpCircle className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <div>
-                        <h3 className="font-medium text-foreground">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-foreground truncate">
                           {source.name}
                         </h3>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                           <span>Q&A</span>
-                          <span>•</span>
-                          <span>Updated {formatDate(source.updated_at)}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="truncate">
+                            Updated {formatDate(source.updated_at)}
+                          </span>
                         </div>
                         {source.description && (
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2 break-words">
                             {source.description}
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
                       <Badge
                         variant={
                           source.status === "completed"
@@ -220,7 +228,8 @@ export function QASource() {
                             : source.status === "failed"
                             ? "destructive"
                             : "outline"
-                        }>
+                        }
+                        className="text-xs">
                         {source.status === "completed"
                           ? "Ready"
                           : source.status === "processing"
@@ -234,7 +243,8 @@ export function QASource() {
                         size="sm"
                         onClick={() => {
                           /* TODO: Implement QA viewer if needed */
-                        }}>
+                        }}
+                        className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-4 w-4"
@@ -258,7 +268,8 @@ export function QASource() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteQA(source.id, source.name)}>
+                        onClick={() => handleDeleteQA(source.id, source.name)}
+                        className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

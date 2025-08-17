@@ -146,13 +146,13 @@ export function TextSource() {
   };
 
   return (
-    <div className="flex-1 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex-1 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
             Text Sources
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Upload and manage your knowledge base text content
           </p>
         </div>
@@ -181,6 +181,7 @@ export function TextSource() {
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className="w-full"
             />
           </div>
           <div className="space-y-2">
@@ -189,6 +190,7 @@ export function TextSource() {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="w-full"
             />
           </div>
           <div className="space-y-2">
@@ -198,13 +200,14 @@ export function TextSource() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Enter your text content here..."
-              className="min-h-[200px]"
+              className="min-h-[150px] sm:min-h-[200px] w-full"
             />
           </div>
           <Button
             onClick={handleAddText}
             disabled={!title || !content || createLoading || !isAgentSelected}
-            title={!isAgentSelected ? "Select an agent first" : ""}>
+            title={!isAgentSelected ? "Select an agent first" : ""}
+            className="w-full sm:w-auto">
             {createLoading ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -239,18 +242,20 @@ export function TextSource() {
           </Alert>
         ) : textSources && textSources.length > 0 ? (
           <div className="space-y-4">
-            <div className="flex items-center space-x-4 p-4 bg-muted/20 rounded-lg">
-              <input
-                type="checkbox"
-                checked={selectAll}
-                onChange={handleSelectAll}
-                className="accent-primary h-4 w-4 rounded border"
-              />
-              <span className="text-sm font-medium">
-                Select All Text Sources
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 p-4 bg-muted/20 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={handleSelectAll}
+                  className="accent-primary h-4 w-4 rounded border"
+                />
+                <span className="text-sm font-medium">
+                  Select All Text Sources
+                </span>
+              </div>
               {selectedTexts.length > 0 && (
-                <div className="flex items-center space-x-2 ml-auto">
+                <div className="flex items-center space-x-2 sm:ml-auto">
                   <Button
                     variant="outline"
                     size="sm"
@@ -260,9 +265,11 @@ export function TextSource() {
                       );
                       setViewerSources(selected);
                       setViewerOpen(true);
-                    }}>
-                    <Eye className="h-4 w-4 mr-2" />
-                    View ({selectedTexts.length})
+                    }}
+                    className="text-xs sm:text-sm">
+                    <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="hidden xs:inline">View </span>(
+                    {selectedTexts.length})
                   </Button>
                   <Button
                     variant="destructive"
@@ -270,9 +277,11 @@ export function TextSource() {
                     onClick={() => {
                       selectedTexts.forEach((id) => handleDeleteText(id, ""));
                       setSelectedTexts([]);
-                    }}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete ({selectedTexts.length})
+                    }}
+                    className="text-xs sm:text-sm">
+                    <Trash2 className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="hidden xs:inline">Delete </span>(
+                    {selectedTexts.length})
                   </Button>
                 </div>
               )}
@@ -283,32 +292,36 @@ export function TextSource() {
               return (
                 <Card key={source.id}>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-start sm:items-center space-x-3 flex-1 min-w-0">
                         {/* Use Checkbox component for consistency */}
-                        <Checkbox
-                          checked={selectedTexts.includes(source.id)}
-                          onCheckedChange={() => handleSelectText(source.id)}
-                        />
-                        <div className="p-2 bg-muted rounded-lg">
+                        <div className="flex-shrink-0 pt-1 sm:pt-0">
+                          <Checkbox
+                            checked={selectedTexts.includes(source.id)}
+                            onCheckedChange={() => handleSelectText(source.id)}
+                          />
+                        </div>
+                        <div className="flex-shrink-0 p-2 bg-muted rounded-lg">
                           <FileText className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <div>
-                          <h3 className="font-medium text-foreground">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-foreground truncate">
                             {source.name}
                           </h3>
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                             <span>Text</span>
-                            <span>•</span>
-                            <span>Updated {formatDate(source.updated_at)}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span className="truncate">
+                              Updated {formatDate(source.updated_at)}
+                            </span>
                           </div>
-                          <p className="flex items-center space-x-2 text-sm text-muted-foreground mt-1 line-clamp-2">
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2 break-words">
                             {textSource.content?.substring(0, 150)}
                             {(textSource.content?.length || 0) > 150 && "..."}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
                         <Badge
                           variant={
                             source.status === "completed"
@@ -318,7 +331,8 @@ export function TextSource() {
                               : source.status === "failed"
                               ? "destructive"
                               : "outline"
-                          }>
+                          }
+                          className="text-xs">
                           {source.status === "completed"
                             ? "Ready"
                             : source.status === "processing"
@@ -333,7 +347,8 @@ export function TextSource() {
                           onClick={() => {
                             setViewerSources([source]);
                             setViewerOpen(true);
-                          }}>
+                          }}
+                          className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
@@ -341,7 +356,8 @@ export function TextSource() {
                           size="sm"
                           onClick={() =>
                             handleDeleteText(source.id, source.name)
-                          }>
+                          }
+                          className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

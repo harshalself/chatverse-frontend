@@ -58,19 +58,21 @@ function AgentCardComponent({
     <Card
       className="cursor-pointer transition-all hover:shadow-md hover:scale-[1.02]"
       onClick={() => onClick?.(id)}>
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-muted rounded-lg">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
+            <div className="p-2 bg-muted rounded-lg flex-shrink-0">
               <MessageSquare className="h-5 w-5 text-muted-foreground" />
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground">{name}</h3>
-              <p className="text-sm text-muted-foreground">{description}</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground truncate">{name}</h3>
+              <p className="text-sm text-muted-foreground truncate">
+                {description}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-shrink-0">
             <Badge
               variant="secondary"
               className={cn("text-xs", getStatusColor(status))}>
@@ -93,7 +95,7 @@ function AgentCardComponent({
         </div>
 
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+          <div className="flex flex-col sm:flex-row sm:justify-between text-sm gap-1">
             <span className="text-muted-foreground">Last trained:</span>
             <span className="font-medium text-foreground">
               {trainedOn

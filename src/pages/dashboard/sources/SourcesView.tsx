@@ -6,6 +6,7 @@ import { DatabaseSource } from "@/components/dashboard/sources/DatabaseSource";
 import { QASource } from "@/components/dashboard/sources/QASource";
 import { SourcesSummary } from "@/components/dashboard/sources/SourcesSummary";
 import { Files, Beaker, Globe, Database, HelpCircle } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SourcesViewProps {
   activeSource: string;
@@ -24,6 +25,33 @@ export function SourcesView({
   activeSource,
   onSourceChange,
 }: SourcesViewProps) {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    // Mobile layout - vertical stacking
+    return (
+      <div className="flex flex-col min-h-[calc(100vh-120px)]">
+        <ReusableSidebar
+          title="Sources"
+          items={sources}
+          activeItem={activeSource}
+          onItemChange={onSourceChange}
+        />
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1">
+            {activeSource === "files" && <DocumentFiles />}
+            {activeSource === "text" && <TextSource />}
+            {activeSource === "website" && <WebsiteSource />}
+            {activeSource === "database" && <DatabaseSource />}
+            {activeSource === "qa" && <QASource />}
+          </div>
+          <SourcesSummary />
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout - horizontal
   return (
     <div className="flex min-h-[calc(100vh-120px)]">
       <ReusableSidebar

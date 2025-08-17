@@ -1,11 +1,21 @@
 import { memo, useCallback, useState, useEffect } from "react";
-import { Bot, ChevronDown, User, LogOut, Bell, Loader2 } from "lucide-react";
+import {
+  Bot,
+  ChevronDown,
+  User,
+  LogOut,
+  Bell,
+  Loader2,
+  Menu,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useLogout } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { UserService } from "@/services/user.service";
 import { User as UserType } from "@/types/user.types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +28,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface HeaderProps {
   breadcrumbs: string[];
@@ -30,12 +41,14 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
   const { mutate: logout } = useLogout();
   const [userData, setUserData] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   // Fetch real user data from API
   useEffect(() => {
     async function fetchUserData() {
       if (!authUser?.id) return;
-      
+
       try {
         setIsLoading(true);
         const response = await UserService.getUser(authUser.id);
@@ -48,7 +61,7 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
         setIsLoading(false);
       }
     }
-    
+
     fetchUserData();
   }, [authUser]);
 
@@ -74,9 +87,28 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
   }, [logout, navigate]);
 
   return (
-    <header className="border-b bg-background px-6 py-2">
+    <header className="border-b bg-background px-4 sm:px-6 py-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        {/* Mobile breadcrumbs */}
+        <div className="flex items-center space-x-2 md:hidden">
+          <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+            <Bot
+              className="h-5 w-5 text-primary cursor-pointer"
+              onClick={handleLogoClick}
+            />
+            {breadcrumbs.length > 0 && (
+              <>
+                <span className="mx-1">/</span>
+                <span className="text-foreground font-medium truncate max-w-[120px]">
+                  {breadcrumbs[breadcrumbs.length - 1]}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop breadcrumbs */}
+        <div className="hidden md:flex items-center space-x-2">
           <div className="flex items-center space-x-1 text-sm text-muted-foreground">
             <div className="flex items-center">
               <Bot
@@ -106,7 +138,9 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
             ))}
           </div>
         </div>
-        <div className="flex items-center space-x-4">
+
+        {/* Desktop actions */}
+        <div className="hidden md:flex items-center space-x-4">
           {children}
           {authUser && (
             <Popover>
@@ -188,18 +222,24 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
                     <Avatar className="h-6 w-6 mr-1">
                       <AvatarImage src="" />
                       <AvatarFallback className="text-xs">
-                        {userData?.name?.charAt(0) || authUser.name?.charAt(0) || "U"}
+                        {userData?.name?.charAt(0) ||
+                          authUser.name?.charAt(0) ||
+                          "U"}
                       </AvatarFallback>
                     </Avatar>
                   )}
-                  <span className="hidden sm:inline">{userData?.name || authUser.name}</span>
+                  <span className="hidden sm:inline">
+                    {userData?.name || authUser.name}
+                  </span>
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem disabled>
                   <div className="flex flex-col">
-                    <span className="font-medium">{userData?.name || authUser.name}</span>
+                    <span className="font-medium">
+                      {userData?.name || authUser.name}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {userData?.email || authUser.email}
                     </span>
@@ -213,6 +253,78 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+        </div>
+
+        {/* Mobile menu */}
+        <div className="md:hidden">
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72">
+              <div className="flex flex-col space-y-6 pt-6">
+                {/* User profile in mobile */}
+                {authUser && (
+                  <div className="flex items-center space-x-3 pb-4 border-b">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src="" />
+                      <AvatarFallback>
+                        {userData?.name?.charAt(0) ||
+                          authUser.name?.charAt(0) ||
+                          "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {userData?.name || authUser.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {userData?.email || authUser.email}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile notifications */}
+                {authUser && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-foreground">
+                      Notifications
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted">
+                        <div className="h-2 w-2 bg-primary rounded-full mt-2"></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            Agent training completed
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            2 minutes ago
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="space-y-2 pt-4 border-t">
+                  {children && <div className="mb-4">{children}</div>}
+                  {authUser && (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>

@@ -150,7 +150,7 @@ export function NewAgentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] mx-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Agent</DialogTitle>
           <DialogDescription>
@@ -207,12 +207,16 @@ export function NewAgentDialog({
           />
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            className="w-full sm:w-auto">
             Cancel
           </Button>
           <Button
             onClick={handleCreate}
+            className="w-full sm:w-auto"
             disabled={
               !formData.name.trim() ||
               !formData.provider ||

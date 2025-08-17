@@ -74,19 +74,25 @@ export function AgentsView() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">AI Agents</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            AI Agents
+          </h1>
           <p className="text-muted-foreground mt-2">
             Manage and monitor your AI chatbot agents
           </p>
         </div>
-        <Button onClick={() => setShowNewAgentDialog(true)}>+ New Agent</Button>
+        <Button
+          onClick={() => setShowNewAgentDialog(true)}
+          className="self-start sm:self-auto">
+          + New Agent
+        </Button>
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-lg" />
           ))}
@@ -99,7 +105,7 @@ export function AgentsView() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {agents.map((agent) => (
             <AgentCard
               key={agent.id}

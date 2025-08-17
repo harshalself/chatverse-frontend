@@ -2,12 +2,13 @@ import { useState, memo, useCallback, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUp, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { ArrowUp, ChevronDown, ChevronUp, Sparkles, Menu } from "lucide-react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Textarea as ShadcnTextarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   useSendChatMessage,
   useSendAgentChatMessage,
@@ -214,28 +215,30 @@ const PureMessage = ({
   status: "error" | "submitted" | "streaming" | "ready";
   isLatestMessage: boolean;
 }) => {
+  const isMobile = useIsMobile();
+
   return (
     <AnimatePresence>
       <motion.div
-        className="w-full group/message mb-6"
+        className="w-full group/message mb-4 sm:mb-6"
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         key={`message-${message.id}`}
         data-role={message.role}>
         <div
           className={cn(
-            "flex gap-4 w-full",
+            "flex gap-2 sm:gap-4 w-full",
             message.role === "user" && "flex-row-reverse"
           )}>
           {message.role === "assistant" && (
-            <div className="size-8 flex items-center rounded-full justify-center bg-primary/10 shrink-0">
-              <Sparkles size={14} className="text-primary" />
+            <div className="size-6 sm:size-8 flex items-center rounded-full justify-center bg-primary/10 shrink-0 mt-1">
+              <Sparkles size={isMobile ? 12 : 14} className="text-primary" />
             </div>
           )}
 
           <div
             className={cn(
-              "flex flex-col space-y-2 max-w-[80%]",
+              "flex flex-col space-y-2 max-w-[85%] sm:max-w-[80%]",
               message.role === "user" && "items-end"
             )}>
             {message.parts?.map((part, i) => {
@@ -246,7 +249,7 @@ const PureMessage = ({
                     animate={{ y: 0, opacity: 1 }}
                     key={`message-${message.id}-part-${i}`}
                     className={cn(
-                      "rounded-xl px-4 py-3",
+                      "rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted/50 text-foreground"
@@ -307,15 +310,15 @@ function Messages({
 
   if (messages.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full px-4">
         <div className="text-center max-w-md">
-          <div className="size-16 flex items-center rounded-full justify-center bg-muted/50 mx-auto mb-4">
-            <Sparkles className="h-8 w-8 text-muted-foreground/50" />
+          <div className="size-12 sm:size-16 flex items-center rounded-full justify-center bg-muted/50 mx-auto mb-3 sm:mb-4">
+            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
             Start a conversation
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Ask me anything, and I'll do my best to help you!
           </p>
         </div>
@@ -415,6 +418,8 @@ export function Chat() {
   const [status, setStatus] = useState<
     "ready" | "streaming" | "submitted" | "error"
   >("ready");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   // Get URL parameters
   const { agentId, sessionId } = useParams();
@@ -624,21 +629,33 @@ export function Chat() {
 
   return (
     <div className="flex h-full w-full">
-      <SessionSidebar
-        currentSessionId={currentSessionId}
-        onSessionSelect={handleSessionSelect}
-        onNewSession={handleNewSession}
-        agentId={agentId ? parseInt(agentId, 10) : undefined}
-      />
+      {/* Session sidebar - hidden on mobile */}
+      {!isMobile && (
+        <SessionSidebar
+          currentSessionId={currentSessionId}
+          onSessionSelect={handleSessionSelect}
+          onNewSession={handleNewSession}
+          agentId={agentId ? parseInt(agentId, 10) : undefined}
+        />
+      )}
 
       <div className="flex-1 flex flex-col h-full bg-background">
         {/* Chat Header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-background/50 backdrop-blur-sm flex-shrink-0">
-          <div className="size-8 flex items-center rounded-full justify-center bg-primary/10">
-            <Sparkles size={16} className="text-primary" />
+        <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-border/50 bg-background/50 backdrop-blur-sm flex-shrink-0">
+          {/* Mobile session menu button */}
+          {isMobile && (
+            <button
+              onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+              className="p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0">
+              <Menu className="h-4 w-4" />
+            </button>
+          )}
+
+          <div className="size-7 sm:size-8 flex items-center rounded-full justify-center bg-primary/10 flex-shrink-0">
+            <Sparkles size={isMobile ? 14 : 16} className="text-primary" />
           </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-foreground">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
               {isAgentSelected && agentDetails?.name
                 ? agentDetails.name
                 : "AI Assistant"}
@@ -650,6 +667,30 @@ export function Chat() {
             )}
           </div>
         </div>
+
+        {/* Mobile session sidebar overlay */}
+        {isMobile && isMobileSidebarOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/50"
+            onClick={() => setIsMobileSidebarOpen(false)}>
+            <div
+              className="absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-background shadow-xl"
+              onClick={(e) => e.stopPropagation()}>
+              <SessionSidebar
+                currentSessionId={currentSessionId}
+                onSessionSelect={(sessionId) => {
+                  handleSessionSelect(sessionId);
+                  setIsMobileSidebarOpen(false);
+                }}
+                onNewSession={() => {
+                  handleNewSession();
+                  setIsMobileSidebarOpen(false);
+                }}
+                agentId={agentId ? parseInt(agentId, 10) : undefined}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Messages Area */}
         <div className="flex-1 overflow-hidden">
@@ -663,7 +704,7 @@ export function Chat() {
               </div>
             </div>
           ) : (
-            <div className="h-full overflow-y-auto px-6 py-4">
+            <div className="h-full overflow-y-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
               <Messages
                 messages={messages}
                 isLoading={isLoading}
@@ -674,7 +715,7 @@ export function Chat() {
         </div>
 
         {/* Input Area */}
-        <div className="flex-shrink-0 p-4 border-t border-border/50 bg-background/50 backdrop-blur-sm">
+        <div className="flex-shrink-0 p-3 sm:p-4 border-t border-border/50 bg-background/50 backdrop-blur-sm">
           <form
             onSubmit={(e) => {
               e.preventDefault();

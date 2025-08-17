@@ -17,6 +17,7 @@ import { useProviders, useProviderModels } from "@/hooks/use-provider-models";
 import { toast } from "@/hooks/use-toast";
 import { AgentProvider } from "@/types/agent.types";
 import { useAgent } from "@/contexts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const SYSTEM_PROMPTS = [
   { label: "Sales Agent", value: "sales" },
@@ -27,6 +28,7 @@ const SYSTEM_PROMPTS = [
 export function ChatSidebar() {
   // Get agentId from context
   const { currentAgentId } = useAgent();
+  const isMobile = useIsMobile();
   const [selectedProvider, setSelectedProvider] = useState<AgentProvider | "">(
     ""
   );
@@ -172,9 +174,14 @@ export function ChatSidebar() {
   // Show message when no agent is selected
   if (!currentAgentId) {
     return (
-      <aside className="flex flex-col gap-4 w-96 h-full p-6 bg-white dark:bg-neutral-900 border-r border-gray-200 dark:border-neutral-800">
+      <aside
+        className={`flex flex-col gap-4 ${
+          isMobile ? "w-full h-full" : "w-96 h-full"
+        } p-4 sm:p-6 bg-white dark:bg-neutral-900 ${
+          !isMobile && "border-r border-gray-200 dark:border-neutral-800"
+        }`}>
         <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground text-center">
+          <p className="text-muted-foreground text-center text-sm sm:text-base">
             No agent selected.
             <br />
             Please select an agent to configure its settings.
@@ -186,162 +193,188 @@ export function ChatSidebar() {
 
   if (agentLoading || providersLoading) {
     return (
-      <aside className="flex flex-col gap-4 w-96 h-full p-6 bg-white dark:bg-neutral-900 border-r border-gray-200 dark:border-neutral-800">
+      <aside
+        className={`flex flex-col gap-4 ${
+          isMobile ? "w-full h-full" : "w-96 h-full"
+        } p-4 sm:p-6 bg-white dark:bg-neutral-900 ${
+          !isMobile && "border-r border-gray-200 dark:border-neutral-800"
+        }`}>
         <div className="animate-pulse">
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-          <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+          <div className="h-8 sm:h-10 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+          <div className="h-16 sm:h-20 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+          <div className="h-8 sm:h-10 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
         </div>
       </aside>
     );
   }
 
   return (
-    <aside className="flex flex-col gap-4 w-96 h-full p-6 bg-white dark:bg-neutral-900 border-r border-gray-200 dark:border-neutral-800">
+    <aside
+      className={`flex flex-col gap-4 ${
+        isMobile ? "w-full h-full" : "w-96 h-full"
+      } p-4 sm:p-6 bg-white dark:bg-neutral-900 ${
+        !isMobile && "border-r border-gray-200 dark:border-neutral-800"
+      }`}>
       <Button
         onClick={handleSaveAgent}
-        className="w-full"
+        className="w-full text-sm sm:text-base"
         disabled={!hasChanges || updateAgentMutation.isPending}>
         {updateAgentMutation.isPending ? "Saving..." : "Save Agent"}
       </Button>
 
-      <div>
-        <label className="block mb-1 text-sm font-medium">Provider</label>
-        <Select
-          value={selectedProvider}
-          onValueChange={(value: AgentProvider) => setSelectedProvider(value)}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a provider" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {providersLoading ? (
-                <SelectItem value="__loading__" disabled>
-                  Loading providers...
-                </SelectItem>
-              ) : providers.length === 0 ? (
-                <SelectItem value="__no-providers__" disabled>
-                  No providers available
-                </SelectItem>
-              ) : (
-                providers.map((provider) => (
-                  <SelectItem
-                    key={provider.provider}
-                    value={provider.provider}
-                    disabled={
-                      !provider.provider || provider.provider.trim() === ""
-                    }>
-                    {provider.displayName}
+      <div className="space-y-4 flex-1 overflow-y-auto">
+        <div>
+          <label className="block mb-1 text-xs sm:text-sm font-medium">
+            Provider
+          </label>
+          <Select
+            value={selectedProvider}
+            onValueChange={(value: AgentProvider) =>
+              setSelectedProvider(value)
+            }>
+            <SelectTrigger className="w-full h-9 sm:h-10">
+              <SelectValue placeholder="Select a provider" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {providersLoading ? (
+                  <SelectItem value="__loading__" disabled>
+                    Loading providers...
                   </SelectItem>
-                ))
-              )}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="block mb-1 text-sm font-medium">Model</label>
-        <Select
-          value={selectedModel}
-          onValueChange={(value: string) => setSelectedModel(value)}
-          disabled={!selectedProvider || modelsLoading}>
-          <SelectTrigger className="w-full">
-            <SelectValue
-              placeholder={
-                !selectedProvider
-                  ? "Select a provider first"
-                  : modelsLoading
-                  ? "Loading models..."
-                  : "Select a model"
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {!selectedProvider ? (
-                <SelectItem value="__no-provider__" disabled>
-                  Select a provider first
-                </SelectItem>
-              ) : modelsLoading ? (
-                <SelectItem value="__loading__" disabled>
-                  Loading models...
-                </SelectItem>
-              ) : availableModels.length === 0 ? (
-                <SelectItem value="__no-models__" disabled>
-                  No models available for {selectedProvider}
-                </SelectItem>
-              ) : (
-                availableModels.map((model) => (
-                  <SelectItem
-                    key={model.id}
-                    value={model.model_name}
-                    disabled={
-                      !model.model_name || model.model_name.trim() === ""
-                    }>
-                    {model.model_name}
+                ) : providers.length === 0 ? (
+                  <SelectItem value="__no-providers__" disabled>
+                    No providers available
                   </SelectItem>
-                ))
-              )}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="block mb-1 text-sm font-medium">
-          Temperature{" "}
-          <span className="ml-2 text-xs text-gray-500">
-            {temperature.toFixed(1)}
-          </span>
-        </label>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.1}
-          value={temperature}
-          onChange={(e) => {
-            // Snap to nearest 0.1 step
-            let value = Math.round(parseFloat(e.target.value) * 10) / 10;
-            if (isNaN(value)) value = 0.7;
-            setTemperature(value);
-          }}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-        />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
-          {[...Array(11)].map((_, i) => (
-            <span key={i}>{(i / 10).toFixed(1)}</span>
-          ))}
+                ) : (
+                  providers.map((provider) => (
+                    <SelectItem
+                      key={provider.provider}
+                      value={provider.provider}
+                      disabled={
+                        !provider.provider || provider.provider.trim() === ""
+                      }>
+                      {provider.displayName}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
 
-      <div>
-        <label className="block mb-1 text-sm font-medium">System Prompt</label>
-        <Select value={systemPrompt} onValueChange={setSystemPrompt}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a prompt" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {SYSTEM_PROMPTS.map((prompt) => (
-                <SelectItem key={prompt.value} value={prompt.value}>
-                  {prompt.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
+        <div>
+          <label className="block mb-1 text-xs sm:text-sm font-medium">
+            Model
+          </label>
+          <Select
+            value={selectedModel}
+            onValueChange={(value: string) => setSelectedModel(value)}
+            disabled={!selectedProvider || modelsLoading}>
+            <SelectTrigger className="w-full h-9 sm:h-10">
+              <SelectValue
+                placeholder={
+                  !selectedProvider
+                    ? "Select a provider first"
+                    : modelsLoading
+                    ? "Loading models..."
+                    : "Select a model"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {!selectedProvider ? (
+                  <SelectItem value="__no-provider__" disabled>
+                    Select a provider first
+                  </SelectItem>
+                ) : modelsLoading ? (
+                  <SelectItem value="__loading__" disabled>
+                    Loading models...
+                  </SelectItem>
+                ) : availableModels.length === 0 ? (
+                  <SelectItem value="__no-models__" disabled>
+                    No models available for {selectedProvider}
+                  </SelectItem>
+                ) : (
+                  availableModels.map((model) => (
+                    <SelectItem
+                      key={model.id}
+                      value={model.model_name}
+                      disabled={
+                        !model.model_name || model.model_name.trim() === ""
+                      }>
+                      {model.model_name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="flex-1 flex flex-col">
-        <label className="block mb-1 text-sm font-medium">Instructions</label>
-        <ShadcnTextarea
-          className="flex-1 resize-none min-h-[120px]"
-          value={instructions}
-          onChange={(e) => setInstructions(e.target.value)}
-          placeholder="Add custom instructions for the agent..."
-        />
+        <div>
+          <label className="block mb-1 text-xs sm:text-sm font-medium">
+            Temperature{" "}
+            <span className="ml-2 text-xs text-gray-500">
+              {temperature.toFixed(1)}
+            </span>
+          </label>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.1}
+            value={temperature}
+            onChange={(e) => {
+              // Snap to nearest 0.1 step
+              let value = Math.round(parseFloat(e.target.value) * 10) / 10;
+              if (isNaN(value)) value = 0.7;
+              setTemperature(value);
+            }}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+          />
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            {[...Array(11)].map((_, i) => (
+              <span key={i} className="text-xs">
+                {(i / 10).toFixed(1)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block mb-1 text-xs sm:text-sm font-medium">
+            System Prompt
+          </label>
+          <Select value={systemPrompt} onValueChange={setSystemPrompt}>
+            <SelectTrigger className="w-full h-9 sm:h-10">
+              <SelectValue placeholder="Select a prompt" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {SYSTEM_PROMPTS.map((prompt) => (
+                  <SelectItem key={prompt.value} value={prompt.value}>
+                    {prompt.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex-1 flex flex-col">
+          <label className="block mb-1 text-xs sm:text-sm font-medium">
+            Instructions
+          </label>
+          <ShadcnTextarea
+            className={`flex-1 resize-none text-sm ${
+              isMobile ? "min-h-[80px]" : "min-h-[120px]"
+            }`}
+            value={instructions}
+            onChange={(e) => setInstructions(e.target.value)}
+            placeholder="Add custom instructions for the agent..."
+          />
+        </div>
       </div>
     </aside>
   );
