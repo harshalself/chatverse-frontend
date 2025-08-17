@@ -1,6 +1,6 @@
 # API Integration Status
 
-This document tracks the integration status of backend APIs with the AgentFlow UI frontend.
+This document tracks the integration status of backend APIs with the ChatVerse frontend.
 
 ---
 

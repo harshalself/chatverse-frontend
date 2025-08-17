@@ -1,6 +1,6 @@
-# AgentFlow UI
+# ChatVerse
 
-A modern React application for building and managing AI agents with an intuitive interface.
+A modern React application for building and managing AI chatbots with an intuitive interface.
 
 ## Features
 
@@ -14,7 +14,7 @@ A modern React application for building and managing AI agents with an intuitive
 
 ```bash
 git clone <repository-url>
-cd agentflow-ui
+cd chatverse-frontend
 ```
 
 2. Install dependencies:
@@ -76,18 +76,18 @@ The built files will be in the `dist` directory and can be deployed to any stati
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-# AgentFlow UI
+# ChatVerse
 
 ---
 
 ## 🚀 Overview
 
-AgentFlow UI is a feature-rich, production-ready platform for managing AI agents, their data sources, and workflows. It is designed for extensibility, maintainability, and a seamless developer experience.
+ChatVerse is a feature-rich, production-ready platform for managing AI chatbots, their data sources, and workflows. It is designed for extensibility, maintainability, and a seamless developer experience.
 
 **Key Features:**
 
 - **Authentication**: Secure sign in/sign up, protected routes, persistent sessions
-- **Agent Management**: Create, configure, and deploy AI agents
+- **Chatbot Management**: Create, configure, and deploy AI chatbots
 - **Data Sources**: Modular support for file, text, website, database, and Q&A sources
 - **File Uploads**: Efficient, scalable file uploads using `multipart/form-data`
 - **Responsive UI**: Mobile-first, accessible, and visually appealing
@@ -130,7 +130,7 @@ src/
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd agentflow-ui
+   cd chatverse-frontend
    ```
 2. **Install dependencies:**
    ```bash

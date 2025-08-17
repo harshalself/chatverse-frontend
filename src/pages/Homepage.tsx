@@ -24,7 +24,7 @@ export default function Homepage() {
             {/* Logo */}
             <div className="flex items-center space-x-2">
               <Bot className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">AgentFlow</span>
+              <span className="text-xl font-bold">ChatVerse</span>
             </div>
 
             {/* Navigation Links */}
@@ -93,7 +93,10 @@ export default function Homepage() {
               Get Started
               <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <Button variant="outline" size="lg" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-auto">
+            <Button
+              variant="outline"
+              size="lg"
+              className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-auto">
               View Documentation
             </Button>
           </div>
@@ -104,7 +107,7 @@ export default function Homepage() {
       <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20 bg-muted/30">
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 px-4">
-            Why Choose AgentFlow?
+            Why Choose ChatVerse?
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
             Everything you need to create powerful AI agents in one platform
@@ -172,7 +175,7 @@ export default function Homepage() {
             Ready to Build Your First Agent?
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 px-4">
-            Join thousands of developers and businesses already using AgentFlow
+            Join thousands of developers and businesses already using ChatVerse
             to automate their workflows.
           </p>
           <Button
@@ -192,10 +195,10 @@ export default function Homepage() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Bot className="h-6 w-6 text-primary" />
-                <span className="text-xl font-bold">AgentFlow</span>
+                <span className="text-xl font-bold">ChatVerse</span>
               </div>
               <p className="text-muted-foreground">
-                The easiest way to build and deploy AI agents.
+                The easiest way to build and deploy AI chatbots.
               </p>
             </div>
 
@@ -282,7 +285,7 @@ export default function Homepage() {
           </div>
 
           <div className="border-t mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-muted-foreground">
-            <p>&copy; 2025 AgentFlow. All rights reserved.</p>
+            <p>&copy; 2025 ChatVerse. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -1,4 +1,4 @@
-# AgentFlow UI - Production Ready & Integration Tasks
+# ChatVerse - Production Ready & Integration Tasks
 
 ## Phase 1: Environment Setup & Configuration
 

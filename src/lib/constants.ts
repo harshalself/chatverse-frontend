@@ -1,6 +1,6 @@
 // App Configuration
 export const APP_CONFIG = {
-  name: import.meta.env.VITE_APP_NAME || "AgentFlow",
+  name: import.meta.env.VITE_APP_NAME || "ChatVerse",
   version: import.meta.env.VITE_APP_VERSION || "1.0.0",
   environment: import.meta.env.VITE_ENVIRONMENT || "development",
   apiBaseUrl:

@@ -1,7 +1,7 @@
 {
-  "name": "ai-chatbot-frontend",
+  "name": "chatverse-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,9 +10,13 @@
     "build:staging": "tsc && vite build --mode staging",
     "build:production": "tsc && vite build --mode production",
     "preview": "vite preview",
+    "preview:production": "vite build --mode production && vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "predeploy": "npm run type-check && npm run lint",
+    "deploy:staging": "npm run predeploy && npm run build:staging",
+    "deploy:production": "npm run predeploy && npm run build:production"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -78,13 +82,13 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.11",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"

@@ -132,7 +132,7 @@ export default function SignIn() {
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
           <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-          <span className="text-xl sm:text-2xl font-bold">AgentFlow</span>
+          <span className="text-xl sm:text-2xl font-bold">ChatVerse</span>
         </div>
 
         {/* Back to home link */}

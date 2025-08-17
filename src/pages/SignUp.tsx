@@ -163,7 +163,7 @@ export default function SignUp() {
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
           <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-          <span className="text-xl sm:text-2xl font-bold">AgentFlow</span>
+          <span className="text-xl sm:text-2xl font-bold">ChatVerse</span>
         </div>
 
         {/* Back to home link */}
@@ -181,7 +181,7 @@ export default function SignUp() {
               Create your account
             </CardTitle>
             <CardDescription className="text-sm sm:text-base">
-              Get started with AgentFlow and build your first AI agent
+              Get started with ChatVerse and build your first AI chatbot
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">

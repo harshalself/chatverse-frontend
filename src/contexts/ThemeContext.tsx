@@ -92,7 +92,7 @@ export { ThemeContext };
 
 function getStoredPreferences(): UserPreferences {
   try {
-    const stored = localStorage.getItem("agentflow-preferences");
+    const stored = localStorage.getItem("chatverse-preferences");
     if (stored) {
       const parsed = JSON.parse(stored);
       // Merge with defaults to ensure all properties exist
@@ -176,7 +176,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem(
-        "agentflow-preferences",
+        "chatverse-preferences",
         JSON.stringify(preferences)
       );
     } catch (error) {

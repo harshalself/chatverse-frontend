@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AgentProvider } from "@/contexts/AgentContext";
+import EnvironmentIndicator from "@/components/EnvironmentIndicator";
 
 // Lazy load pages to improve initial load time
 const Homepage = lazy(() => import("./pages/Homepage"));
@@ -31,6 +32,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AgentProvider>
+        <EnvironmentIndicator />
         <Toaster />
         <Sonner />
         <BrowserRouter>
