@@ -4,8 +4,9 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  plugins: [react()],
   server: {
-    host: "::",
+    host: true, // supports both IPv4 and IPv6
     port: 8080,
   },
   resolve: {
@@ -14,12 +15,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Enable minification for production builds
     minify: mode === "production" ? "esbuild" : false,
-    // Optimize chunk size with better defaults
     rollupOptions: {
       output: {
-        // Optimize chunk size by grouping dependencies
         manualChunks: {
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           "ui-components": [
@@ -30,12 +28,10 @@ export default defineConfig(({ mode }) => ({
           "data-management": ["@tanstack/react-query"],
           utils: ["axios", "date-fns", "zod"],
         },
-        // Ensure chunks are a reasonable size
         chunkFileNames:
           mode === "production"
             ? "assets/[name].[hash].js"
             : "assets/[name].js",
-        // This pattern helps with cache busting in production
         entryFileNames:
           mode === "production"
             ? "assets/[name].[hash].js"
@@ -46,11 +42,12 @@ export default defineConfig(({ mode }) => ({
             : "assets/[name].[ext]",
       },
     },
-    // Configure chunk size warnings
-    chunkSizeWarningLimit: 600, // Set warning limit to 600KB
-    // Enable source maps only in development mode
+    chunkSizeWarningLimit: 600,
     sourcemap: mode !== "production",
-    // Ensure CSS is properly extracted and optimized
     cssCodeSplit: true,
+    reportCompressedSize: mode === "production",
+  },
+  define: {
+    __DEV__: mode === "development",
   },
 }));
