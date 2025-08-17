@@ -134,9 +134,9 @@ export function SessionSidebar({
             <div className="size-6 flex items-center rounded-full justify-center bg-primary/10">
               <MessageSquare className="h-4 w-4 text-primary" />
             </div>
-            <h2 className="text-sm font-semibold text-foreground">
+            <span className="text-sm font-bold text-foreground">
               Chat Sessions
-            </h2>
+            </span>
           </div>
           <Button
             onClick={handleCreateSession}
@@ -153,19 +153,21 @@ export function SessionSidebar({
         {isLoading ? (
           <div className="p-4 text-center">
             <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent mx-auto mb-3"></div>
-            <p className="text-sm text-muted-foreground">Loading sessions...</p>
+            <span className="text-sm text-muted-foreground">
+              Loading sessions...
+            </span>
           </div>
         ) : sessions.length === 0 ? (
           <div className="p-6 text-center">
             <div className="size-12 flex items-center rounded-full justify-center bg-muted/50 mx-auto mb-3">
               <MessageSquare className="h-6 w-6 text-muted-foreground/50" />
             </div>
-            <p className="text-sm font-medium text-foreground mb-1">
+            <span className="text-sm text-foreground mb-1">
               No conversations yet
-            </p>
-            <p className="text-xs text-muted-foreground">
+            </span>
+            <span className="text-xs text-muted-foreground">
               Start a new chat to begin
-            </p>
+            </span>
           </div>
         ) : (
           <div className="overflow-y-auto h-full">
@@ -196,9 +198,9 @@ export function SessionSidebar({
                           {formatSessionDate(session.last_message_time)}
                         </span>
                       </div>
-                      <p className="text-sm text-foreground font-medium leading-snug overflow-hidden">
+                      <span className="text-sm text-foreground leading-snug overflow-hidden">
                         {truncateMessage(session.last_message, 60)}
-                      </p>
+                      </span>
                     </div>
                     <Button
                       size="sm"
