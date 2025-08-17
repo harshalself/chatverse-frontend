@@ -11,7 +11,7 @@ import { useAgent as useAgentDetails } from "@/hooks/use-agents";
 import { useAgent } from "@/contexts";
 
 export default function Dashboard() {
-  const { agentId } = useParams();
+  const { agentId, sessionId } = useParams();
   const location = useLocation();
 
   // Use the agent context

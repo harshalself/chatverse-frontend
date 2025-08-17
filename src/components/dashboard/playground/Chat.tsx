@@ -1,4 +1,5 @@
 import { useState, memo, useCallback, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
@@ -6,10 +7,19 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Textarea as ShadcnTextarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { useSendChatMessage } from "@/hooks/use-chat";
+import { ROUTES } from "@/lib/constants";
+import {
+  useSendChatMessage,
+  useSendAgentChatMessage,
+  useSessionHistory,
+} from "@/hooks/use-chat";
+import { useAgent as useAgentContext } from "@/contexts/AgentContext";
+import { useAgent as useAgentDetails } from "@/hooks/use-agents";
+import { SessionSidebar } from "./SessionSidebar";
 import type {
   UIMessage as ChatUIMessage,
-  Message as ChatMessage,
+  Message,
+  HistoryMessage,
 } from "@/types/chat.types";
 
 // Markdown component configuration
@@ -100,7 +110,7 @@ function ReasoningMessagePart({
     expanded: {
       height: "auto",
       opacity: 1,
-      marginTop: "1rem",
+      marginTop: "0.5rem",
       marginBottom: 0,
     },
   };
@@ -114,39 +124,32 @@ function ReasoningMessagePart({
   }, [isReasoning, memoizedSetIsExpanded]);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col rounded-lg bg-muted/30 p-3">
       {isReasoning ? (
-        <div className="flex flex-row gap-2 items-center">
-          <div className="font-medium text-sm">Reasoning</div>
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-medium text-foreground">Thinking...</div>
           <div className="animate-spin">
-            <SpinnerIcon />
+            <SpinnerIcon className="text-muted-foreground" />
           </div>
         </div>
       ) : (
-        <div className="flex flex-row gap-2 items-center">
-          <div className="font-medium text-sm">Reasoned for a few seconds</div>
-          <button
-            className={cn(
-              "cursor-pointer rounded-full dark:hover:bg-zinc-800 hover:bg-zinc-200",
-              {
-                "dark:bg-zinc-800 bg-zinc-200": isExpanded,
-              }
-            )}
-            onClick={() => setIsExpanded(!isExpanded)}>
-            {isExpanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronUp className="h-4 w-4" />
-            )}
-          </button>
-        </div>
+        <button
+          className="flex items-center gap-2 hover:bg-muted/50 rounded-md p-1 -m-1 transition-colors"
+          onClick={() => setIsExpanded(!isExpanded)}>
+          <div className="text-sm font-medium text-foreground">Reasoning</div>
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
       )}
 
       <AnimatePresence initial={false}>
         {isExpanded && part.text && (
           <motion.div
             key="reasoning"
-            className="text-sm dark:text-zinc-400 text-zinc-600 flex flex-col gap-4 border-l pl-3 dark:border-zinc-800"
+            className="text-sm text-muted-foreground mt-2 pt-2 border-t border-border/50"
             initial="collapsed"
             animate="expanded"
             exit="collapsed"
@@ -214,25 +217,27 @@ const PureMessage = ({
   return (
     <AnimatePresence>
       <motion.div
-        className="w-full mx-auto px-4 group/message"
+        className="w-full group/message mb-6"
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         key={`message-${message.id}`}
         data-role={message.role}>
         <div
           className={cn(
-            "flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl",
-            "group-data-[role=user]/message:w-fit"
+            "flex gap-4 w-full",
+            message.role === "user" && "flex-row-reverse"
           )}>
           {message.role === "assistant" && (
-            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-              <div className="">
-                <Sparkles size={14} />
-              </div>
+            <div className="size-8 flex items-center rounded-full justify-center bg-primary/10 shrink-0">
+              <Sparkles size={14} className="text-primary" />
             </div>
           )}
 
-          <div className="flex flex-col w-full space-y-4">
+          <div
+            className={cn(
+              "flex flex-col space-y-2 max-w-[80%]",
+              message.role === "user" && "items-end"
+            )}>
             {message.parts?.map((part, i) => {
               if (part.type === "text") {
                 return (
@@ -240,14 +245,13 @@ const PureMessage = ({
                     initial={{ y: 5, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     key={`message-${message.id}-part-${i}`}
-                    className="flex flex-row gap-2 items-start w-full pb-4">
-                    <div
-                      className={cn("flex flex-col gap-4", {
-                        "bg-secondary text-secondary-foreground px-3 py-2 rounded-tl-xl rounded-tr-xl rounded-bl-xl":
-                          message.role === "user",
-                      })}>
-                      <Markdown>{part.text || ""}</Markdown>
-                    </div>
+                    className={cn(
+                      "rounded-xl px-4 py-3",
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/50 text-foreground"
+                    )}>
+                    <Markdown>{part.text || ""}</Markdown>
                   </motion.div>
                 );
               }
@@ -301,9 +305,27 @@ function Messages({
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  if (messages.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center max-w-md">
+          <div className="size-16 flex items-center rounded-full justify-center bg-muted/50 mx-auto mb-4">
+            <Sparkles className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            Start a conversation
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Ask me anything, and I'll do my best to help you!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full space-y-4">
-      <div className="max-w-xl mx-auto">
+    <div className="space-y-6 min-h-full pb-4">
+      <div className="max-w-4xl mx-auto">
         {messages.map((m, i) => (
           <Message
             key={i}
@@ -319,7 +341,7 @@ function Messages({
   );
 }
 
-// Textarea component
+// ChatTextarea component
 function ChatTextarea({
   input,
   handleInputChange,
@@ -336,10 +358,10 @@ function ChatTextarea({
   return (
     <div className="relative w-full">
       <ShadcnTextarea
-        className="resize-none bg-secondary w-full rounded-2xl pr-12 pt-2 pb-2 h-12 min-h-[48px] max-h-[48px]"
+        className="resize-none bg-muted/50 border-border/50 w-full rounded-xl pr-12 pt-3 pb-3 min-h-[52px] max-h-[120px] text-sm placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
         value={input}
         autoFocus
-        placeholder="Say something..."
+        placeholder="Type your message..."
         onChange={handleInputChange}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
@@ -355,17 +377,17 @@ function ChatTextarea({
         <button
           type="button"
           onClick={stop}
-          className="cursor-pointer absolute right-2 bottom-2 rounded-full p-2 bg-black hover:bg-zinc-800 disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors">
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed transition-all duration-200">
           <div className="animate-spin h-4 w-4">
-            <SpinnerIcon />
+            <SpinnerIcon className="text-primary-foreground" />
           </div>
         </button>
       ) : (
         <button
           type="submit"
           disabled={isLoading || !input.trim()}
-          className="absolute right-2 bottom-2 rounded-full p-2 bg-black hover:bg-zinc-800 disabled:bg-zinc-300 disabled:dark:bg-zinc-700 dark:disabled:opacity-80 disabled:cursor-not-allowed transition-colors">
-          <ArrowUp className="h-4 w-4 text-white" />
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed transition-all duration-200">
+          <ArrowUp className="h-4 w-4 text-primary-foreground" />
         </button>
       )}
     </div>
@@ -394,46 +416,200 @@ export function Chat() {
     "ready" | "streaming" | "submitted" | "error"
   >("ready");
 
-  // Use the real chat API hook
-  const { mutate: sendChatMessage, isPending } = useSendChatMessage();
+  // Get URL parameters
+  const { agentId, sessionId } = useParams();
+  const navigate = useNavigate();
+
+  // Convert sessionId from URL to number
+  const currentSessionId = sessionId ? parseInt(sessionId, 10) : null;
+
+  // Get current agent from context
+  const { currentAgentId, isAgentSelected } = useAgentContext();
+
+  // Get agent details for name display
+  const { data: agentDetails } = useAgentDetails(
+    currentAgentId?.toString() || "",
+    isAgentSelected
+  );
+
+  // Use both chat hooks - agent chat and regular chat
+  const { mutate: sendChatMessage, isPending: isChatPending } =
+    useSendChatMessage();
+  const { mutate: sendAgentChatMessage, isPending: isAgentChatPending } =
+    useSendAgentChatMessage();
+
+  // Load session history when a session is selected
+  const { data: sessionHistory, isLoading: isLoadingHistory } =
+    useSessionHistory(currentSessionId || 0, !!currentSessionId);
+
+  // Convert history messages to UI messages
+  const convertHistoryToUIMessages = (
+    historyMessages: HistoryMessage[]
+  ): UIMessage[] => {
+    return historyMessages.map((msg, index) => ({
+      id: `history-${index}`,
+      role: msg.role,
+      content: msg.content,
+      parts: [{ type: "text", text: msg.content }],
+      created_at: msg.created_at,
+    }));
+  };
+
+  // Load session history when sessionHistory data changes
+  useEffect(() => {
+    if (sessionHistory && Array.isArray(sessionHistory.messages)) {
+      const uiMessages = convertHistoryToUIMessages(sessionHistory.messages);
+      setMessages(uiMessages);
+    } else if (sessionHistory && !sessionHistory.messages) {
+      // If session exists but no messages, clear the messages
+      setMessages([]);
+    }
+  }, [sessionHistory, currentSessionId]);
+
+  const handleSessionSelect = (sessionId: number) => {
+    // Navigate to the session URL
+    if (agentId) {
+      const newRoute = ROUTES.AGENT_SESSION_WITH_IDS(
+        agentId,
+        sessionId.toString()
+      );
+      navigate(newRoute);
+    }
+    setStatus("ready");
+  };
+
+  const handleNewSession = () => {
+    // Navigate back to agent without session
+    if (agentId) {
+      navigate(ROUTES.AGENT_WITH_ID(agentId));
+    }
+    setMessages([]);
+    setStatus("ready");
+  };
 
   async function sendMessage() {
-    if (!input.trim()) return;
+    if (!input.trim()) {
+      return;
+    }
 
     const userMessage = createUIMessage({ role: "user", content: input });
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
     setStatus("submitted");
     setInput("");
 
-    // Convert UI messages to API messages
-    const apiMessages: ChatMessage[] = newMessages.map((msg) => ({
-      role: msg.role,
-      content: msg.content,
-    }));
+    // Capture current messages state for potential rollback
+    const currentMessages = messages;
 
-    sendChatMessage(
-      { messages: apiMessages },
+    // Optimistically add user message
+    const newMessages = [...currentMessages, userMessage];
+    setMessages(newMessages);
+
+    // Send only the current user message (like the test script does)
+    const apiMessages: Message[] = [
       {
-        onSuccess: (data) => {
-          const assistantMessage = createUIMessage({
-            role: "assistant",
-            content: data.message,
-          });
-          setMessages([...newMessages, assistantMessage]);
-          setStatus("ready");
+        role: userMessage.role,
+        content: userMessage.content,
+      },
+    ];
+
+    // Use agent chat if an agent is selected, otherwise use regular chat
+    if (isAgentSelected && currentAgentId) {
+      sendAgentChatMessage(
+        {
+          agentId: currentAgentId,
+          messages: apiMessages,
+          sessionId: currentSessionId?.toString(),
         },
-        onError: (error: any) => {
-          toast.error(
-            error.message || "An error occurred. Please try again later.",
-            {
-              position: "top-center",
+        {
+          onSuccess: (data) => {
+            // Support both nested and flat response
+            const response = data?.data ?? data;
+
+            // Only add assistant message if it has content
+            if (response.message && response.message.trim()) {
+              const assistantMessage = createUIMessage({
+                role: "assistant",
+                content: response.message,
+              });
+
+              setMessages((prev) => [...prev, assistantMessage]);
+            } else {
+              console.warn("Received empty response from API:", response);
             }
-          );
-          setStatus("error");
-        },
-      }
-    );
+
+            // Navigate to session URL if we got a new session ID
+            if (
+              "sessionId" in response &&
+              response.sessionId &&
+              !currentSessionId &&
+              agentId
+            ) {
+              navigate(
+                ROUTES.AGENT_SESSION_WITH_IDS(
+                  agentId,
+                  response.sessionId.toString()
+                )
+              );
+            } else if (
+              "data" in response &&
+              response.data?.sessionId &&
+              !currentSessionId &&
+              agentId
+            ) {
+              navigate(
+                ROUTES.AGENT_SESSION_WITH_IDS(
+                  agentId,
+                  response.data.sessionId.toString()
+                )
+              );
+            }
+
+            setStatus("ready");
+          },
+          onError: (error: any) => {
+            toast.error(
+              error.message || "An error occurred. Please try again later.",
+              {
+                position: "top-center",
+              }
+            );
+            setStatus("error");
+            // Revert to original messages state (remove the user message that was optimistically added)
+            setMessages(currentMessages);
+          },
+        }
+      );
+    } else {
+      // Use regular chat for legacy support
+      sendChatMessage(
+        { messages: apiMessages },
+        {
+          onSuccess: (data) => {
+            // Only add assistant message if it has content
+            if (data.message && data.message.trim()) {
+              const assistantMessage = createUIMessage({
+                role: "assistant",
+                content: data.message,
+              });
+              setMessages((prev) => [...prev, assistantMessage]);
+            } else {
+              console.warn("Received empty response from API:", data);
+            }
+            setStatus("ready");
+          },
+          onError: (error: any) => {
+            toast.error(
+              error.message || "An error occurred. Please try again later.",
+              {
+                position: "top-center",
+              }
+            );
+            setStatus("error");
+            // Revert to original messages state (remove the user message that was optimistically added)
+            setMessages(currentMessages);
+          },
+        }
+      );
+    }
   }
 
   function stop() {
@@ -441,36 +617,79 @@ export function Chat() {
   }
 
   const isLoading =
-    status === "streaming" || status === "submitted" || isPending;
+    status === "streaming" ||
+    status === "submitted" ||
+    isChatPending ||
+    isAgentChatPending;
 
   return (
-    <div className="flex items-center justify-center w-full h-full">
-      <div className="flex flex-col w-full max-w-lg h-[calc(100%-4rem)] bg-white dark:bg-neutral-900 rounded-xl shadow-lg overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-          <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-            <Sparkles size={14} />
+    <div className="flex h-full w-full">
+      <SessionSidebar
+        currentSessionId={currentSessionId}
+        onSessionSelect={handleSessionSelect}
+        onNewSession={handleNewSession}
+        agentId={agentId ? parseInt(agentId, 10) : undefined}
+      />
+
+      <div className="flex-1 flex flex-col h-full bg-background">
+        {/* Chat Header */}
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-background/50 backdrop-blur-sm flex-shrink-0">
+          <div className="size-8 flex items-center rounded-full justify-center bg-primary/10">
+            <Sparkles size={16} className="text-primary" />
           </div>
-          <div>
-            <h3 className="font-medium">AgentFlow Assistant</h3>
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground">
+              {isAgentSelected && agentDetails?.name
+                ? agentDetails.name
+                : "AI Assistant"}
+            </h3>
+            {isLoadingHistory && currentSessionId && (
+              <p className="text-xs text-muted-foreground">
+                Loading chat history...
+              </p>
+            )}
           </div>
         </div>
-        <div className="h-[calc(100vh-280px)] overflow-y-auto px-4 py-2">
-          <Messages messages={messages} isLoading={isLoading} status={status} />
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-hidden">
+          {isLoadingHistory && currentSessionId ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-3"></div>
+                <p className="text-sm text-muted-foreground">
+                  Loading chat history...
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="h-full overflow-y-auto px-6 py-4">
+              <Messages
+                messages={messages}
+                isLoading={isLoading}
+                status={status}
+              />
+            </div>
+          )}
         </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!isLoading) sendMessage();
-          }}
-          className="flex-shrink-0 p-2 border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-          <ChatTextarea
-            handleInputChange={(e) => setInput(e.currentTarget.value)}
-            input={input}
-            isLoading={isLoading}
-            status={status}
-            stop={stop}
-          />
-        </form>
+
+        {/* Input Area */}
+        <div className="flex-shrink-0 p-4 border-t border-border/50 bg-background/50 backdrop-blur-sm">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!isLoading) sendMessage();
+            }}
+            className="max-w-3xl mx-auto">
+            <ChatTextarea
+              handleInputChange={(e) => setInput(e.currentTarget.value)}
+              input={input}
+              isLoading={isLoading}
+              status={status}
+              stop={stop}
+            />
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -55,6 +55,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/agent/:agentId/session/:sessionId"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

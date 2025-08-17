@@ -16,6 +16,9 @@ export const ROUTES = {
   WORKSPACE: "/workspace",
   AGENT: "/agent/:agentId",
   AGENT_WITH_ID: (id: string) => `/agent/${id}`,
+  AGENT_SESSION: "/agent/:agentId/session/:sessionId",
+  AGENT_SESSION_WITH_IDS: (agentId: string, sessionId: string) =>
+    `/agent/${agentId}/session/${sessionId}`,
 } as const;
 
 // React Query Keys
@@ -56,6 +59,13 @@ export const QUERY_KEYS = {
   // Playground
   PLAYGROUND: ["playground"],
   CHAT: ["chat"],
+  CHAT_SESSIONS: ["chat", "sessions"],
+  CHAT_SESSION_HISTORY: (sessionId: string) => [
+    "chat",
+    "sessions",
+    sessionId,
+    "history",
+  ],
 } as const;
 
 // API Endpoints - Updated to match real User API
@@ -161,6 +171,12 @@ export const API_ENDPOINTS = {
   // Playground
   PLAYGROUND: {
     CHAT: "/chat",
+    AGENT_CHAT: (agentId: number) => `/chat/agents/${agentId}`,
+    SESSIONS: "/chat/sessions",
+    CREATE_SESSION: "/chat/sessions",
+    SESSION_HISTORY: (sessionId: string) =>
+      `/chat/sessions/${sessionId}/history`,
+    DELETE_SESSION: (sessionId: string) => `/chat/sessions/${sessionId}`,
     MESSAGES: "/playground/messages",
   },
 } as const;
