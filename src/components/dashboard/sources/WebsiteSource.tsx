@@ -7,12 +7,12 @@ import {
   Trash2,
   ExternalLink,
   CheckCircle,
-  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -24,46 +24,47 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useDeleteSource } from "@/hooks/use-base-sources";
-// NOTE: Website source specific hooks need to be implemented
+import { useAgent } from "@/contexts";
+import {
+  useCreateWebsiteSource,
+  useTestWebsiteConnection,
+} from "@/hooks/use-website-sources";
+import { useSourcesByAgent, useDeleteSource } from "@/hooks/use-base-sources";
+import { WebsiteSourceForm } from "@/types/source.types";
 
 export function WebsiteSource() {
-  const [url, setUrl] = useState("");
-  const [crawlDepth, setCrawlDepth] = useState("1");
+  // Form state
+  const [formData, setFormData] = useState<WebsiteSourceForm>({
+    name: "",
+    description: "",
+    url: "",
+    crawl_depth: 1,
+  });
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const { toast } = useToast();
+  const { currentAgentId } = useAgent();
 
-  // TODO: Implement Website source hooks (useSourcesByType, useCreateWebsiteSource, useTestWebsiteConnection)
-  // Temporary stubs to avoid errors
-  const websiteSourcesData = { data: [] };
-  const websiteSourcesLoading = false;
-  const websiteSourcesError = null;
-  const refetchWebsiteSources = () => {};
-  const createLoading = false;
-  const createWebsiteSource = () => {
-    toast({
-      title: "Not implemented",
-      description: "Creating website sources is not yet implemented.",
-      variant: "destructive",
-    });
-  };
-  const testConnection = () => {
-    toast({
-      title: "Not implemented",
-      description: "Testing website connection is not yet implemented.",
-      variant: "destructive",
-    });
-    setIsTestingConnection(false);
-  };
+  // Get data using hooks
+  const {
+    data: allSources,
+    isLoading: websiteSourcesLoading,
+    error: websiteSourcesError,
+    refetch: refetchWebsiteSources,
+  } = useSourcesByAgent(currentAgentId || 0);
 
+  // Filter for website sources
+  const websiteSources = (allSources || []).filter(
+    (src) => src.type === "website"
+  );
+
+  // Mutations
+  const { mutate: createWebsiteSource, isPending: createLoading } =
+    useCreateWebsiteSource();
+  const { mutate: testConnection } = useTestWebsiteConnection();
   const { mutate: deleteSource } = useDeleteSource();
 
-  // (Removed duplicate testConnection declaration)
-
-  const websiteSources = websiteSourcesData?.data || [];
-
   const handleTestConnection = () => {
-    if (!url) {
+    if (!formData.url) {
       toast({
         title: "URL required",
         description: "Please enter a website URL to test the connection.",
@@ -72,17 +73,73 @@ export function WebsiteSource() {
       return;
     }
     setIsTestingConnection(true);
-    testConnection();
+    testConnection(formData.url, {
+      onSuccess: (result) => {
+        setIsTestingConnection(false);
+        if (result.accessible) {
+          toast({
+            title: "Connection successful",
+            description: result.title
+              ? `Found: ${result.title}`
+              : "Website is accessible",
+          });
+        } else {
+          toast({
+            title: "Connection failed",
+            description: result.error || "Website is not accessible",
+            variant: "destructive",
+          });
+        }
+      },
+      onError: () => {
+        setIsTestingConnection(false);
+      },
+    });
   };
 
   const handleAddWebsite = () => {
-    if (url && crawlDepth) {
-      createWebsiteSource();
+    if (!currentAgentId) {
+      toast({
+        title: "No agent selected",
+        description: "Please select an agent first.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    if (!formData.name || !formData.url) {
+      toast({
+        title: "Missing required fields",
+        description: "Please fill in the name and URL fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createWebsiteSource(
+      {
+        agent_id: currentAgentId,
+        name: formData.name,
+        description: formData.description,
+        url: formData.url,
+        crawl_depth: formData.crawl_depth,
+      },
+      {
+        onSuccess: () => {
+          // Reset form
+          setFormData({
+            name: "",
+            description: "",
+            url: "",
+            crawl_depth: 1,
+          });
+        },
+      }
+    );
   };
 
-  const handleDeleteWebsite = (id: string, name: string) => {
-    deleteSource(Number(id), {
+  const handleDeleteWebsite = (id: number, name: string) => {
+    deleteSource(id, {
       onSuccess: () => {
         toast({
           title: "Website source deleted",
@@ -134,20 +191,52 @@ export function WebsiteSource() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="name">Website Name</Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
+              }
+              placeholder="Enter a descriptive name"
+              className="flex-1"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description (optional)</Label>
+            <Textarea
+              id="description"
+              value={formData.description || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="Describe this website source"
+              className="min-h-[80px]"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="url">Website URL</Label>
             <div className="flex flex-col xs:flex-row gap-2">
               <Input
                 id="url"
                 type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                value={formData.url}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, url: e.target.value }))
+                }
                 placeholder="https://example.com"
                 className="flex-1"
               />
               <Button
                 variant="outline"
                 onClick={handleTestConnection}
-                disabled={!url || isTestingConnection}
+                disabled={!formData.url || isTestingConnection}
                 className="xs:w-auto w-full">
                 {isTestingConnection ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
@@ -161,7 +250,14 @@ export function WebsiteSource() {
 
           <div className="space-y-2">
             <Label htmlFor="crawlDepth">Crawl Depth</Label>
-            <Select value={crawlDepth} onValueChange={setCrawlDepth}>
+            <Select
+              value={formData.crawl_depth?.toString() || "1"}
+              onValueChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  crawl_depth: parseInt(value),
+                }))
+              }>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select crawl depth" />
               </SelectTrigger>
@@ -177,7 +273,7 @@ export function WebsiteSource() {
 
           <Button
             onClick={handleAddWebsite}
-            disabled={!url || createLoading}
+            disabled={!formData.name || !formData.url || createLoading}
             className="w-full sm:w-auto">
             {createLoading ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -242,7 +338,7 @@ export function WebsiteSource() {
                           <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
                         </a>
                         <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs text-muted-foreground mt-2">
-                          <span>Updated {formatDate(source.updatedAt)}</span>
+                          <span>Updated {formatDate(source.updated_at)}</span>
                           <span className="hidden sm:inline">•</span>
                           <span>
                             Depth:{" "}
@@ -257,30 +353,23 @@ export function WebsiteSource() {
                     </div>
                     <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
                       <Badge
-                        variant="secondary"
-                        className={`text-xs
-                        ${
-                          source.status === "ready"
-                            ? "bg-success/10 text-success border-success/20"
-                            : ""
+                        variant={
+                          source.status === "completed"
+                            ? "default"
+                            : source.status === "processing"
+                            ? "secondary"
+                            : source.status === "failed"
+                            ? "destructive"
+                            : "outline"
                         }
-                        ${
-                          source.status === "processing"
-                            ? "bg-warning/10 text-warning border-warning/20"
-                            : ""
-                        }
-                        ${
-                          source.status === "error"
-                            ? "bg-destructive/10 text-destructive border-destructive/20"
-                            : ""
-                        }
-                        ${
-                          source.status === "pending"
-                            ? "bg-muted/10 text-muted-foreground border-muted/20"
-                            : ""
-                        }
-                      `}>
-                        {source.status}
+                        className="text-xs">
+                        {source.status === "completed"
+                          ? "Ready"
+                          : source.status === "processing"
+                          ? "Processing"
+                          : source.status === "failed"
+                          ? "Failed"
+                          : "Pending"}
                       </Badge>
                       <Button
                         variant="ghost"

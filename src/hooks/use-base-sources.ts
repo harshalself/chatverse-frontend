@@ -11,10 +11,27 @@ import { ErrorHandler } from "@/lib/error-handler";
 import { toast } from "@/hooks/use-toast";
 
 // Helper function to transform BaseSource to DataSource for UI compatibility
-const transformToDataSource = (baseSource: BaseSource): DataSource => ({
-  ...baseSource,
-  type: baseSource.source_type,
-});
+const transformToDataSource = (baseSource: BaseSource): DataSource => {
+  const base: DataSource = {
+    ...baseSource,
+    type: baseSource.source_type,
+  };
+
+  // Handle website source specific fields
+  if (baseSource.source_type === "website" && "page_count" in baseSource) {
+    base.pageCount = (baseSource as any).page_count;
+  }
+
+  // Handle database source specific fields
+  if (baseSource.source_type === "database" && "record_count" in baseSource) {
+    base.recordCount = (baseSource as any).record_count;
+  }
+
+  // Initialize metadata as empty object by default
+  base.metadata = {};
+
+  return base;
+};
 
 // Get sources for a specific agent
 export const useSourcesByAgent = (agentId: number, enabled = true) => {

@@ -137,15 +137,52 @@ export interface UpdateQASourceRequest {
   answer?: string;
 }
 
-// Website Source Types
-export interface WebsiteSource extends BaseSource {
-  type: "website";
+// Website Source Types - Complete schema with joined source and website_sources table data
+export interface WebsiteSource {
+  // Fields from sources table
+  id: number;
+  agent_id: number;
+  source_type: "website";
+  name: string;
+  description?: string | null;
+  status: SourceStatus;
+  is_embedded: boolean;
+  created_by: number;
+  created_at: Timestamp;
+  updated_by?: number | null;
+  updated_at: Timestamp;
+  is_deleted: boolean;
+  deleted_by?: number | null;
+  deleted_at?: Timestamp | null;
+  // Fields from website_sources table
+  source_id: number;
   url: string;
-  crawlDepth?: number;
-  includePatterns?: string[];
-  excludePatterns?: string[];
-  lastCrawled?: Timestamp;
-  pageCount?: number;
+  crawl_depth: number;
+  page_count?: number;
+  last_crawled?: Timestamp | null;
+}
+
+export interface CreateWebsiteSourceRequest {
+  agent_id: number;
+  name: string;
+  description?: string;
+  url: string;
+  crawl_depth?: number;
+}
+
+export interface UpdateWebsiteSourceRequest {
+  url?: string;
+  crawl_depth?: number;
+  page_count?: number;
+  last_crawled?: Timestamp;
+}
+
+// Form types for UI components
+export interface WebsiteSourceForm {
+  name: string; // Required - text input
+  description?: string; // Optional - textarea
+  url: string; // Required - URL input with validation
+  crawl_depth?: number; // Optional - number input (1-10), default 1
 }
 
 // Database Source Types
@@ -204,6 +241,8 @@ export type FileSourceResponse = ApiResponse<FileSource>;
 export type FileSourcesResponse = ApiResponse<FileSource[]>;
 export type TextSourceResponse = ApiResponse<TextSource>;
 export type TextSourcesResponse = ApiResponse<TextSource[]>;
+export type WebsiteSourceResponse = ApiResponse<WebsiteSource>;
+export type WebsiteSourcesResponse = ApiResponse<WebsiteSource[]>;
 export type QASourceResponse = ApiResponse<QASource>;
 export type QASourcesResponse = ApiResponse<QASource[]>;
 

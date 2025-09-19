@@ -228,6 +228,7 @@ export const SUCCESS_MESSAGES = {
   TEXT_SOURCE_CREATED: "Text source created successfully",
   TEXT_SOURCE_UPDATED: "Text source updated successfully",
   TEXT_SOURCE_DELETED: "Text source deleted successfully",
+  WEBSITE_SOURCE_CREATED: "Website source created successfully",
   FILE_UPLOADED: "File uploaded successfully",
   SETTINGS_SAVED: "Settings saved successfully",
   USER_UPDATED: "User updated successfully",

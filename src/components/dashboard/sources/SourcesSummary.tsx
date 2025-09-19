@@ -36,14 +36,28 @@ const getSourceCount = (source: DataSource): number => {
     return 1;
   }
 
-  // For WebsiteSource
+  // For WebsiteSource - if we don't have page count data yet, count as 1 source
   if (source.type === "website") {
-    return source.pageCount || source.metadata?.pageCount || 0;
+    const pageCount =
+      source.pageCount ||
+      source.metadata?.pageCount ||
+      (source as any).page_count ||
+      source.metadata?.page_count;
+
+    // If pageCount is available and > 0, use it; otherwise count as 1 source
+    return pageCount && pageCount > 0 ? pageCount : 1;
   }
 
-  // For DatabaseSource
+  // For DatabaseSource - if we don't have record count data yet, count as 1 source
   if (source.type === "database") {
-    return source.recordCount || source.metadata?.recordCount || 0;
+    const recordCount =
+      source.recordCount ||
+      source.metadata?.recordCount ||
+      (source as any).record_count ||
+      source.metadata?.record_count;
+
+    // If recordCount is available and > 0, use it; otherwise count as 1 source
+    return recordCount && recordCount > 0 ? recordCount : 1;
   }
 
   // Default fallback
