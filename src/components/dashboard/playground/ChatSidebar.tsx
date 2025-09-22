@@ -19,12 +19,6 @@ import { AgentProvider } from "@/types/agent.types";
 import { useAgent } from "@/contexts";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const SYSTEM_PROMPTS = [
-  { label: "Sales Agent", value: "sales" },
-  { label: "Support Agent", value: "support" },
-  { label: "General Assistant", value: "general" },
-];
-
 export function ChatSidebar() {
   // Get agentId from context
   const { currentAgentId } = useAgent();
@@ -34,16 +28,14 @@ export function ChatSidebar() {
   );
   const [selectedModel, setSelectedModel] = useState("");
   const [temperature, setTemperature] = useState(0.7);
-  const [systemPrompt, setSystemPrompt] = useState("sales");
-  const [instructions, setInstructions] = useState("");
+  const [systemPrompt, setSystemPrompt] = useState("");
 
   // Track initial values to detect changes
   const [initialValues, setInitialValues] = useState({
     provider: "",
     model: "",
     temperature: 0.7,
-    systemPrompt: "sales",
-    instructions: "",
+    systemPrompt: "",
   });
 
   // Backend hooks - only fetch if agentId is available
@@ -98,15 +90,13 @@ export function ChatSidebar() {
           provider: agent.provider || "",
           model: agent.model || "",
           temperature: agentTemperature,
-          systemPrompt: "sales", // Default since this isn't in backend yet
-          instructions: "", // Default since this isn't in backend yet
+          systemPrompt: agent.system_prompt || "", // Load from backend
         };
 
         setSelectedProvider(agent.provider || "");
         setSelectedModel(agent.model || "");
         setTemperature(agentTemperature);
-        setSystemPrompt("sales");
-        setInstructions("");
+        setSystemPrompt(agent.system_prompt || "");
         setInitialValues(values);
         lastLoadedAgentId.current = agent.id;
       }
@@ -119,15 +109,13 @@ export function ChatSidebar() {
       selectedProvider !== initialValues.provider ||
       selectedModel !== initialValues.model ||
       temperature !== initialValues.temperature ||
-      systemPrompt !== initialValues.systemPrompt ||
-      instructions !== initialValues.instructions
+      systemPrompt !== initialValues.systemPrompt
     );
   }, [
     selectedProvider,
     selectedModel,
     temperature,
     systemPrompt,
-    instructions,
     initialValues,
   ]);
 
@@ -139,7 +127,7 @@ export function ChatSidebar() {
       provider: selectedProvider as AgentProvider,
       model: selectedModel,
       temperature: temperature,
-      // Note: systemPrompt and instructions would need to be added to backend schema
+      system_prompt: systemPrompt,
     };
 
     updateAgentMutation.mutate(
@@ -152,7 +140,6 @@ export function ChatSidebar() {
             model: selectedModel,
             temperature: temperature,
             systemPrompt: systemPrompt,
-            instructions: instructions,
           });
           toast({
             title: "Success",
@@ -217,7 +204,7 @@ export function ChatSidebar() {
       }`}>
       <Button
         onClick={handleSaveAgent}
-        className="w-full text-sm sm:text-base"
+        className="w-full text-sm sm:text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
         disabled={!hasChanges || updateAgentMutation.isPending}>
         {updateAgentMutation.isPending ? "Saving..." : "Save Agent"}
       </Button>
@@ -232,7 +219,7 @@ export function ChatSidebar() {
             onValueChange={(value: AgentProvider) =>
               setSelectedProvider(value)
             }>
-            <SelectTrigger className="w-full h-9 sm:h-10">
+            <SelectTrigger className="w-full h-9 sm:h-10 focus:ring-0 focus:ring-offset-0 focus:border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0">
               <SelectValue placeholder="Select a provider" />
             </SelectTrigger>
             <SelectContent>
@@ -270,7 +257,7 @@ export function ChatSidebar() {
             value={selectedModel}
             onValueChange={(value: string) => setSelectedModel(value)}
             disabled={!selectedProvider || modelsLoading}>
-            <SelectTrigger className="w-full h-9 sm:h-10">
+            <SelectTrigger className="w-full h-9 sm:h-10 focus:ring-0 focus:ring-offset-0 focus:border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0">
               <SelectValue
                 placeholder={
                   !selectedProvider
@@ -331,7 +318,7 @@ export function ChatSidebar() {
               if (isNaN(value)) value = 0.7;
               setTemperature(value);
             }}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 focus:outline-none focus:ring-0"
           />
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             {[...Array(11)].map((_, i) => (
@@ -342,37 +329,17 @@ export function ChatSidebar() {
           </div>
         </div>
 
-        <div>
-          <label className="block mb-1 text-xs sm:text-sm font-medium">
-            System Prompt
-          </label>
-          <Select value={systemPrompt} onValueChange={setSystemPrompt}>
-            <SelectTrigger className="w-full h-9 sm:h-10">
-              <SelectValue placeholder="Select a prompt" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {SYSTEM_PROMPTS.map((prompt) => (
-                  <SelectItem key={prompt.value} value={prompt.value}>
-                    {prompt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
         <div className="flex-1 flex flex-col">
           <label className="block mb-1 text-xs sm:text-sm font-medium">
-            Instructions
+            System Prompt
           </label>
           <ShadcnTextarea
             className={`flex-1 resize-none text-sm ${
               isMobile ? "min-h-[80px]" : "min-h-[120px]"
-            }`}
-            value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
-            placeholder="Add custom instructions for the agent..."
+            } focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-gray-300`}
+            value={systemPrompt}
+            onChange={(e) => setSystemPrompt(e.target.value)}
+            placeholder="Add a system prompt for the agent..."
           />
         </div>
       </div>

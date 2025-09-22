@@ -10,6 +10,7 @@ export interface Agent {
   provider: AgentProvider;
   model: string;
   temperature: number;
+  system_prompt?: string;
   is_active: number; // 0 or 1
   trained_on?: Timestamp; // Added field for when the agent was trained
   created_by: ID;
@@ -28,6 +29,7 @@ export interface CreateAgentRequest {
   api_key: string;
   model: string;
   temperature: number;
+  system_prompt?: string;
   is_active: number;
 }
 

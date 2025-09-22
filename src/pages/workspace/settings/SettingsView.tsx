@@ -1,5 +1,4 @@
 import { ProfileSettings } from "@/components/agents/ProfileSettings";
-import { NotificationSettings } from "@/components/agents/NotificationSettings";
 import { AccountSettings } from "@/components/agents/AccountSettings";
 
 export function SettingsView() {
@@ -8,17 +7,14 @@ export function SettingsView() {
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
         <p className="text-muted-foreground">
-          Configure your account, notifications, and preferences.
+          Manage your profile and account settings.
         </p>
       </div>
 
       {/* Profile Settings */}
       <ProfileSettings />
 
-      {/* Notification Settings */}
-      <NotificationSettings />
-
-      {/* Account Settings */}
+      {/* Account Settings - Delete Account */}
       <AccountSettings />
     </div>
   );

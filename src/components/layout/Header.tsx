@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useLogout } from "@/hooks/use-auth";
+import { useNotifications } from "@/contexts";
 import { Button } from "@/components/ui/button";
 import { UserService } from "@/services/user.service";
 import { User as UserType } from "@/types/user.types";
@@ -39,6 +40,8 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const { mutate: logout } = useLogout();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useNotifications();
   const [userData, setUserData] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -150,7 +153,11 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
                   size="sm"
                   className="relative h-8 w-8 p-0">
                   <Bell className="h-4 w-4" />
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-destructive rounded-full"></span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs font-medium">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80" align="end">
@@ -159,52 +166,60 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
                     Notifications
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted">
-                      <div className="h-2 w-2 bg-primary rounded-full mt-2"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          Agent training completed
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Your sales agent has finished training on new data
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          2 minutes ago
-                        </p>
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-4 text-muted-foreground">
+                        <p className="text-sm">No notifications</p>
                       </div>
-                    </div>
-                    <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted">
-                      <div className="h-2 w-2 bg-muted-foreground rounded-full mt-2"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          New conversation started
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Customer support agent received a new inquiry
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          1 hour ago
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted">
-                      <div className="h-2 w-2 bg-muted-foreground rounded-full mt-2"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          Usage limit reminder
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          You've used 80% of your monthly quota
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          3 hours ago
-                        </p>
-                      </div>
-                    </div>
+                    ) : (
+                      notifications.slice(0, 5).map((notification) => (
+                        <div
+                          key={notification.id}
+                          className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                          onClick={() => markAsRead(notification.id)}>
+                          <div
+                            className={`h-2 w-2 rounded-full mt-2 ${
+                              notification.read
+                                ? "bg-muted-foreground"
+                                : "bg-primary"
+                            }`}></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">
+                              {notification.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {notification.description}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Intl.RelativeTimeFormat("en", {
+                                numeric: "auto",
+                              }).format(
+                                Math.round(
+                                  (notification.timestamp.getTime() -
+                                    Date.now()) /
+                                    (1000 * 60)
+                                ),
+                                "minutes"
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                  <Button variant="outline" size="sm" className="w-full">
-                    View All Notifications
-                  </Button>
+                  <div className="flex gap-2 pt-2">
+                    {notifications.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={markAllAsRead}>
+                        Mark All Read
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" className="flex-1">
+                      View All
+                    </Button>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
@@ -294,17 +309,42 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
                       Notifications
                     </h3>
                     <div className="space-y-2">
-                      <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted">
-                        <div className="h-2 w-2 bg-primary rounded-full mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            Agent training completed
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            2 minutes ago
-                          </p>
+                      {notifications.length === 0 ? (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p className="text-sm">No notifications</p>
                         </div>
-                      </div>
+                      ) : (
+                        notifications.slice(0, 3).map((notification) => (
+                          <div
+                            key={notification.id}
+                            className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                            onClick={() => markAsRead(notification.id)}>
+                            <div
+                              className={`h-2 w-2 rounded-full mt-2 ${
+                                notification.read
+                                  ? "bg-muted-foreground"
+                                  : "bg-primary"
+                              }`}></div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">
+                                {notification.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Intl.RelativeTimeFormat("en", {
+                                  numeric: "auto",
+                                }).format(
+                                  Math.round(
+                                    (notification.timestamp.getTime() -
+                                      Date.now()) /
+                                      (1000 * 60)
+                                  ),
+                                  "minutes"
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}

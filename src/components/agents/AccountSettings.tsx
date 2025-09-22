@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +19,9 @@ import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useLogout } from "@/hooks/use-auth";
+import { UserService } from "@/services/user.service";
+import { ErrorHandler } from "@/lib/error-handler";
+import { Loader2 } from "lucide-react";
 
 export function AccountSettings() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -28,58 +30,26 @@ export function AccountSettings() {
   const { mutate: logout } = useLogout();
   const navigate = useNavigate();
 
-  // Current date + 1 year for next reset (placeholder)
-  const nextResetDate = new Date();
-  nextResetDate.setFullYear(nextResetDate.getFullYear() + 1);
-  const formattedResetDate = nextResetDate.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
   // Handle account deletion
   const handleDeleteAccount = async () => {
     if (!user?.id) return;
 
     setIsDeleting(true);
     try {
-      // Get the authentication token
-      const token = localStorage.getItem("authToken");
-
-      // Call the delete user API
-      const response = await fetch(
-        `http://localhost:8000/api/v1/users/${user.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete account");
-      }
+      // Use the proper UserService method
+      const response = await UserService.deleteUser(user.id);
 
       // Log the user out and redirect to homepage
       logout();
       toast({
         title: "Account deleted",
-        description: "Your account has been successfully deleted.",
+        description:
+          response.message || "Your account has been successfully deleted.",
       });
       navigate("/");
     } catch (error) {
       console.error("Delete account error:", error);
-      toast({
-        title: "Failed to delete account",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      ErrorHandler.handleApiError(error, "Failed to delete account");
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
@@ -90,38 +60,31 @@ export function AccountSettings() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>Manage your account settings</CardDescription>
+          <CardTitle>Danger Zone</CardTitle>
+          <CardDescription>
+            Permanent actions that cannot be undone
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Current Plan */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Current Plan</p>
-              <p className="text-sm text-muted-foreground">Professional Plan</p>
+        <CardContent>
+          <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <h3 className="text-sm font-medium text-destructive">
+                  Delete Account
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Permanently delete your account and all associated data. This
+                  action cannot be undone.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowDeleteDialog(true)}
+                className="ml-4 flex-shrink-0">
+                Delete Account
+              </Button>
             </div>
-            <Button variant="outline">Upgrade Plan</Button>
-          </div>
-
-          <Separator />
-
-          {/* Usage Reset Date */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Usage Reset Date</p>
-              <p className="text-sm text-muted-foreground">
-                Next reset: {formattedResetDate}
-              </p>
-            </div>
-          </div>
-
-          {/* Delete Account */}
-          <div className="pt-4">
-            <Button
-              variant="destructive"
-              onClick={() => setShowDeleteDialog(true)}>
-              Delete Account
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -135,14 +98,15 @@ export function AccountSettings() {
             </DialogTitle>
             <DialogDescription>
               This action cannot be undone. All your data, including agents,
-              configurations, and settings will be permanently removed from our
-              servers.
+              configurations, chat history, and settings will be permanently
+              removed from our servers.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 p-3 rounded-md my-2">
+          <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 p-3 rounded-md my-4">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              Warning: This action is permanent and cannot be reversed.
+              <strong>Warning:</strong> This action is permanent and cannot be
+              reversed.
             </p>
           </div>
 
@@ -157,7 +121,14 @@ export function AccountSettings() {
               variant="destructive"
               onClick={handleDeleteAccount}
               disabled={isDeleting}>
-              {isDeleting ? "Deleting..." : "Yes, Delete My Account"}
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Yes, Delete My Account"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
