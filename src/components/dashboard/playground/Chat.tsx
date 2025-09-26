@@ -96,6 +96,17 @@ const Markdown = memo(({ children }: { children: string }) => (
   </ReactMarkdown>
 ));
 
+// ThinkingAnimation component
+function ThinkingAnimation() {
+  return (
+    <div className="flex space-x-1">
+      <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+      <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+      <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+    </div>
+  );
+}
+
 // ReasoningMessagePart component
 function ReasoningMessagePart({
   part,
@@ -216,6 +227,11 @@ const PureMessage = ({
   isLatestMessage: boolean;
 }) => {
   const isMobile = useIsMobile();
+  // Show thinking animation for the last assistant message when processing
+  const showThinkingForAssistant =
+    isLatestMessage &&
+    message.role === "assistant" &&
+    (status === "submitted" || status === "streaming");
 
   return (
     <AnimatePresence>
@@ -232,7 +248,11 @@ const PureMessage = ({
           )}>
           {message.role === "assistant" && (
             <div className="size-6 sm:size-8 flex items-center rounded-full justify-center bg-primary/10 shrink-0 mt-1">
-              <Sparkles size={isMobile ? 12 : 14} className="text-primary" />
+              {showThinkingForAssistant ? (
+                <ThinkingAnimation />
+              ) : (
+                <Sparkles size={isMobile ? 12 : 14} className="text-primary" />
+              )}
             </div>
           )}
 
@@ -308,18 +328,30 @@ function Messages({
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Show thinking message when assistant is processing
+  const showThinkingMessage =
+    (status === "submitted" || status === "streaming") && messages.length > 0;
+
   if (messages.length === 0) {
     return (
       <div className="flex items-center justify-center h-full px-4">
         <div className="text-center max-w-md">
           <div className="size-12 sm:size-16 flex items-center rounded-full justify-center bg-muted/50 mx-auto mb-3 sm:mb-4">
-            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50" />
+            {status === "submitted" || status === "streaming" ? (
+              <ThinkingAnimation />
+            ) : (
+              <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50" />
+            )}
           </div>
           <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
-            Start a conversation
+            {status === "submitted" || status === "streaming"
+              ? "Thinking..."
+              : "Start a conversation"}
           </h3>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Ask me anything, and I'll do my best to help you!
+            {status === "submitted" || status === "streaming"
+              ? "The AI is processing your message"
+              : "Ask me anything, and I'll do my best to help you!"}
           </p>
         </div>
       </div>
@@ -338,6 +370,21 @@ function Messages({
             status={status}
           />
         ))}
+        {/* Show thinking animation when assistant is processing */}
+        {(status === "submitted" || status === "streaming") &&
+          messages.length > 0 && (
+            <motion.div
+              className="w-full group/message mb-4 sm:mb-6"
+              initial={{ y: 5, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              key="thinking-animation">
+              <div className="flex gap-2 sm:gap-4 w-full">
+                <div className="size-6 sm:size-8 flex items-center rounded-full justify-center bg-primary/10 shrink-0 mt-1">
+                  <ThinkingAnimation />
+                </div>
+              </div>
+            </motion.div>
+          )}
         <div ref={messageEndRef} />
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { ReusableSidebar } from "@/components/ui/reusable-sidebar";
-import { Settings, Key, Trash2, Loader2, Brain, RefreshCw } from "lucide-react";
+import { Settings, Trash2, Loader2, Brain, RefreshCw } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -36,7 +36,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { useAgent } from "@/contexts";
@@ -55,10 +54,7 @@ import {
 } from "@/components/dashboard/sources/AllSourcesTable";
 import { useNavigate } from "react-router-dom";
 
-const settingsItems = [
-  { id: "general", label: "General", icon: Settings },
-  { id: "api", label: "API Keys", icon: Key },
-];
+const settingsItems = [{ id: "general", label: "General", icon: Settings }];
 
 export function SettingsView() {
   const navigate = useNavigate();
@@ -77,6 +73,8 @@ export function SettingsView() {
   const [selectedModel, setSelectedModel] = useState("");
   const [temperature, setTemperature] = useState(0.7);
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [hasApiKey, setHasApiKey] = useState(false);
 
   // Track initial values to detect changes
   const [initialValues, setInitialValues] = useState({
@@ -84,6 +82,7 @@ export function SettingsView() {
     model: "",
     temperature: 0.7,
     systemPrompt: "",
+    apiKey: "",
   });
 
   // Hooks
@@ -142,12 +141,15 @@ export function SettingsView() {
         model: agent.model || "",
         temperature: agentTemperature,
         systemPrompt: agent.system_prompt || "", // Load from backend
+        apiKey: "", // API keys are not returned from backend for security
       };
 
       setSelectedProvider(agent.provider || "");
       setSelectedModel(agent.model || "");
       setTemperature(agentTemperature);
       setSystemPrompt(agent.system_prompt || ""); // Load from backend
+      setApiKey(""); // API keys are not returned from backend for security
+      setHasApiKey(agent.has_api_key || false); // Track if API key exists
       setInitialValues(values);
     }
   }, [agentData, agentLoading]);
@@ -158,13 +160,15 @@ export function SettingsView() {
       selectedProvider !== initialValues.provider ||
       selectedModel !== initialValues.model ||
       temperature !== initialValues.temperature ||
-      systemPrompt !== initialValues.systemPrompt
+      systemPrompt !== initialValues.systemPrompt ||
+      (apiKey.trim() && apiKey !== initialValues.apiKey) // Only consider API key change if user entered something
     );
   }, [
     selectedProvider,
     selectedModel,
     temperature,
     systemPrompt,
+    apiKey,
     initialValues,
   ]);
 
@@ -172,12 +176,18 @@ export function SettingsView() {
   const handleSaveAgent = () => {
     if (!currentAgentId || !hasChanges) return;
 
-    const updateData = {
+    const updateData: any = {
       provider: selectedProvider as AgentProvider,
       model: selectedModel,
       temperature: temperature,
       system_prompt: systemPrompt,
+      is_active: 1, // Keep agent active by default
     };
+
+    // Only include API key if user entered a new one
+    if (apiKey.trim()) {
+      updateData.api_key = apiKey;
+    }
 
     updateAgentMutation.mutate(
       { id: currentAgentId.toString(), data: updateData },
@@ -188,7 +198,14 @@ export function SettingsView() {
             model: selectedModel,
             temperature: temperature,
             systemPrompt: systemPrompt,
+            apiKey: apiKey || initialValues.apiKey, // Keep the entered API key or existing one
           });
+          // Clear the API key input after successful update
+          setApiKey("");
+          // Update hasApiKey status if a new key was provided
+          if (apiKey.trim()) {
+            setHasApiKey(true);
+          }
           toast({
             title: "Success",
             description: "Agent configuration updated successfully",
@@ -404,6 +421,27 @@ export function SettingsView() {
                         />
                       </div>
 
+                      <div className="space-y-2">
+                        <Label htmlFor="apiKey">API Key</Label>
+                        <Input
+                          id="apiKey"
+                          type="password"
+                          placeholder={
+                            hasApiKey
+                              ? "•••••••• (API key is configured)"
+                              : "Enter your API key..."
+                          }
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          disabled={!currentAgentId}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {hasApiKey
+                            ? "Leave empty to keep current API key, or enter a new one to update it."
+                            : "Your API key is encrypted and stored securely."}
+                        </p>
+                      </div>
+
                       <div className="flex justify-end space-x-2 pt-4">
                         <Button
                           onClick={handleSaveAgent}
@@ -546,65 +584,6 @@ export function SettingsView() {
                         Delete Agent
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        );
-
-      case "api":
-        return (
-          <div className="p-6">
-            <h2 className="text-2xl font-bold text-foreground mb-6">
-              API Configuration
-            </h2>
-
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>API Keys</CardTitle>
-                  <CardDescription>
-                    Manage your API keys and integration settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="openai-key">OpenAI API Key</Label>
-                    <div className="flex space-x-2">
-                      <Input
-                        id="openai-key"
-                        type="password"
-                        placeholder="sk-..."
-                        className="flex-1"
-                      />
-                      <Button variant="outline">Update</Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="anthropic-key">Anthropic API Key</Label>
-                    <div className="flex space-x-2">
-                      <Input
-                        id="anthropic-key"
-                        type="password"
-                        placeholder="sk-ant-..."
-                        className="flex-1"
-                      />
-                      <Button variant="outline">Update</Button>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">API Usage Status</p>
-                      <p className="text-sm text-muted-foreground">
-                        Current monthly usage and limits
-                      </p>
-                    </div>
-                    <Badge variant="outline">Active</Badge>
                   </div>
                 </CardContent>
               </Card>

@@ -20,6 +20,7 @@ export interface Agent {
   is_deleted: boolean;
   deleted_by?: ID;
   deleted_at?: Timestamp;
+  has_api_key?: boolean; // Indicates if API key is configured
 }
 
 // Agent Request Types based on backend API - aligned with agents.yaml
@@ -35,6 +36,9 @@ export interface CreateAgentRequest {
 
 export interface UpdateAgentRequest {
   name?: string;
+  provider?: string;
+  api_key?: string;
+  model?: string;
   temperature?: number;
   system_prompt?: string;
   is_active?: number;

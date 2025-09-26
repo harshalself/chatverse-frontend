@@ -85,6 +85,18 @@ components:
           type: string
           description: Updated name of the agent
           example: "Updated Agent Name"
+        provider:
+          type: string
+          description: Updated AI provider
+          example: "groq"
+        api_key:
+          type: string
+          description: Updated API key (will be encrypted automatically)
+          example: "sk-new-api-key-here"
+        model:
+          type: string
+          description: Updated AI model
+          example: "meta-llama/llama-4-scout-17b-16e-instruct"
         temperature:
           type: number
           description: Updated temperature setting
@@ -93,6 +105,10 @@ components:
           type: string
           description: Updated system prompt
           example: "You are an updated AI assistant"
+        is_active:
+          type: integer
+          description: Updated active status (0 or 1)
+          example: 1
 
     Agent:
       type: object
@@ -309,7 +325,7 @@ paths:
       tags:
         - Agents
       summary: Update agent
-      description: Updates an existing agent (requires authentication)
+      description: Updates an existing agent. All fields are optional - only provide the fields you want to update. API keys are automatically encrypted before storage (requires authentication)
       security:
         - bearerAuth: []
       parameters:
@@ -328,9 +344,10 @@ paths:
               $ref: "#/components/schemas/UpdateAgentRequest"
             examples:
               update_agent:
-                summary: Update agent name and temperature
+                summary: Update agent name, API key, and temperature
                 value:
-                  name: "My Llama 4 Scout Agent"
+                  name: "My Updated Llama 4 Scout Agent"
+                  api_key: "sk-new-api-key-here"
                   temperature: 0.5
                   is_active: 1
       responses:
