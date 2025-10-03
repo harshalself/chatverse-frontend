@@ -86,8 +86,11 @@ export function SourcesSummary() {
 
   // Training hooks
   const { mutate: trainAgent, isPending: isTraining } = useTrainAgent();
-  const { data: trainingStatus, isLoading: isTrainingStatusLoading } =
-    useTrainingStatus(currentAgentId?.toString() || "", isAgentSelected);
+  const { 
+    data: trainingStatus, 
+    isLoading: isTrainingStatusLoading,
+    refetch: refetchTrainingStatus 
+  } = useTrainingStatus(currentAgentId?.toString() || "", isAgentSelected);
 
   // Use allSources directly from the hook instead of sourcesData
   const sources = allSources || [];
@@ -105,6 +108,14 @@ export function SourcesSummary() {
         id: currentAgentId.toString(),
         data: { forceRetrain: false, cleanupExisting: true },
       });
+    }
+  };
+
+  // Combined refresh function for sources and training status
+  const handleRefresh = () => {
+    refetch(); // Refresh sources
+    if (currentAgentId) {
+      refetchTrainingStatus(); // Refresh training status
     }
   };
 
@@ -133,11 +144,11 @@ export function SourcesSummary() {
               variant="ghost"
               size="icon"
               className="h-7 w-7"
-              onClick={() => refetch()}
-              title="Refresh sources"
-              disabled={isLoading}>
+              onClick={handleRefresh}
+              title="Refresh sources and training status"
+              disabled={isLoading || isTrainingStatusLoading}>
               <RefreshCw
-                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                className={`h-4 w-4 ${isLoading || isTrainingStatusLoading ? "animate-spin" : ""}`}
               />
             </Button>
           </CardTitle>

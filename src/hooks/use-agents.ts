@@ -235,7 +235,7 @@ export const useRetrainAgent = () => {
 export const useTrainingStatus = (
   id: string,
   enabled = true,
-  pollInterval = 2000
+  pollInterval = 5000 // 5 seconds polling interval
 ) => {
   const memoizedId = useMemo(() => id, [id]);
   const previousStatusRef = useRef<string | null>(null);
@@ -268,21 +268,12 @@ export const useTrainingStatus = (
         return false;
       }
 
-      // Poll every 2 seconds if training is in progress for faster updates
-      if (data?.status && ["pending", "processing"].includes(data.status)) {
-        console.log(
-          `Continuing polling - training in progress: ${data.status}`
-        );
-        return 500; // Faster polling during training
-      }
-
-      // For not_started status, poll every 5 seconds in case training starts
-      if (data?.status === "not_started") {
-        return 2000;
-      }
-
-      // Default: no polling
-      return false;
+      // Always poll every 5 seconds if we have an agent ID and are enabled
+      // This ensures polling starts immediately after training begins
+      console.log(
+        `Polling every ${pollInterval}ms - status: ${data?.status || 'unknown'}`
+      );
+      return pollInterval;
     },
     staleTime: 0, // Always consider stale for real-time updates
     retry: 1,
@@ -331,6 +322,12 @@ export const useTrainingStatus = (
           queryKey: QUERY_KEYS.AGENT(memoizedId),
         });
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AGENTS });
+        
+        // Invalidate sources queries to refresh SourcesSummary
+        queryClient.invalidateQueries({ 
+          queryKey: [...QUERY_KEYS.SOURCES, "by-agent", Number(memoizedId)]
+        });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOURCES });
       }
 
       // Training failed
