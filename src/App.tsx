@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AgentProvider } from "@/contexts/AgentContext";
 import { NotificationProvider } from "@/contexts";
+import { GlobalChatbot } from "@/components/global";
 
 // Lazy load pages to improve initial load time
 const Homepage = lazy(() => import("./pages/Homepage"));
@@ -69,6 +70,8 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            {/* Global Chatbot - Only shows on authenticated pages */}
+            <GlobalChatbot />
           </BrowserRouter>
         </AgentProvider>
       </NotificationProvider>
