@@ -12,14 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -44,10 +36,11 @@ import {
   useUpdateAgent,
   useDeleteAgent,
 } from "@/hooks/use-agents";
-import { useProviders, useProviderModels } from "@/hooks/use-provider-models";
 import { useSourcesByAgent, useDeleteSource } from "@/hooks/use-base-sources";
 import { AgentProvider } from "@/types/agent.types";
 import { DataSource } from "@/types/source.types";
+import { ProviderSelect } from "@/components/ProviderSelect";
+import { ModelSelect } from "@/components/ModelSelect";
 import {
   sourceIcons,
   sourceLabels,
@@ -90,10 +83,6 @@ export function SettingsView() {
     currentAgentId?.toString() || "",
     !!currentAgentId
   );
-  const { data: providersData, isLoading: providersLoading } = useProviders();
-  const { data: modelsData, isLoading: modelsLoading } = useProviderModels(
-    selectedProvider || undefined
-  );
   const {
     data: sourcesData,
     isLoading: sourcesLoading,
@@ -105,21 +94,7 @@ export function SettingsView() {
   const deleteSourceMutation = useDeleteSource();
 
   // Get data
-  const providers = providersData?.data || [];
-  const availableModels = modelsData?.data || [];
   const sources = sourcesData || [];
-
-  // Reset model when provider changes
-  useEffect(() => {
-    if (selectedProvider && selectedModel) {
-      const isModelAvailable = availableModels.some(
-        (model) => model.model_name === selectedModel
-      );
-      if (!isModelAvailable && !modelsLoading) {
-        setSelectedModel("");
-      }
-    }
-  }, [selectedProvider, availableModels, modelsLoading, selectedModel]);
 
   // Load agent data
   useEffect(() => {
@@ -285,99 +260,22 @@ export function SettingsView() {
                     </div>
                   ) : (
                     <>
-                      <div className="space-y-2">
-                        <Label>Provider</Label>
-                        <Select
-                          value={selectedProvider}
-                          onValueChange={(value: AgentProvider) =>
-                            setSelectedProvider(value)
-                          }
-                          disabled={!currentAgentId}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a provider" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {providersLoading ? (
-                                <SelectItem value="__loading__" disabled>
-                                  Loading providers...
-                                </SelectItem>
-                              ) : providers.length === 0 ? (
-                                <SelectItem value="__no-providers__" disabled>
-                                  No providers available
-                                </SelectItem>
-                              ) : (
-                                providers.map((provider) => (
-                                  <SelectItem
-                                    key={provider.provider}
-                                    value={provider.provider}
-                                    disabled={
-                                      !provider.provider ||
-                                      provider.provider.trim() === ""
-                                    }>
-                                    {provider.displayName}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <ProviderSelect
+                        value={selectedProvider}
+                        onValueChange={(value: AgentProvider) =>
+                          setSelectedProvider(value)
+                        }
+                        disabled={!currentAgentId}
+                      />
 
-                      <div className="space-y-2">
-                        <Label>Model</Label>
-                        <Select
-                          value={selectedModel}
-                          onValueChange={(value: string) =>
-                            setSelectedModel(value)
-                          }
-                          disabled={
-                            !currentAgentId ||
-                            !selectedProvider ||
-                            modelsLoading
-                          }>
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={
-                                !selectedProvider
-                                  ? "Select a provider first"
-                                  : modelsLoading
-                                  ? "Loading models..."
-                                  : "Select a model"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {!selectedProvider ? (
-                                <SelectItem value="__no-provider__" disabled>
-                                  Select a provider first
-                                </SelectItem>
-                              ) : modelsLoading ? (
-                                <SelectItem value="__loading__" disabled>
-                                  Loading models...
-                                </SelectItem>
-                              ) : availableModels.length === 0 ? (
-                                <SelectItem value="__no-models__" disabled>
-                                  No models available for {selectedProvider}
-                                </SelectItem>
-                              ) : (
-                                availableModels.map((model) => (
-                                  <SelectItem
-                                    key={model.id}
-                                    value={model.model_name}
-                                    disabled={
-                                      !model.model_name ||
-                                      model.model_name.trim() === ""
-                                    }>
-                                    {model.model_name}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <ModelSelect
+                        provider={selectedProvider}
+                        value={selectedModel}
+                        onValueChange={(value: string) =>
+                          setSelectedModel(value)
+                        }
+                        disabled={!currentAgentId}
+                      />
 
                       <div className="space-y-2">
                         <Label>

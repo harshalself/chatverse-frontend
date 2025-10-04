@@ -114,6 +114,28 @@ export const API_ENDPOINTS = {
     USAGE: "/dashboard/usage",
   },
 
+  // Analytics API Endpoints
+  ANALYTICS: {
+    AGENTS: {
+      PERFORMANCE: (agentId: number) => `/analytics/agents/${agentId}/performance`,
+      COMPARE: "/analytics/agents/compare",
+      TOP: "/analytics/agents/top",
+      OPTIMIZE: (agentId: number) => `/analytics/agents/${agentId}/optimize`,
+    },
+    MODELS: {
+      USAGE: "/analytics/models/usage",
+      COSTS: "/analytics/models/costs",
+      PERFORMANCE: "/analytics/models/performance",
+    },
+    SYSTEM: {
+      PERFORMANCE: "/analytics/system/performance",
+    },
+    USER: {
+      ENGAGEMENT: "/analytics/user/engagement",
+      BEHAVIOR: "/analytics/user/behavior",
+    },
+  },
+
   // Sources - Base Sources API
   SOURCES: {
     // Base Sources API - aligned with backend

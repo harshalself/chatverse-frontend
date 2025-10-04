@@ -1,23 +1,16 @@
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-} from "@/components/ui/select";
 import { Textarea as ShadcnTextarea } from "@/components/ui/textarea";
 import { useState, useEffect, useMemo, useRef } from "react";
 import {
   useAgent as useAgentDetails,
   useUpdateAgent,
 } from "@/hooks/use-agents";
-import { useProviders, useProviderModels } from "@/hooks/use-provider-models";
 import { toast } from "@/hooks/use-toast";
 import { AgentProvider } from "@/types/agent.types";
 import { useAgent } from "@/contexts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ProviderSelect } from "@/components/ProviderSelect";
+import { ModelSelect } from "@/components/ModelSelect";
 
 export function ChatSidebar() {
   // Get agentId from context
@@ -43,30 +36,7 @@ export function ChatSidebar() {
     currentAgentId?.toString() || "",
     !!currentAgentId
   );
-  const { data: providersData, isLoading: providersLoading } = useProviders();
-  const { data: modelsData, isLoading: modelsLoading } = useProviderModels(
-    selectedProvider || undefined
-  );
   const updateAgentMutation = useUpdateAgent();
-
-  // Get available providers
-  const providers = providersData?.data || [];
-
-  // Get available models for selected provider
-  const availableModels = modelsData?.data || [];
-
-  // Reset model when provider changes
-  useEffect(() => {
-    if (selectedProvider && selectedModel) {
-      // Check if the current model is still available for the new provider
-      const isModelAvailable = availableModels.some(
-        (model) => model.model_name === selectedModel
-      );
-      if (!isModelAvailable && !modelsLoading) {
-        setSelectedModel("");
-      }
-    }
-  }, [selectedProvider, availableModels, modelsLoading, selectedModel]);
 
   // Only update form state from backend when agentId changes
   const lastLoadedAgentId = useRef<string | number | null>(null);
@@ -178,7 +148,7 @@ export function ChatSidebar() {
     );
   }
 
-  if (agentLoading || providersLoading) {
+  if (agentLoading) {
     return (
       <aside
         className={`flex flex-col gap-4 ${
@@ -210,94 +180,18 @@ export function ChatSidebar() {
       </Button>
 
       <div className="space-y-4 flex-1 overflow-y-auto">
-        <div>
-          <label className="block mb-1 text-xs sm:text-sm font-medium">
-            Provider
-          </label>
-          <Select
-            value={selectedProvider}
-            onValueChange={(value: AgentProvider) =>
-              setSelectedProvider(value)
-            }>
-            <SelectTrigger className="w-full h-9 sm:h-10 focus:ring-0 focus:ring-offset-0 focus:border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0">
-              <SelectValue placeholder="Select a provider" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {providersLoading ? (
-                  <SelectItem value="__loading__" disabled>
-                    Loading providers...
-                  </SelectItem>
-                ) : providers.length === 0 ? (
-                  <SelectItem value="__no-providers__" disabled>
-                    No providers available
-                  </SelectItem>
-                ) : (
-                  providers.map((provider) => (
-                    <SelectItem
-                      key={provider.provider}
-                      value={provider.provider}
-                      disabled={
-                        !provider.provider || provider.provider.trim() === ""
-                      }>
-                      {provider.displayName}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+        <ProviderSelect
+          value={selectedProvider}
+          onValueChange={(value: AgentProvider) =>
+            setSelectedProvider(value)
+          }
+        />
 
-        <div>
-          <label className="block mb-1 text-xs sm:text-sm font-medium">
-            Model
-          </label>
-          <Select
-            value={selectedModel}
-            onValueChange={(value: string) => setSelectedModel(value)}
-            disabled={!selectedProvider || modelsLoading}>
-            <SelectTrigger className="w-full h-9 sm:h-10 focus:ring-0 focus:ring-offset-0 focus:border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0">
-              <SelectValue
-                placeholder={
-                  !selectedProvider
-                    ? "Select a provider first"
-                    : modelsLoading
-                    ? "Loading models..."
-                    : "Select a model"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {!selectedProvider ? (
-                  <SelectItem value="__no-provider__" disabled>
-                    Select a provider first
-                  </SelectItem>
-                ) : modelsLoading ? (
-                  <SelectItem value="__loading__" disabled>
-                    Loading models...
-                  </SelectItem>
-                ) : availableModels.length === 0 ? (
-                  <SelectItem value="__no-models__" disabled>
-                    No models available for {selectedProvider}
-                  </SelectItem>
-                ) : (
-                  availableModels.map((model) => (
-                    <SelectItem
-                      key={model.id}
-                      value={model.model_name}
-                      disabled={
-                        !model.model_name || model.model_name.trim() === ""
-                      }>
-                      {model.model_name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+        <ModelSelect
+          provider={selectedProvider}
+          value={selectedModel}
+          onValueChange={(value: string) => setSelectedModel(value)}
+        />
 
         <div>
           <label className="block mb-1 text-xs sm:text-sm font-medium">

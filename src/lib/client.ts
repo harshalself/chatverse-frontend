@@ -80,9 +80,22 @@ apiClient.interceptors.request.use((config) => {
   const token = TokenManager.getToken();
   if (token) {
     // Include schema in Authorization header as expected by backend
-    const authHeader = `Bearer ${token} public`;
+    const authHeader = `Bearer ${token}`;
     config.headers.Authorization = authHeader;
   }
+
+  // Debug logging
+  console.log('🚀 API Request:', {
+    method: config.method?.toUpperCase(),
+    url: config.url,
+    fullUrl: `${config.baseURL}${config.url}`,
+    headers: {
+      ...config.headers,
+      Authorization: config.headers.Authorization ? '[REDACTED]' : undefined
+    },
+    params: config.params,
+    data: config.data
+  });
 
   // Check cache for GET requests in production
   if (
@@ -116,6 +129,16 @@ apiClient.interceptors.request.use((config) => {
 // Response interceptor for error handling and caching
 apiClient.interceptors.response.use(
   (response) => {
+    // Debug logging for successful responses
+    console.log('✅ API Response:', {
+      status: response.status,
+      url: response.config.url,
+      fullUrl: `${response.config.baseURL}${response.config.url}`,
+      method: response.config.method?.toUpperCase(),
+      data: response.data,
+      headers: response.headers
+    });
+
     // Cache successful GET responses
     if (
       response.config.method?.toLowerCase() === "get" &&
@@ -138,6 +161,17 @@ apiClient.interceptors.response.use(
     return response.data; // Return only the data part
   },
   (error) => {
+    // Debug logging for errors
+    console.error('❌ API Error:', {
+      message: error.message,
+      status: error.response?.status,
+      url: error.config?.url,
+      fullUrl: error.config ? `${error.config.baseURL}${error.config.url}` : 'N/A',
+      method: error.config?.method?.toUpperCase(),
+      data: error.response?.data,
+      headers: error.config?.headers
+    });
+
     // Handle canceled requests with cached data
     if (axios.isCancel(error)) {
       try {
