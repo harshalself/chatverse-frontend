@@ -40,7 +40,7 @@ export function ModelSelect({
         value={value}
         onValueChange={onValueChange}
         disabled={disabled || !provider || providerModels.isLoading}>
-        <SelectTrigger className={error ? "border-destructive" : ""} id="model">
+        <SelectTrigger className={`${error ? "border-destructive" : ""} focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0`} id="model">
           <SelectValue placeholder="Select a model" />
         </SelectTrigger>
         <SelectContent>

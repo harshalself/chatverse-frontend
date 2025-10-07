@@ -40,7 +40,7 @@ export function ProviderSelect({
         onValueChange={onValueChange}
         disabled={disabled || providersQuery.isLoading}>
         <SelectTrigger
-          className={error ? "border-destructive" : ""}
+          className={`${error ? "border-destructive" : ""} focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0`}
           id="provider">
           <SelectValue placeholder="Select AI provider" />
         </SelectTrigger>
