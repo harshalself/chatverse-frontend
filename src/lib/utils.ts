@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { APP_CONFIG } from "./constants";
+import { TokenPayload } from "@/types/auth.types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -41,14 +42,50 @@ export const getApiUrl = (endpoint: string): string => {
   return `${baseUrl}${cleanEndpoint}`;
 };
 
-// Format file size utility
-export const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-};
+// JWT token utilities
+export const jwtUtils = {
+  /**
+   * Decode JWT token payload (without verifying signature)
+   * @param token - JWT token string
+   * @returns Decoded payload or null if invalid
+   */
+  decodeToken: (token: string): TokenPayload | null => {
+    try {
+      if (!token || !token.includes('.')) {
+        return null;
+      }
+
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload as TokenPayload;
+    } catch (error) {
+      logger.error('Error decoding JWT token:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Get user ID from JWT token
+   * @param token - JWT token string
+   * @returns User ID or null if invalid
+   */
+  getUserIdFromToken: (token: string): string | null => {
+    const payload = jwtUtils.decodeToken(token);
+    return payload?.userId || null;
+  },
+
+  /**
+   * Check if JWT token is expired
+   * @param token - JWT token string
+   * @returns True if expired, false otherwise
+   */
+  isTokenExpired: (token: string): boolean => {
+    const payload = jwtUtils.decodeToken(token);
+    if (!payload?.exp) return false;
+
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp < now;
+  }
+} as const;
 
 // Debounce utility
 export const debounce = <T extends (...args: any[]) => void>(
