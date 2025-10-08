@@ -1,13 +1,27 @@
 // Common API Response Types - Aligned with backend API structure
+// The API client automatically converts new standardized format to this legacy format
 export interface ApiResponse<T = any> {
   data: T;
   message: string;
+  meta?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+    hasNext?: boolean;
+    hasPrev?: boolean;
+    [key: string]: any;
+  };
+  // Optional success field for new code that wants to check it
+  success?: boolean;
 }
 
 export interface ApiErrorResponse {
-  status: number;
+  success: false;
   message: string;
-  details?: string[];
+  error: string;
+  details?: any;
+  timestamp?: string;
 }
 
 export interface PaginatedResponse<T = any> {

@@ -2,9 +2,68 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { APP_CONFIG } from "./constants";
 import { TokenPayload } from "@/types/auth.types";
+import { ApiResponse } from "@/types/api.types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Extract data from standardized API response
+ * Handles both new standardized format and legacy format for backward compatibility
+ */
+export function extractApiData<T>(response: any): T {
+  // If response is already the data we need (legacy format)
+  if (!response || typeof response !== 'object') {
+    return response;
+  }
+
+  // New standardized format: { success: true, data: T, message: string }
+  if ('success' in response && 'data' in response) {
+    return response.data;
+  }
+
+  // Legacy format: assume the response IS the data
+  return response;
+}
+
+/**
+ * Extract message from standardized API response
+ */
+export function extractApiMessage(response: any): string {
+  if (!response || typeof response !== 'object') {
+    return '';
+  }
+
+  return response.message || '';
+}
+
+/**
+ * Extract meta information from standardized API response
+ */
+export function extractApiMeta(response: any): any {
+  if (!response || typeof response !== 'object') {
+    return null;
+  }
+
+  return response.meta || null;
+}
+
+/**
+ * Check if API response indicates success
+ */
+export function isApiSuccess(response: any): boolean {
+  if (!response || typeof response !== 'object') {
+    return false;
+  }
+
+  // New standardized format
+  if ('success' in response) {
+    return response.success === true;
+  }
+
+  // Legacy format - assume success if no error indicators
+  return true;
 }
 
 // Environment utilities

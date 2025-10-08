@@ -20,7 +20,8 @@ class AuthService {
 
     console.log("Raw API response:", response);
 
-    // Extract token from response - ensure we get the raw token value
+    // API client now automatically converts standardized format to legacy format
+    // Extract token from response data
     let token: string;
 
     // Handle different possible response structures
@@ -48,7 +49,7 @@ class AuthService {
     const authResponse: AuthResponse = {
       message: (response as any).message || "Login successful",
       token: token,
-      user: (response as any).data || (response as any).user, // User data is under 'data' in the actual API
+      user: (response as any).data || (response as any).user, // User data is in the response
     };
 
     console.log("Processed auth response:", authResponse);
@@ -68,12 +69,16 @@ class AuthService {
    * Register new user
    */
   static async register(userData: RegisterRequest): Promise<RegisterResponse> {
-    const response = (await apiClient.post(
+    const response = await apiClient.post(
       API_ENDPOINTS.AUTH.REGISTER,
       userData
-    )) as RegisterResponse;
+    );
 
-    return response;
+    // API client automatically converts standardized format to legacy format
+    return {
+      message: (response as any).message || "Registration successful",
+      user: (response as any).data || response,
+    } as RegisterResponse;
   }
 
   /**

@@ -139,6 +139,32 @@ apiClient.interceptors.response.use(
       headers: response.headers
     });
 
+    const responseData = response.data;
+    
+    // Handle new standardized format: { success: true, data: T, message: string }
+    if (typeof responseData === 'object' && responseData !== null && 'success' in responseData) {
+      if (!responseData.success) {
+        // Handle API-level errors (success: false)
+        const error = new Error(responseData.message || 'API request failed');
+        (error as any).response = {
+          data: responseData,
+          status: response.status,
+          statusText: response.statusText
+        };
+        return Promise.reject(error);
+      }
+      
+      // For successful standardized responses, return in the legacy format
+      // This maintains backward compatibility with all existing services
+      return {
+        data: responseData.data,
+        message: responseData.message,
+        meta: responseData.meta,
+        // Include success for new code that might check it
+        success: responseData.success
+      };
+    }
+
     // Cache successful GET responses
     if (
       response.config.method?.toLowerCase() === "get" &&
@@ -158,7 +184,8 @@ apiClient.interceptors.response.use(
       requestCache.invalidate(url);
     }
 
-    return response.data; // Return only the data part
+    // For legacy responses, return as-is
+    return responseData;
   },
   (error) => {
     // Debug logging for errors
