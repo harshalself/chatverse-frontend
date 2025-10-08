@@ -80,7 +80,7 @@ apiClient.interceptors.request.use((config) => {
   const token = TokenManager.getToken();
   if (token) {
     // Include schema in Authorization header as expected by backend
-    const authHeader = `Bearer ${token}`;
+    const authHeader = `Bearer ${token} public`;
     config.headers.Authorization = authHeader;
   }
 
