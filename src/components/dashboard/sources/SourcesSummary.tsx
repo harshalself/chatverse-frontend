@@ -15,9 +15,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DataSource } from "@/types/source.types";
-import { useAgent } from "@/contexts";
+import { useAgent as useAgentContext } from "@/contexts";
 import { useSourcesByAgent, useDeleteSource } from "@/hooks/use-base-sources";
-import { useTrainAgent, useTrainingStatus } from "@/hooks/use-agents";
+import { useTrainAgent, useTrainingStatus, useAgent as useAgentData } from "@/hooks/use-agents";
+import { toast } from "@/hooks/use-toast";
 import {
   AllSourcesTable,
   sourceIcons as importedSourceIcons,
@@ -72,7 +73,10 @@ export function SourcesSummary() {
   const [isAllSourcesOpen, setIsAllSourcesOpen] = useState(false);
 
   // Get the current agent ID from context
-  const { currentAgentId, isAgentSelected } = useAgent();
+  const { currentAgentId, isAgentSelected } = useAgentContext();
+
+  // Fetch current agent data to get trained_on timestamp
+  const { data: currentAgent } = useAgentData(currentAgentId?.toString() || "", isAgentSelected);
 
   // Fetch all sources using the hook with agent context
   const {
@@ -85,7 +89,7 @@ export function SourcesSummary() {
   const { mutate: deleteSource } = useDeleteSource();
 
   // Training hooks
-  const { mutate: trainAgent, isPending: isTraining } = useTrainAgent();
+  const trainAgentMutation = useTrainAgent();
   const { 
     data: trainingStatus, 
     isLoading: isTrainingStatusLoading,
@@ -101,12 +105,105 @@ export function SourcesSummary() {
     [sources]
   );
 
+  // Calculate ready sources (pending or completed status)
+  const readySourcesCount = useMemo(
+    () => sources
+      .filter(source => source.status === "pending" || source.status === "completed")
+      .reduce((acc, source) => acc + getSourceCount(source), 0),
+    [sources]
+  );
+
   // Training functions
   const handleTrainAgent = () => {
+    // Check if agent is selected
+    if (!isAgentSelected) {
+      toast({
+        title: "No Agent Selected",
+        description: "Please select an agent before training.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if there are sources
+    if (totalAllSources === 0) {
+      toast({
+        title: "No Sources Available",
+        description: "Add at least one data source before training the agent.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if training is already in progress
+    if (isTrainingInProgress) {
+      toast({
+        title: "Training in Progress",
+        description: "Agent training is already in progress. Please wait for it to complete.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if sources are ready for training (must be pending or completed status)
+    const readySources = sources.filter(source => 
+      source.status === "pending" || source.status === "completed"
+    );
+    
+    if (readySources.length === 0) {
+      const processingSources = sources.filter(source => source.status === "processing");
+      const failedSources = sources.filter(source => source.status === "failed");
+      
+      let message = "No sources are ready for training.";
+      if (processingSources.length > 0) {
+        message += ` ${processingSources.length} source(s) are still processing.`;
+      }
+      if (failedSources.length > 0) {
+        message += ` ${failedSources.length} source(s) failed to process.`;
+      }
+      
+      toast({
+        title: "Sources Not Ready",
+        description: message + " Please wait for sources to complete processing or try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if agent is already trained and no new sources have been added since training
+    if (trainingStatus?.status === "completed" && currentAgent?.trained_on) {
+      const trainedOnTime = new Date(currentAgent.trained_on).getTime();
+      
+      // Check if any ready sources were created or updated after the training time
+      const hasNewReadySources = readySources.some(source => {
+        const createdTime = new Date(source.created_at).getTime();
+        const updatedTime = source.updated_at ? new Date(source.updated_at).getTime() : createdTime;
+        return createdTime > trainedOnTime || updatedTime > trainedOnTime;
+      });
+
+      // Only show "already trained" if there are no new ready sources since training
+      if (!hasNewReadySources) {
+        toast({
+          title: "Agent Already Trained",
+          description: "This agent is already trained. Add new sources or use retrain if needed.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Proceed with training
     if (currentAgentId) {
-      trainAgent({
+      trainAgentMutation.mutate({
         id: currentAgentId.toString(),
         data: { forceRetrain: false, cleanupExisting: true },
+      }, {
+        onSuccess: (response) => {
+          toast({
+            title: "Training Started! 🚀",
+            description: response.message || "Agent training started successfully",
+          });
+        },
       });
     }
   };
@@ -122,11 +219,6 @@ export function SourcesSummary() {
   const isTrainingInProgress =
     trainingStatus?.status === "processing" ||
     trainingStatus?.status === "pending";
-  const canTrain =
-    isAgentSelected &&
-    totalAllSources > 0 &&
-    !isTraining &&
-    !isTrainingInProgress;
 
   // Always show training status component when agent is selected - let the component handle visibility
   const showTrainingStatus = isAgentSelected && currentAgentId;
@@ -225,18 +317,22 @@ export function SourcesSummary() {
           <Button
             className="w-full text-sm"
             size="lg"
-            disabled={!canTrain}
+            disabled={trainAgentMutation.isPending}
             onClick={handleTrainAgent}
             title={
               !isAgentSelected
                 ? "Select an agent first"
                 : totalAllSources === 0
                 ? "Add sources before training"
+                : readySourcesCount === 0
+                ? "Sources are still processing - wait for completion"
                 : isTrainingInProgress
                 ? "Training in progress"
+                : trainingStatus?.status === "completed"
+                ? "Agent already trained - add new sources or retrain"
                 : ""
             }>
-            {isTraining || isTrainingInProgress ? (
+            {trainAgentMutation.isPending || isTrainingInProgress ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Brain className="h-4 w-4 mr-2" />

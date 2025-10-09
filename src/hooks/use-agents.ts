@@ -192,13 +192,21 @@ export const useTrainAgent = () => {
         });
       }, 500); // Small delay to let the backend update
 
-      toast({
-        title: "Training Started! 🚀",
-        description:
-          response.message || SUCCESS_MESSAGES.AGENT_TRAINING_STARTED,
-      });
+      // Success toast is now handled in the component
     },
     onError: (error: any) => {
+      // Check for specific backend error about sources not ready for embedding
+      if (error?.response?.status === 400 && 
+          error?.response?.data?.message?.includes("No sources ready for embedding found")) {
+        toast({
+          title: "Sources Already Processed",
+          description: "All sources have already been embedded. Add new sources to train the agent further.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Handle other errors with the generic error handler
       ErrorHandler.handleApiError(error, "Failed to start agent training");
     },
   });
