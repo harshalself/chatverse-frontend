@@ -104,17 +104,24 @@ export function GlobalChatbot({ className }: GlobalChatbotProps) {
       },
       {
         onSuccess: (response) => {
-          const assistantMessage = createMiniMessage(
-            "assistant",
-            response.data?.message || response.message || "I received your message!"
-          );
+          console.log('[GlobalChatbot] Chat response received:', response);
+          
+          // Extract the actual AI message from the response
+          // After ChatService.sendAgentChatMessage, response is already the data object
+          // So response.message is the AI's response
+          const aiMessage = response.message || (response as any).data?.message || "I received your message!";
+          
+          console.log('[GlobalChatbot] Extracted AI message:', aiMessage);
+          
+          const assistantMessage = createMiniMessage("assistant", aiMessage);
           setMessages((prev) => [...prev, assistantMessage]);
           
           // Store session ID for future messages in this conversation
           if (!currentSessionId) {
-            const sessionId = response.data?.sessionId || (response as any).sessionId;
+            const sessionId = (response as any).sessionId || (response as any).data?.sessionId;
             if (sessionId) {
               setCurrentSessionId(sessionId.toString());
+              console.log('[GlobalChatbot] Session ID stored:', sessionId);
             }
           }
           
