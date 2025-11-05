@@ -32,12 +32,16 @@ export const prefetchAgents = async (
 };
 
 // Get all agents with pagination
-export const useAgents = (options?: PaginationOptions) => {
-  // Memoize options to prevent unnecessary re-renders
-  const memoizedOptions = useMemo(
-    () => options,
-    [options?.page, options?.limit, options?.sort, options?.filter]
-  );
+export const useAgents = (options?: Partial<PaginationOptions> & { enabled?: boolean }) => {
+  // Extract enabled from options, default to true
+  const enabled = options?.enabled !== undefined ? options.enabled : true;
+  
+  // Memoize pagination options without enabled flag
+  const memoizedOptions = useMemo(() => {
+    if (!options) return undefined;
+    const { enabled: _, ...paginationOptions } = options;
+    return Object.keys(paginationOptions).length > 0 ? paginationOptions : undefined;
+  }, [options?.page, options?.limit, options?.sort, options?.filter]);
 
   return useQuery({
     queryKey: [...QUERY_KEYS.AGENTS, memoizedOptions],
@@ -56,6 +60,7 @@ export const useAgents = (options?: PaginationOptions) => {
       }
       return [];
     },
+    enabled, // Use the enabled option
     staleTime: 2 * 60 * 1000, // 2 minutes
     placeholderData: (previousData) => previousData,
     retry: 1, // Only retry once

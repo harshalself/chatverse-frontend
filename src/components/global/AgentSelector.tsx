@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Check } from "lucide-react";
 import { useAgents } from "@/hooks/use-agents";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 interface AgentSelectorProps {
@@ -23,7 +24,8 @@ export function AgentSelector({
   onAgentSelect,
   className,
 }: AgentSelectorProps) {
-  const { data: agentsResponse, isLoading } = useAgents();
+  const { isAuthenticated } = useAuth();
+  const { data: agentsResponse, isLoading } = useAgents({ enabled: isAuthenticated });
 
   // Extract agents array from response and filter only active agents
   const allAgents = Array.isArray(agentsResponse)

@@ -17,8 +17,9 @@ const EXCLUDED_PAGES = ["/", "/signin", "/signup"];
 
 export function GlobalChatbot({ className }: GlobalChatbotProps) {
   const location = useLocation();
-  const { user } = useAuth();
-  const { data: agentsResponse } = useAgents();
+  const { user, isAuthenticated } = useAuth();
+  // Only fetch agents when user is authenticated
+  const { data: agentsResponse } = useAgents({ enabled: isAuthenticated });
   
   const {
     isExpanded,

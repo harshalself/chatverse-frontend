@@ -17,7 +17,7 @@ export class AgentsService {
   /**
    * Get all agents - returns consistent ApiResponse structure
    */
-  static async getAgents(options?: PaginationOptions): Promise<AgentsResponse> {
+  static async getAgents(options?: Partial<PaginationOptions>): Promise<AgentsResponse> {
     const params = new URLSearchParams();
 
     if (options?.page) params.append("page", options.page.toString());
