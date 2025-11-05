@@ -217,10 +217,8 @@ export function SourcesSummary() {
   };
 
   const isTrainingInProgress =
-    trainingStatus?.status === "processing" ||
-    trainingStatus?.status === "pending";
-
-  // Always show training status component when agent is selected - let the component handle visibility
+    trainAgentMutation.isPending ||
+    (trainingStatus?.status && !["completed", "failed", "cancelled", "not_started"].includes(trainingStatus.status));
   const showTrainingStatus = isAgentSelected && currentAgentId;
 
   return (

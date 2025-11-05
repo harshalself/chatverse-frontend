@@ -319,7 +319,7 @@ export const useTrainingStatus = (
 
       // Training completed successfully
       if (
-        (previousStatus === "processing" || previousStatus === "pending") &&
+        (previousStatus && !["completed", "failed", "cancelled", "not_started"].includes(previousStatus)) &&
         currentStatus === "completed" &&
         !hasShownCompletionToast.current
       ) {
@@ -345,7 +345,7 @@ export const useTrainingStatus = (
 
       // Training failed
       else if (
-        (previousStatus === "processing" || previousStatus === "pending") &&
+        (previousStatus && !["completed", "failed", "cancelled", "not_started"].includes(previousStatus)) &&
         currentStatus === "failed" &&
         !hasShownCompletionToast.current
       ) {
@@ -361,7 +361,7 @@ export const useTrainingStatus = (
 
       // Training cancelled
       else if (
-        (previousStatus === "processing" || previousStatus === "pending") &&
+        (previousStatus && !["completed", "failed", "cancelled", "not_started"].includes(previousStatus)) &&
         currentStatus === "cancelled" &&
         !hasShownCompletionToast.current
       ) {
@@ -381,7 +381,7 @@ export const useTrainingStatus = (
   // Reset completion toast flag when training starts again
   useEffect(() => {
     const currentStatus = query.data?.status;
-    if (currentStatus === "pending" || currentStatus === "processing") {
+    if (currentStatus && !["completed", "failed", "cancelled", "not_started"].includes(currentStatus)) {
       hasShownCompletionToast.current = false;
     }
   }, [query.data?.status]);

@@ -113,7 +113,7 @@ export function SessionsList({
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-lg font-medium text-foreground">
             Chat Sessions
           </h2>
         </div>

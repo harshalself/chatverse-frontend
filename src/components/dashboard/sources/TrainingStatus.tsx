@@ -30,7 +30,8 @@ function getStatusIcon(status: string) {
     case "cancelled":
       return <AlertCircle className="h-5 w-5 text-orange-500" />;
     default:
-      return <Clock className="h-5 w-5 text-muted-foreground" />;
+      // Treat any unknown status as processing (e.g., "training" from backend)
+      return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
   }
 }
 
@@ -41,7 +42,7 @@ function getStatusLabel(status: string) {
     case "pending":
       return "Pending";
     case "processing":
-      return "Training in Progress";
+      return "Processing";
     case "completed":
       return "Training Completed";
     case "failed":
@@ -49,7 +50,8 @@ function getStatusLabel(status: string) {
     case "cancelled":
       return "Training Cancelled";
     default:
-      return "Unknown Status";
+      // Treat any unknown status as processing (e.g., "training" from backend)
+      return "Processing";
   }
 }
 

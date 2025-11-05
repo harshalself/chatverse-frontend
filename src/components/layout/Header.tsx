@@ -40,7 +40,7 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const { mutate: logout } = useLogout();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAllNotifications } =
     useNotifications();
   const [userData, setUserData] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -154,9 +154,7 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
                   className="relative h-8 w-8 p-0">
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs font-medium">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
+                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full"></span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -208,17 +206,23 @@ function HeaderComponent({ breadcrumbs, children }: HeaderProps) {
                   </div>
                   <div className="flex gap-2 pt-2">
                     {notifications.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={markAllAsRead}>
-                        Mark All Read
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={markAllAsRead}>
+                          Mark All Read
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={clearAllNotifications}>
+                          Clear All
+                        </Button>
+                      </>
                     )}
-                    <Button variant="outline" size="sm" className="flex-1">
-                      View All
-                    </Button>
                   </div>
                 </div>
               </PopoverContent>

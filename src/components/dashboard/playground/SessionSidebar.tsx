@@ -136,7 +136,7 @@ export function SessionSidebar({
             <div className="size-5 sm:size-6 flex items-center rounded-full justify-center bg-primary/10">
               <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
             </div>
-            <span className="text-xs sm:text-sm font-bold text-foreground">
+            <span className="text-xs sm:text-sm font-medium text-foreground">
               Chat Sessions
             </span>
           </div>
