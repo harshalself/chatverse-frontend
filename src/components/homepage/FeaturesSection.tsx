@@ -24,7 +24,7 @@ const features = [
   {
     icon: Database,
     title: "Diverse Data Sources",
-    description: "Train agents with files, text, websites, databases, and Q&A pairs. Your data, your way.",
+    description: "Train agents with files, text, websites, and Q&A pairs. Your data, your way.",
     gradient: "from-purple-500 to-pink-500",
   },
   {
@@ -73,17 +73,13 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-24 md:py-32 bg-background relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-background relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
       
       <div className="container relative z-10 px-4">
         {/* Section header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary mb-6">
-            <Sparkles className="h-4 w-4" />
-            <span>Powerful Features</span>
-          </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
             Everything You Need to Build
             <br />

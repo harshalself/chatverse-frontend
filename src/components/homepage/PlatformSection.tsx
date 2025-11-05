@@ -33,7 +33,6 @@ const capabilities = [
     features: [
       { name: "File Upload", icon: FileText, description: "PDF, DOCX, TXT, CSV" },
       { name: "Website Crawling", icon: Globe, description: "Scrape and index websites" },
-      { name: "Database Integration", icon: DatabaseIcon, description: "Connect to external databases" },
       { name: "Q&A Pairs", icon: HelpCircle, description: "Manual knowledge base" },
     ],
   },
@@ -61,12 +60,12 @@ const capabilities = [
 
 const stats = [
   {
-    value: "50+",
+    value: "4+",
     label: "AI Model Options",
     description: "Choose the perfect model for your use case",
   },
   {
-    value: "5",
+    value: "3",
     label: "Data Source Types",
     description: "Flexible data integration options",
   },
@@ -76,7 +75,7 @@ const stats = [
     description: "Full REST API for custom integrations",
   },
   {
-    value: "<2min",
+    value: "<5min",
     label: "Training Time",
     description: "Average time to train an agent",
   },
@@ -84,7 +83,7 @@ const stats = [
 
 export function PlatformSection() {
   return (
-    <section className="py-24 md:py-32 bg-background relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-background relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0">
         <div className="absolute top-20 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -94,10 +93,6 @@ export function PlatformSection() {
       <div className="container relative z-10 px-4">
         {/* Section header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary mb-6">
-            <Zap className="h-4 w-4" />
-            <span>Platform Capabilities</span>
-          </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
             A Complete AI Agent
             <br />

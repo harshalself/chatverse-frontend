@@ -314,7 +314,7 @@ export function SettingsView() {
                           value={systemPrompt}
                           onChange={(e) => setSystemPrompt(e.target.value)}
                           disabled={!currentAgentId}
-                          rows={4}
+                          rows={10}
                           className="resize-none"
                         />
                       </div>

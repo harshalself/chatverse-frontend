@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 export function CTASection() {
   return (
-    <section className="py-24 md:py-32 relative overflow-hidden">
+    <section className="py-16 md:py-24 relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-purple-600 to-blue-600" />
       
@@ -20,12 +20,6 @@ export function CTASection() {
 
       <div className="container relative z-10 px-4">
         <div className="max-w-4xl mx-auto text-center text-white">
-          {/* Icon badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-sm font-medium mb-8 animate-fade-in">
-            <Sparkles className="h-4 w-4" />
-            <span>Start Building Today</span>
-          </div>
-
           {/* Headline */}
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in-up">
             Ready to Transform Your Workflow with AI?
@@ -58,24 +52,6 @@ export function CTASection() {
                 View Demo
               </Link>
             </Button>
-          </div>
-
-          {/* Trust badges */}
-          <div className="flex flex-wrap justify-center items-center gap-8 text-white/80 text-sm animate-fade-in-up delay-300">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span>Free 14-day trial</span>
-            </div>
-            <div className="hidden sm:block w-px h-4 bg-white/30" />
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span>No credit card required</span>
-            </div>
-            <div className="hidden sm:block w-px h-4 bg-white/30" />
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span>Cancel anytime</span>
-            </div>
           </div>
         </div>
 

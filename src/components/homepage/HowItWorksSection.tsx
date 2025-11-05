@@ -54,7 +54,7 @@ const steps = [
 
 export function HowItWorksSection() {
   return (
-    <section className="py-24 md:py-32 bg-muted/30 relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-muted/30 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
@@ -62,10 +62,6 @@ export function HowItWorksSection() {
       <div className="container relative z-10 px-4">
         {/* Section header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary mb-6">
-            <Brain className="h-4 w-4" />
-            <span>Simple Process</span>
-          </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
             From Idea to Intelligent Agent
             <br />

@@ -151,10 +151,6 @@ export default function SignIn() {
 
         <Card className="border-border/50 shadow-xl">
           <CardHeader className="text-center px-4 sm:px-6 space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary mx-auto">
-              <Sparkles className="h-4 w-4" />
-              <span>Welcome Back</span>
-            </div>
             <CardTitle className="text-2xl sm:text-3xl font-bold">
               Sign in to ChatVerse
             </CardTitle>

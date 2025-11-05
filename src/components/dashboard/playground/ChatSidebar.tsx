@@ -229,7 +229,7 @@ export function ChatSidebar() {
           </label>
           <ShadcnTextarea
             className={`flex-1 resize-none text-sm ${
-              isMobile ? "min-h-[80px]" : "min-h-[120px]"
+              isMobile ? "min-h-[160px]" : "min-h-[240px]"
             } focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-gray-300`}
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}

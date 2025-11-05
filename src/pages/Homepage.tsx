@@ -12,11 +12,23 @@ import {
   CTASection,
 } from "@/components/homepage";
 
+const scrollToSection = (sectionId: string) => {
+  const element = document.getElementById(sectionId);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { mutate: logout } = useLogout();
+
+  const handleScrollAndClose = (sectionId: string) => {
+    scrollToSection(sectionId);
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -26,22 +38,27 @@ function Header() {
           <span className="text-xl font-bold">ChatVerse</span>
         </Link>
 
-        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-          <a
-            href="#features"
+                <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+          <button
+            onClick={() => scrollToSection('hero')}
+            className="transition-colors hover:text-foreground/80 text-foreground/60">
+            Home
+          </button>
+          <button
+            onClick={() => scrollToSection('features')}
             className="transition-colors hover:text-foreground/80 text-foreground/60">
             Features
-          </a>
-          <a
-            href="#how-it-works"
+          </button>
+          <button
+            onClick={() => scrollToSection('how-it-works')}
             className="transition-colors hover:text-foreground/80 text-foreground/60">
             How It Works
-          </a>
-          <a
-            href="#platform"
+          </button>
+          <button
+            onClick={() => scrollToSection('platform')}
             className="transition-colors hover:text-foreground/80 text-foreground/60">
             Platform
-          </a>
+          </button>
         </nav>
 
         <div className="hidden md:flex items-center space-x-4">
@@ -80,24 +97,26 @@ function Header() {
       {isMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="flex flex-col space-y-4 p-4">
-            <a
-              href="#features"
-              className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60"
-              onClick={() => setIsMenuOpen(false)}>
+            <button
+              onClick={() => handleScrollAndClose('hero')}
+              className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60 text-left">
+              Home
+            </button>
+            <button
+              onClick={() => handleScrollAndClose('features')}
+              className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60 text-left">
               Features
-            </a>
-            <a
-              href="#how-it-works"
-              className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60"
-              onClick={() => setIsMenuOpen(false)}>
+            </button>
+            <button
+              onClick={() => handleScrollAndClose('how-it-works')}
+              className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60 text-left">
               How It Works
-            </a>
-            <a
-              href="#platform"
-              className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60"
-              onClick={() => setIsMenuOpen(false)}>
+            </button>
+            <button
+              onClick={() => handleScrollAndClose('platform')}
+              className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60 text-left">
               Platform
-            </a>
+            </button>
             <div className="flex flex-col space-y-2 pt-2">
               {isAuthenticated ? (
                 <>
@@ -157,19 +176,28 @@ function Footer() {
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li>
-                <a href="#features" className="hover:text-foreground transition-colors">
+                <button 
+                  onClick={() => scrollToSection('features')}
+                  className="hover:text-foreground transition-colors"
+                >
                   Features
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#how-it-works" className="hover:text-foreground transition-colors">
+                <button 
+                  onClick={() => scrollToSection('how-it-works')}
+                  className="hover:text-foreground transition-colors"
+                >
                   How It Works
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#platform" className="hover:text-foreground transition-colors">
+                <button 
+                  onClick={() => scrollToSection('platform')}
+                  className="hover:text-foreground transition-colors"
+                >
                   Platform
-                </a>
+                </button>
               </li>
             </ul>
           </div>
