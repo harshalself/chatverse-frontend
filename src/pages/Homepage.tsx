@@ -7,7 +7,6 @@ import {
   HeroSection,
   FeaturesSection,
   HowItWorksSection,
-  PlatformSection,
   StatsSection,
   CTASection,
 } from "@/components/homepage";
@@ -53,11 +52,6 @@ function Header() {
             onClick={() => scrollToSection('how-it-works')}
             className="transition-colors hover:text-foreground/80 text-foreground/60">
             How It Works
-          </button>
-          <button
-            onClick={() => scrollToSection('platform')}
-            className="transition-colors hover:text-foreground/80 text-foreground/60">
-            Platform
           </button>
         </nav>
 
@@ -111,11 +105,6 @@ function Header() {
               onClick={() => handleScrollAndClose('how-it-works')}
               className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60 text-left">
               How It Works
-            </button>
-            <button
-              onClick={() => handleScrollAndClose('platform')}
-              className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60 text-left">
-              Platform
             </button>
             <div className="flex flex-col space-y-2 pt-2">
               {isAuthenticated ? (
@@ -191,14 +180,6 @@ function Footer() {
                   How It Works
                 </button>
               </li>
-              <li>
-                <button 
-                  onClick={() => scrollToSection('platform')}
-                  className="hover:text-foreground transition-colors"
-                >
-                  Platform
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -245,8 +226,8 @@ function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>© 2024 ChatVerse. All rights reserved.</p>
+        <div className="mt-6 pt-6 border-t text-center text-sm text-muted-foreground">
+          <p>© 2025 ChatVerse. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -265,9 +246,6 @@ export default function Homepage() {
         </div>
         <div id="how-it-works">
           <HowItWorksSection />
-        </div>
-        <div id="platform">
-          <PlatformSection />
         </div>
         <StatsSection />
         <CTASection />
