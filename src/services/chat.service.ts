@@ -35,10 +35,11 @@ export class ChatService {
       model: (model as any) || DEFAULT_CHAT_MODEL,
     };
 
-    // The response interceptor returns response.data directly
+    // Use longer timeout for chat requests (60 seconds for AI responses)
     const response = await apiClient.post(
       API_ENDPOINTS.PLAYGROUND.CHAT,
-      requestData
+      requestData,
+      { timeout: 60000 }
     );
     return response.data;
   }
@@ -62,10 +63,11 @@ export class ChatService {
       ...(sessionId && { sessionId }),
     };
 
-    // The response interceptor returns response.data directly
+    // Use longer timeout for chat requests (60 seconds for AI responses)
     const response = await apiClient.post(
       API_ENDPOINTS.PLAYGROUND.AGENT_CHAT(agentId),
-      requestData
+      requestData,
+      { timeout: 60000 }
     );
 
     // Add warning if response message is empty
