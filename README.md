@@ -1,82 +1,139 @@
-# ChatVerse
+a# ChatVerse
 
-A modern React application for building and managing AI chatbots with an intuitive interface.
+**Build, train, and deploy intelligent AI agents with ease. No coding required.**
 
-## Features
+ChatVerse is a comprehensive platform that empowers users to create custom AI agents, train them with diverse data sources, and integrate them seamlessly into workflows. Choose from multiple AI providers, manage data sources, and deploy agents through an intuitive web interface.
 
-## Getting Started
+## 📸 Screenshots
+
+### Dashboard Overview
+![Dashboard](public/Screenshot-1.png)
+
+### Agent Management
+![Agent Management](public/Screenshot-2.png)
+
+### Data Sources
+![Chat Playground](public/Screenshot-3.png)
+
+### Chat Playground
+![Data Sources](public/Screenshot-4.png)
+
+## ✨ Key Features
+
+- **🤖 Multiple AI Providers**: OpenAI, Claude, Gemini, Groq - switch seamlessly
+- **📊 Diverse Data Sources**: Files, text, websites, databases, Q&A pairs
+- **🧠 Intelligent Training**: Advanced vector embeddings and semantic search
+- **💬 Real-time Playground**: Test agents in live chat environment
+- **📈 Advanced Analytics**: Performance metrics, token usage, costs
+- **⚡ Lightning Fast**: Optimized with caching and efficient data fetching
+- **🔒 Enterprise Security**: Bank-grade encryption and access control
+- **🔌 API-First Design**: Comprehensive REST API for integrations
+
+## 🚀 Getting Started
 
 ### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd chatverse-frontend
+   ```
 
-```bash
-git clone <repository-url>
-cd chatverse-frontend
-```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-2. Install dependencies:
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm install
-```
+4. **Open your browser:**
+   Visit [http://localhost:8080](http://localhost:8080)
 
-3. Start the development server:
+## 📦 Available Scripts
 
-```bash
-npm run dev
-```
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+- `npm run type-check` - Run TypeScript type checking
 
-4. Open your browser and navigate to `http://localhost:8080`
+## 🛠️ Tech Stack
 
-## Available Scripts
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, Radix UI
+- **State Management**: TanStack Query, React Context
+- **Routing**: React Router
+- **HTTP Client**: Axios
+- **Build Tool**: Vite
+- **Icons**: Lucide React
 
-## Tech Stack
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 src/
 ├── components/          # Reusable UI components
-│   ├── ui/             # Base UI components (buttons, inputs, etc.)
-│   ├── layout/         # Layout components (header, navigation)
-│   └── agents/         # Agent-specific components
-├── contexts/           # React contexts (auth, etc.)
-├── hooks/              # Custom React hooks
-├── pages/              # Page components
-├── lib/                # Utility functions
-└── types/              # TypeScript type definitions
+│   ├── ui/             # Base UI components (Radix UI + Tailwind)
+│   ├── layout/         # Layout components (Header, Navigation)
+│   ├── agents/         # Agent-specific components
+│   ├── dashboard/      # Dashboard sections
+│   └── homepage/       # Landing page components
+├── contexts/           # React Contexts (auth, theme, agent)
+├── hooks/              # Custom React hooks with TanStack Query
+├── lib/                # Utilities, API client, constants
+├── pages/              # Route-level pages
+├── providers/          # Context composition providers
+├── services/           # API service modules
+├── types/              # TypeScript definitions
+└── public/             # Static assets and screenshots
 ```
 
-## Authentication
+## 🔐 Authentication
 
-The application includes a complete authentication system:
+- Secure sign in/sign up with JWT tokens
+- Protected routes for workspace access
+- Persistent login state
+- Automatic token refresh
 
-## Deployment
+## 📤 Deployment
 
 ### Build for Production
 
 ```bash
-npm run build
+npm run build:production
 ```
 
-The built files will be in the `dist` directory and can be deployed to any static hosting service.
+The built files in the `dist` directory can be deployed to:
+- Vercel
+- Netlify
+- AWS S3 + CloudFront
+- Any static hosting service
 
-## Contributing
+### Environment Variables
+
+Create a `.env` file with:
+```env
+VITE_API_BASE_URL=https://your-api-domain.com/api/v1
+VITE_APP_NAME=ChatVerse
+```
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes and commit them: `git commit -m 'Add some feature'`
-4. Push to the branch: `git push origin feature-name`
+3. Make your changes and commit: `git commit -m 'Add feature'`
+4. Push to your branch: `git push origin feature-name`
 5. Submit a pull request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-# ChatVerse
+This project is licensed under the MIT License.
 
 ---
 
